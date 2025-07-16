@@ -8,16 +8,21 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useLanguage } from '@/lib/language-context';
+import { useAuth } from '@/lib/auth-context';
+import { LoginButton } from '@/components/auth/LoginButton';
+import { UserProfile } from '@/components/auth/UserProfile';
 
 export default function Navigation() {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { user, loading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const navigation = [
     { name: t.header.home, href: '/', icon: Heart },
     { name: t.header.about, href: '/about', icon: Sparkles },
     { name: t.header.dashboard, href: '/dashboard', icon: Sparkles },
+    ...(user ? [{ name: 'Profile', href: '/profile', icon: Sparkles }] : []),
   ];
 
   // Show language toggle only on home page
@@ -65,6 +70,25 @@ export default function Navigation() {
           <div className="hidden md:flex items-center space-x-2">
             {showLanguageToggle && <LanguageToggle />}
             <ThemeToggle />
+            {!loading && (
+              user ? (
+                <div className="relative group">
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <img 
+                      src={user.photoURL || '/default-avatar.png'} 
+                      alt={user.displayName || 'User'} 
+                      className="w-6 h-6 rounded-full"
+                    />
+                    <span className="hidden sm:inline">{user.displayName}</span>
+                  </Button>
+                  <div className="absolute right-0 top-full mt-2 w-80 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <UserProfile />
+                  </div>
+                </div>
+              ) : (
+                <LoginButton />
+              )
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -108,6 +132,15 @@ export default function Navigation() {
               <div className="flex items-center justify-between px-4 py-3 mt-4 pt-4 border-t border-border">
                 {showLanguageToggle && <LanguageToggle />}
                 <ThemeToggle />
+                {!loading && (
+                  user ? (
+                    <div className="w-full">
+                      <UserProfile />
+                    </div>
+                  ) : (
+                    <LoginButton />
+                  )
+                )}
               </div>
             </div>
           </div>

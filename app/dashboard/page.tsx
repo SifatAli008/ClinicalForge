@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/lib/language-context';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
 export default function DashboardPage() {
   const { t } = useLanguage();
@@ -131,7 +132,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
+    <AuthGuard>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-12 fade-in">
@@ -357,5 +359,6 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
+    </AuthGuard>
   );
 } 
