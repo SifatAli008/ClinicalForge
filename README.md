@@ -207,21 +207,5 @@ interface ClinicalLogic {
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Team
-
-- **Bionic Team, UIU**
-- Strategic collaboration platform for AI-driven synthetic clinical data
-
-## 🔗 Links
-
-- [Live Demo](https://your-demo-url.com)
-- [Documentation](https://your-docs-url.com)
-- [Issues](https://github.com/your-repo/issues)
-
-## 📞 Support
-
-For questions or collaboration opportunities, please contact the Bionic Team at UIU.
-
----
 
 **Note**: This platform is designed for medical professionals to contribute clinical expertise for AI development. All data collection follows strict privacy guidelines and ethical standards. 
