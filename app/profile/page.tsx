@@ -1,13 +1,22 @@
 'use client';
 
+import React from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { UserProfile } from '@/components/auth/UserProfile';
 import { LoginButton } from '@/components/auth/LoginButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { trackProfileAccess } from '@/lib/analytics-service';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
+
+  // Track profile access
+  React.useEffect(() => {
+    if (user) {
+      trackProfileAccess();
+    }
+  }, [user]);
 
   if (loading) {
     return (

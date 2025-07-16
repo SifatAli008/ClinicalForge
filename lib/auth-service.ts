@@ -15,6 +15,7 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { trackUserSignIn, trackUserSignOut, trackProfileUpdate } from './analytics-service';
 
 // User profile interface
 export interface UserProfile {
@@ -45,6 +46,9 @@ export async function signInWithGoogle(): Promise<UserCredential> {
       await createOrUpdateUserProfile(result.user);
     }
     
+    // Track sign in event
+    trackUserSignIn('google');
+    
     return result;
   } catch (error) {
     console.error('Error signing in with Google:', error);
@@ -56,6 +60,8 @@ export async function signInWithGoogle(): Promise<UserCredential> {
 export async function signOutUser(): Promise<void> {
   try {
     await signOut(auth);
+    // Track sign out event
+    trackUserSignOut();
   } catch (error) {
     console.error('Error signing out:', error);
     throw new Error('Failed to sign out');
@@ -128,6 +134,10 @@ export async function updateUserProfile(uid: string, updates: Partial<UserProfil
       ...updates,
       updatedAt: Timestamp.now(),
     });
+    
+    // Track profile update event
+    const updatedFields = Object.keys(updates);
+    trackProfileUpdate(updatedFields);
   } catch (error) {
     console.error('Error updating user profile:', error);
     throw new Error('Failed to update user profile');

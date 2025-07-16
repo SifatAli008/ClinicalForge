@@ -21,9 +21,15 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/lib/language-context';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { trackDashboardAccess } from '@/lib/analytics-service';
 
 export default function DashboardPage() {
   const { t } = useLanguage();
+
+  // Track dashboard access
+  React.useEffect(() => {
+    trackDashboardAccess();
+  }, []);
 
   const stats = [
     {

@@ -1,14 +1,16 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  apiKey: "AIzaSyBK1pvOaDPNJcwtEZfZSXsimnMmcHSlNGw",
+  authDomain: "hdms-a8e42.firebaseapp.com",
+  projectId: "hdms-a8e42",
+  storageBucket: "hdms-a8e42.firebasestorage.app",
+  messagingSenderId: "1041849143687",
+  appId: "1:1041849143687:web:34d48f1209e10443a30322",
+  measurementId: "G-K26DF8CGV4"
 };
 
 // Initialize Firebase
@@ -19,5 +21,8 @@ export const db = getFirestore(app);
 
 // Initialize Auth
 export const auth = getAuth(app);
+
+// Initialize Analytics (only in browser)
+export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
 export default app; 

@@ -16,12 +16,18 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/lib/language-context';
+import { trackClinicalLogicStarted, trackClinicalLogicCompleted, trackFormStepCompleted } from '@/lib/analytics-service';
 
 export default function HomePage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { t } = useLanguage();
+
+  // Track form start when component mounts
+  React.useEffect(() => {
+    trackClinicalLogicStarted();
+  }, []);
 
   const {
     register,
@@ -42,6 +48,9 @@ export default function HomePage() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       setIsSubmitted(true);
+      
+      // Track completion
+      trackClinicalLogicCompleted(data.diseaseType);
     } catch (error) {
       console.error('Submission error:', error);
     } finally {
@@ -1103,7 +1112,10 @@ export default function HomePage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setCurrentStep(currentStep - 1)}
+                onClick={() => {
+                  setCurrentStep(currentStep - 1);
+                  trackFormStepCompleted(currentStep - 1, steps[currentStep - 2]?.title || 'Previous Step');
+                }}
                 className="flex items-center gap-3 h-11 px-6 text-base font-semibold border hover:bg-accent/50 transition-colors duration-200"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -1114,7 +1126,10 @@ export default function HomePage() {
             {currentStep < 7 ? (
               <Button
                 type="button"
-                onClick={() => setCurrentStep(currentStep + 1)}
+                onClick={() => {
+                  setCurrentStep(currentStep + 1);
+                  trackFormStepCompleted(currentStep + 1, steps[currentStep]?.title || 'Next Step');
+                }}
                 className="ml-auto flex items-center gap-3 h-11 px-8 text-base font-semibold transition-colors duration-200"
               >
                 {t.ui.next}
