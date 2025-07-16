@@ -1,25 +1,28 @@
 # ClinicalForge
 
-A comprehensive platform for collecting clinical logic data from medical professionals and visualizing AI-driven insights for healthcare AI development.
+A comprehensive platform for collecting clinical logic data from medical professionals and visualizing healthcare insights for medical research and development.
 
 ## 🎯 Overview
 
-ClinicalForge is designed to bridge the gap between real-world clinical expertise and AI training datasets. It enables medical professionals to contribute structured clinical logic that can be used to generate synthetic patient data for AI model training.
+ClinicalForge is designed to bridge the gap between real-world clinical expertise and healthcare research datasets. It enables medical professionals to contribute structured clinical logic that can be used to advance medical research and improve patient care outcomes.
 
 ### Key Features
 
 - **Clinical Logic Collection**: Multi-step form for collecting structured disease progression data
-- **Strategic Collaboration**: Platform for medical professionals to contribute to AI development
+- **Strategic Collaboration**: Platform for medical professionals to contribute to healthcare research
 - **Data Visualization**: Interactive dashboard with charts and analytics
-- **Contributor Recognition**: Public acknowledgment system similar to Kaggle authorship
+- **Contributor Recognition**: Public acknowledgment system for medical professionals
 - **Privacy-First**: No personal health records collected, only structured clinical logic
+- **Admin Dashboard**: Comprehensive admin panel for data management and insights
+- **Professional UI**: Clean, modern interface optimized for medical professionals
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 14 (App Router), TypeScript
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS with professional dark theme
 - **Form Validation**: React Hook Form + Zod
 - **Database**: Firebase Firestore
+- **Authentication**: Firebase Auth with Google Sign-in
 - **Charts**: Recharts
 - **Icons**: Lucide React
 - **Deployment**: Firebase Hosting / Vercel
@@ -36,8 +39,8 @@ ClinicalForge is designed to bridge the gap between real-world clinical expertis
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd clinical-forge
+   git clone https://github.com/SifatAli008/ClinicalForge.git
+   cd ClinicalForge
    ```
 
 2. **Install dependencies**
@@ -78,24 +81,30 @@ ClinicalForge is designed to bridge the gap between real-world clinical expertis
 ## 📁 Project Structure
 
 ```
-clinical-forge/
+ClinicalForge/
 ├── app/                    # Next.js App Router pages
 │   ├── page.tsx           # Home page (Clinical Logic Collection)
 │   ├── about/             # About page
 │   ├── dashboard/         # Dashboard page
+│   ├── profile/           # User profile page
 │   ├── globals.css        # Global styles
 │   └── layout.tsx         # Root layout
 ├── components/            # Reusable components
 │   ├── auth/             # Authentication components
 │   │   ├── LoginButton.tsx
 │   │   ├── UserProfile.tsx
+│   │   ├── DoctorProfile.tsx
 │   │   └── AuthGuard.tsx
+│   ├── admin/            # Admin components
+│   │   ├── AdminGuard.tsx
+│   │   └── AdminLogin.tsx
 │   └── Navigation.tsx     # Navigation component
 ├── lib/                   # Utility functions and configurations
 │   ├── firebase.ts        # Firebase configuration
 │   ├── firebase-service.ts # Firebase service functions
 │   ├── auth-service.ts    # Authentication service
 │   ├── auth-context.tsx   # Authentication context
+│   ├── admin-context.tsx  # Admin context
 │   └── types.ts           # TypeScript type definitions
 ├── public/                # Static assets
 └── package.json           # Dependencies and scripts
@@ -105,7 +114,7 @@ clinical-forge/
 
 ### 1. Clinical Logic Collection Form (`/`)
 
-- **Multi-step wizard**: 4-step form for comprehensive data collection
+- **Multi-step wizard**: 7-step form for comprehensive data collection
 - **Validation**: Type-safe validation with Zod schema
 - **Fields included**:
   - Disease overview (name, type, age, gender bias, urban/rural)
@@ -123,18 +132,20 @@ clinical-forge/
 ### 2. About & Collaboration Page (`/about`)
 
 - **Strategic mission**: Explains the importance of medical collaboration
-- **Benefits for contributors**: Professional recognition, AI model development
+- **Benefits for contributors**: Professional recognition, research development
 - **Data ethics**: Privacy and security information
 - **How it works**: Step-by-step process explanation
+- **Professional UI**: Clean, modern design optimized for medical professionals
 
-### 3. Dashboard (`/dashboard`)
+### 3. Admin Dashboard (`/dashboard`)
 
-- **Protected route**: Requires authentication to access
+- **Protected route**: Requires admin authentication to access
 - **Analytics cards**: Key metrics and statistics
 - **Interactive charts**: Disease distribution, comorbidities, location data
 - **Contributor table**: Recognition system with public/private options
-- **AI insights**: Risk assessment and synthetic patient profiles
-- **Data export**: Download functionality for public datasets
+- **Risk assessment**: AI insights and synthetic patient profiles
+- **Data export**: Download functionality for research datasets
+- **User management**: Admin controls for user accounts
 
 ### 4. User Authentication & Profile (`/profile`)
 
@@ -143,6 +154,15 @@ clinical-forge/
 - **Professional details**: Institution, specialty, experience
 - **Privacy controls**: Manage profile visibility
 - **Account management**: View account information and security
+- **Professional bio**: Replace institution/location with bio field
+
+### 5. Admin Features
+
+- **Admin Authentication**: Secure admin login system
+- **Data Management**: Comprehensive admin dashboard
+- **User Analytics**: Track user contributions and engagement
+- **System Monitoring**: Firebase integration monitoring
+- **Export Capabilities**: Data export for research purposes
 
 ## 🔐 Privacy & Security
 
@@ -151,6 +171,7 @@ clinical-forge/
 - **Consent-based attribution**: Opt-in recognition system
 - **GDPR compliant**: Follows international privacy standards
 - **Firebase security**: Enterprise-grade encryption and security
+- **Professional standards**: HIPAA-compliant data handling
 
 ## 📊 Data Schema
 
@@ -216,6 +237,24 @@ interface ClinicalLogic {
 2. **Set environment variables** in Vercel dashboard
 3. **Deploy automatically** on push to main branch
 
+## 🎨 UI/UX Improvements
+
+### Recent Updates
+
+- **Professional Dark Theme**: Updated color palette for medical professionals
+- **Button Alignment**: Fixed login button alignment and styling
+- **Navigation Speed**: Improved page loading with Next.js router
+- **Clean Login**: Removed unnecessary text for streamlined experience
+- **Responsive Design**: Optimized for all device sizes
+- **Accessibility**: Enhanced keyboard navigation and screen reader support
+
+### Design System
+
+- **Color Palette**: Professional navy and slate tones
+- **Typography**: Inter font family for medical readability
+- **Components**: Consistent UI components with medical theme
+- **Icons**: Lucide React icons for clear visual communication
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -228,5 +267,17 @@ interface ClinicalLogic {
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🔄 Recent Updates
 
-**Note**: This platform is designed for medical professionals to contribute clinical expertise for AI development. All data collection follows strict privacy guidelines and ethical standards. 
+### Latest Improvements (v1.2.0)
+
+- ✅ **Fixed button alignment** in login screens
+- ✅ **Removed unnecessary text** for cleaner UI
+- ✅ **Improved navigation speed** with Next.js router
+- ✅ **Updated dark theme** with professional colors
+- ✅ **Enhanced admin dashboard** with comprehensive features
+- ✅ **Added professional bio field** to user profiles
+- ✅ **Improved responsive design** for all devices
+- ✅ **Enhanced accessibility** features
+
+**Note**: This platform is designed for medical professionals to contribute clinical expertise for healthcare research. All data collection follows strict privacy guidelines and ethical standards. 
