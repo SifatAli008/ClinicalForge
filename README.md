@@ -48,6 +48,7 @@ ClinicalForge is designed to bridge the gap between real-world clinical expertis
 3. **Set up Firebase**
    - Create a new Firebase project
    - Enable Firestore Database
+   - Enable Authentication with Google provider
    - Get your Firebase configuration
 
 4. **Environment Variables**
@@ -61,12 +62,17 @@ ClinicalForge is designed to bridge the gap between real-world clinical expertis
    NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef123456
    ```
 
-5. **Run the development server**
+5. **Configure Firebase Authentication**
+   - Go to Firebase Console > Authentication
+   - Enable Google Sign-in provider
+   - Add your domain to authorized domains
+
+6. **Run the development server**
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**
+7. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 📁 Project Structure
@@ -84,7 +90,15 @@ clinical-forge/
 ├── lib/                   # Utility functions and configurations
 │   ├── firebase.ts        # Firebase configuration
 │   ├── firebase-service.ts # Firebase service functions
+│   ├── auth-service.ts    # Authentication service
+│   ├── auth-context.tsx   # Authentication context
 │   └── types.ts           # TypeScript type definitions
+├── components/            # Reusable components
+│   ├── auth/             # Authentication components
+│   │   ├── LoginButton.tsx
+│   │   ├── UserProfile.tsx
+│   │   └── AuthGuard.tsx
+│   └── Navigation.tsx     # Navigation component
 ├── public/                # Static assets
 └── package.json           # Dependencies and scripts
 ```
@@ -117,11 +131,20 @@ clinical-forge/
 
 ### 3. Dashboard (`/dashboard`)
 
+- **Protected route**: Requires authentication to access
 - **Analytics cards**: Key metrics and statistics
 - **Interactive charts**: Disease distribution, comorbidities, location data
 - **Contributor table**: Recognition system with public/private options
 - **AI insights**: Risk assessment and synthetic patient profiles
 - **Data export**: Download functionality for public datasets
+
+### 4. User Authentication & Profile (`/profile`)
+
+- **Google Sign-in**: Secure authentication with Google
+- **User profiles**: Editable profile information
+- **Professional details**: Institution, specialty, experience
+- **Privacy controls**: Manage profile visibility
+- **Account management**: View account information and security
 
 ## 🔐 Privacy & Security
 
