@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Heart, 
   Users, 
@@ -19,7 +20,8 @@ import {
   ArrowRightCircle,
   Activity,
   Brain,
-  Microscope
+  Microscope,
+  Stethoscope
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +58,7 @@ const CauseEffectDiagram = () => {
     {
       icon: Microscope,
       title: "Synthetic Data",
-      description: "AI generates clinically realistic patient scenarios",
+              description: "Clinical expertise generates realistic patient scenarios",
       color: "from-orange-500 to-orange-600",
       bgColor: "bg-orange-500/10",
       borderColor: "border-orange-500/20"
@@ -405,23 +407,24 @@ const CauseEffectDiagram = () => {
 };
 
 export default function AboutPage() {
+  const router = useRouter();
   const benefits = [
     {
       icon: Award,
       title: "Professional Recognition",
-      description: "Get acknowledged in research publications and AI healthcare advancements. Build your professional reputation in the emerging field of AI-driven medicine.",
+              description: "Get acknowledged in research publications and healthcare advancements. Build your professional reputation in the emerging field of medical innovation.",
       features: ["Dataset collaboration recognition", "Professional profile enhancement", "Industry recognition"]
     },
     {
       icon: TrendingUp,
       title: "Career Advancement",
-      description: "Access to cutting-edge AI insights and data that can enhance your clinical practice and research capabilities.",
-      features: ["Early access to AI insights", "Research collaboration opportunities", "Professional development"]
+              description: "Access to cutting-edge clinical insights and data that can enhance your clinical practice and research capabilities.",
+        features: ["Early access to clinical insights", "Research collaboration opportunities", "Professional development"]
     },
     {
       icon: Globe,
       title: "Global Impact",
-      description: "Contribute to AI solutions that will improve healthcare outcomes for millions of patients worldwide.",
+              description: "Contribute to healthcare solutions that will improve patient outcomes for millions of patients worldwide.",
       features: ["Global healthcare impact", "Cross-border collaboration", "International recognition"]
     },
     {
@@ -446,13 +449,13 @@ export default function AboutPage() {
     },
     {
       step: "02",
-      title: "AI Training & Validation",
-      description: "Your contributions help train AI models to generate clinically accurate synthetic patient data."
+              title: "Research & Validation",
+        description: "Your contributions help develop clinically accurate patient care protocols."
     },
     {
       step: "03",
       title: "Global Impact",
-      description: "Your expertise enables AI solutions that improve healthcare outcomes worldwide."
+              description: "Your expertise enables solutions that improve healthcare outcomes worldwide."
     }
   ];
 
@@ -461,23 +464,28 @@ export default function AboutPage() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="text-center mb-16 fade-in">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Why You Need to Collaborate?
+          <div className="mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 mb-6">
+              <Stethoscope className="h-10 w-10 text-white" />
+            </div>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Advance Healthcare Through Clinical Expertise
           </h1>
           <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed mb-8">
-            Contribute to cutting-edge medical research through synthetic dataset collaboration. Your clinical expertise 
-            helps create high-quality, privacy-preserving datasets that accelerate healthcare development and research breakthroughs.
+            Transform healthcare through clinical expertise. Your medical knowledge drives innovation in healthcare research 
+            through secure, privacy-preserving data collection that accelerates breakthroughs and improves patient outcomes worldwide.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <Badge variant="secondary" className="text-sm px-4 py-2">
+            <Badge variant="secondary" className="text-sm px-4 py-2 bg-green-50 border-green-200 text-green-700 hover:bg-green-100 transition-colors">
               <CheckCircle className="h-4 w-4 mr-2" />
               No Patient Data Required
             </Badge>
-            <Badge variant="secondary" className="text-sm px-4 py-2">
+            <Badge variant="secondary" className="text-sm px-4 py-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors">
               <Shield className="h-4 w-4 mr-2" />
               HIPAA Compliant
             </Badge>
-            <Badge variant="secondary" className="text-sm px-4 py-2">
+            <Badge variant="secondary" className="text-sm px-4 py-2 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 transition-colors">
               <Award className="h-4 w-4 mr-2" />
               Professional Recognition
             </Badge>
@@ -489,15 +497,17 @@ export default function AboutPage() {
           {impactStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="clinical-card text-center">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-center space-x-3 mb-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                      <Icon className="h-6 w-6 text-primary" />
+              <Card key={index} className="clinical-card text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-0 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800">
+                <CardContent className="pt-8 pb-8">
+                  <div className="flex items-center justify-center space-x-4 mb-6">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg">
+                      <Icon className="h-8 w-8 text-white" />
                     </div>
-                    <div className="text-2xl font-bold text-foreground">{stat.number}</div>
+                    <div className="text-3xl font-bold text-foreground bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                      {stat.number}
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
                 </CardContent>
               </Card>
             );
@@ -527,23 +537,25 @@ export default function AboutPage() {
             {benefits.map((benefit, index) => {
               const Icon = benefit.icon;
               return (
-                <Card key={index} className="clinical-card border-l-4 border-l-primary">
-                  <CardHeader>
-                    <div className="flex items-center space-x-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                        <Icon className="h-6 w-6 text-primary" />
+                <Card key={index} className="clinical-card hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg">
+                        <Icon className="h-7 w-7 text-white" />
                       </div>
-                      <CardTitle className="text-xl font-bold">{benefit.title}</CardTitle>
+                      <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{benefit.title}</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground leading-relaxed mb-4">
+                    <p className="text-muted-foreground leading-relaxed mb-6 text-base">
                       {benefit.description}
                     </p>
-                    <ul className="space-y-2">
+                    <ul className="space-y-3">
                       {benefit.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-center text-sm">
-                          <CheckCircle className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
+                        <li key={featureIndex} className="flex items-center text-sm font-medium">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 mr-3 flex-shrink-0">
+                            <CheckCircle className="h-3 w-3 text-green-600" />
+                          </div>
                           {feature}
                         </li>
                       ))}
@@ -570,35 +582,35 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <Card className="clinical-card p-8">
+          <Card className="clinical-card p-8 border-0 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 shadow-lg">
             {/* Alignment Categories */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/10 mx-auto mb-4">
-                  <Globe className="h-8 w-8 text-blue-500" />
+              <div className="text-center group hover:scale-105 transition-transform duration-300">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg mx-auto mb-6 group-hover:shadow-xl transition-shadow">
+                  <Globe className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-2">Global Health Organizations</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-lg font-bold text-foreground mb-3 bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">Global Health Organizations</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Aligned with WHO, UNICEF, and international health initiatives
                 </p>
               </div>
               
-              <div className="text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10 mx-auto mb-4">
-                  <Microscope className="h-8 w-8 text-green-500" />
+              <div className="text-center group hover:scale-105 transition-transform duration-300">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 shadow-lg mx-auto mb-6 group-hover:shadow-xl transition-shadow">
+                  <Microscope className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-2">Research Institutions</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-lg font-bold text-foreground mb-3 bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">Research Institutions</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Connected with NIH, academic medical centers, and research networks
                 </p>
               </div>
               
-              <div className="text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-500/10 mx-auto mb-4">
-                  <Shield className="h-8 w-8 text-purple-500" />
+              <div className="text-center group hover:scale-105 transition-transform duration-300">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg mx-auto mb-6 group-hover:shadow-xl transition-shadow">
+                  <Shield className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-2">Regulatory Bodies</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-lg font-bold text-foreground mb-3 bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">Regulatory Bodies</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Aligned with FDA, CDC, and international regulatory standards
                 </p>
               </div>
@@ -621,17 +633,17 @@ export default function AboutPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {collaborationProcess.map((step, index) => (
-              <Card key={index} className="clinical-card text-center">
-                <CardHeader>
-                  <div className="flex justify-center mb-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white text-xl font-bold">
+              <Card key={index} className="clinical-card text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800">
+                <CardHeader className="pb-4">
+                  <div className="flex justify-center mb-6">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-2xl font-bold shadow-lg">
                       {step.step}
                     </div>
                   </div>
-                  <CardTitle className="text-xl font-bold">{step.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{step.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-muted-foreground leading-relaxed text-base">
                     {step.description}
                   </p>
                 </CardContent>
@@ -641,22 +653,27 @@ export default function AboutPage() {
         </div>
 
         {/* Call to Action */}
-        <Card className="bg-gradient-to-r from-primary to-primary-600 text-white">
-          <CardContent className="pt-8">
+        <Card className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-2xl">
+          <CardContent className="pt-12 pb-12">
             <div className="text-center">
-              <h3 className="text-3xl font-bold mb-4">Ready to Make a Difference?</h3>
-              <p className="text-primary-100 mb-8 max-w-2xl mx-auto text-lg">
-                Join hundreds of medical professionals who are already contributing to the future of AI-driven healthcare. 
+              <div className="mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm mb-4">
+                  <Heart className="h-8 w-8 text-white" />
+                </div>
+              </div>
+              <h3 className="text-4xl font-bold mb-6">Ready to Make a Difference?</h3>
+              <p className="text-blue-100 mb-10 max-w-3xl mx-auto text-xl leading-relaxed">
+                Join hundreds of medical professionals who are already contributing to the future of healthcare. 
                 Your expertise can help save lives and improve healthcare outcomes globally.
               </p>
               <div className="flex justify-center">
                 <Button 
                   size="lg" 
-                  className="bg-white text-primary font-semibold"
-                  onClick={() => window.location.href = '/'}
+                  className="bg-white text-blue-600 font-bold text-lg px-8 py-4 hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  onClick={() => router.push('/')}
                 >
                   Start Contributing Now
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
               </div>
               <div className="mt-8 flex flex-wrap justify-center gap-4">

@@ -28,7 +28,7 @@ export function EnhancedCard({
   const variantClasses = {
     default: "bg-card border border-border",
     gradient: "bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border border-blue-200 dark:border-blue-800",
-    glass: "backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border border-white/20 dark:border-gray-700/20"
+    glass: "backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border border-white/20 dark:border-slate-700/20"
   };
 
   const cardClasses = cn(

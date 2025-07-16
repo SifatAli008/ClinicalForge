@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ClinicalLogicSchema, type ClinicalLogic } from '@/lib/types';
-import { Heart, ArrowRight, CheckCircle, AlertTriangle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Heart, ArrowRight, CheckCircle, AlertTriangle, ChevronRight, ChevronLeft, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/lib/language-context';
 import { trackClinicalLogicStarted, trackClinicalLogicCompleted, trackFormStepCompleted } from '@/lib/analytics-service';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import { LoginButton } from '@/components/auth/LoginButton';
 
 export default function HomePage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -28,6 +30,26 @@ export default function HomePage() {
   React.useEffect(() => {
     trackClinicalLogicStarted();
   }, []);
+
+  // Custom login fallback for Clinical Data form
+  const ClinicalDataLoginFallback = (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md text-center clinical-card">
+        <CardHeader className="text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 mb-4">
+            <Stethoscope className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          </div>
+          <CardTitle className="text-2xl font-bold">Clinical Data Access Required</CardTitle>
+          <p className="text-muted-foreground">
+            Please sign in with your Google account to contribute clinical data and help advance healthcare research.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <LoginButton />
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   const {
     register,
@@ -100,55 +122,62 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-12 fade-in">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Strategic Collaboration on AI-Driven Synthetic Clinical Data
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-            Clinically Validated Synthetic Data for Next-Gen Preventive Health Solution
-          </p>
-        </div>
+    <AuthGuard fallback={ClinicalDataLoginFallback}>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="text-center mb-12 fade-in">
+            <h1 className="text-4xl font-bold text-foreground mb-4">
+              Strategic Collaboration on Clinical Data Collection
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+              Clinically Validated Data for Advanced Medical Research and Patient Care
+            </p>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Stethoscope className="h-3 w-3" />
+                Doctor Access Required
+              </Badge>
+            </div>
+          </div>
 
-        {/* Progress */}
-        <div className="mb-12 slide-in">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-base font-semibold text-foreground">
-              {t.ui.step} {currentStep} {t.ui.of} {steps.length}
-            </span>
-            <span className="text-base font-medium text-muted-foreground">
-              {Math.round(progress)}% {t.ui.complete}
-            </span>
-          </div>
-          <div className="relative">
-            <Progress value={progress} className="h-3 rounded-full" />
-          </div>
-          <div className="flex justify-between mt-6">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex flex-col items-center step-card">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition-all duration-200 ${
-                  currentStep >= step.id
-                    ? 'bg-black text-white shadow-sm'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
-                }`}>
-                  {step.id}
-                </div>
-                <div className="mt-3 text-center">
-                  <div className={`text-xs font-semibold max-w-32 leading-tight ${
+          {/* Progress */}
+          <div className="mb-12 slide-in">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-base font-semibold text-foreground">
+                {t.ui.step} {currentStep} {t.ui.of} {steps.length}
+              </span>
+              <span className="text-base font-medium text-muted-foreground">
+                {Math.round(progress)}% {t.ui.complete}
+              </span>
+            </div>
+            <div className="relative">
+              <Progress value={progress} className="h-3 rounded-full" />
+            </div>
+            <div className="flex justify-between mt-6">
+              {steps.map((step, index) => (
+                <div key={step.id} className="flex flex-col items-center step-card">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition-all duration-200 ${
                     currentStep >= step.id
-                      ? 'text-foreground'
-                      : 'text-muted-foreground'
-                  }`}>{step.title}</div>
+                      ? 'bg-black text-white shadow-sm'
+                      : 'bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'
+                  }`}>
+                    {step.id}
+                  </div>
+                  <div className="mt-3 text-center">
+                    <div className={`text-xs font-semibold max-w-32 leading-tight ${
+                      currentStep >= step.id
+                        ? 'text-foreground'
+                        : 'text-muted-foreground'
+                    }`}>{step.title}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {/* Step 1: Disease Overview */}
           {currentStep === 1 && (
             <Card className="clinical-card form-step">
@@ -1158,5 +1187,6 @@ export default function HomePage() {
         </form>
       </div>
     </div>
+    </AuthGuard>
   );
 } 

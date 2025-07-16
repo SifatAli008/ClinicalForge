@@ -5,6 +5,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider } from '@/lib/language-context';
 import { AuthProvider } from '@/lib/auth-context';
+import { AdminProvider } from '@/lib/admin-context';
 import Navigation from '@/components/Navigation';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -30,10 +31,12 @@ export default function RootLayout({
         >
           <LanguageProvider>
             <AuthProvider>
-              <Navigation />
-              <main className="min-h-screen bg-background">
-                {children}
-              </main>
+              <AdminProvider>
+                <Navigation />
+                <main className="min-h-screen bg-background">
+                  {children}
+                </main>
+              </AdminProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

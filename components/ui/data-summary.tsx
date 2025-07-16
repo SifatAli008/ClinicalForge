@@ -78,7 +78,7 @@ export function DataSummary({
               <span className="font-medium">Progress</span>
               <span className="text-muted-foreground">{Math.round(progressPercentage)}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-slate-200 rounded-full h-2">
               <div 
                 className="bg-primary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progressPercentage}%` }}
@@ -90,7 +90,7 @@ export function DataSummary({
       <CardContent>
         <div className="space-y-4">
           {items.map((item, index) => (
-            <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors duration-200">
               <div className="flex items-center space-x-3">
                 {item.status && getStatusIcon(item.status)}
                 <div>

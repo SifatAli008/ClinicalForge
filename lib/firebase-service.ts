@@ -9,10 +9,37 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
-  Timestamp 
+  Timestamp,
+  onSnapshot,
+  enableNetwork,
+  disableNetwork
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, checkConnection, optimizeConnection } from './firebase';
 import { ClinicalLogic, Contributor, DashboardAnalytics } from './types';
+
+// Cache for performance optimization
+const cache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Cache management
+const getCachedData = (key: string) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+};
+
+const setCachedData = (key: string, data: any) => {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+};
+
+const clearCache = () => {
+  cache.clear();
+};
 
 // Collection names
 const COLLECTIONS = {
@@ -21,9 +48,12 @@ const COLLECTIONS = {
   ANALYTICS: 'analytics',
 } as const;
 
-// Submit clinical logic data
+// Submit clinical logic data with connection optimization
 export async function submitClinicalLogic(data: ClinicalLogic): Promise<string> {
   try {
+    // Check connection before submitting
+    await optimizeConnection();
+    
     const docRef = await addDoc(collection(db, COLLECTIONS.CLINICAL_LOGIC), {
       ...data,
       submissionDate: Timestamp.fromDate(data.submissionDate),
@@ -33,16 +63,42 @@ export async function submitClinicalLogic(data: ClinicalLogic): Promise<string> 
     // Update contributor stats
     await updateContributorStats(data.physicianName, data.institution, data.specialty);
     
+    // Clear cache to ensure fresh data
+    clearCache();
+    
     return docRef.id;
   } catch (error) {
     console.error('Error submitting clinical logic:', error);
-    throw new Error('Failed to submit clinical logic');
+    
+    // Try to reconnect and retry once
+    try {
+      await checkConnection();
+      const docRef = await addDoc(collection(db, COLLECTIONS.CLINICAL_LOGIC), {
+        ...data,
+        submissionDate: Timestamp.fromDate(data.submissionDate),
+        createdAt: Timestamp.now(),
+      });
+      return docRef.id;
+    } catch (retryError) {
+      console.error('Retry failed:', retryError);
+      throw new Error('Failed to submit clinical logic after retry');
+    }
   }
 }
 
-// Get all clinical logic submissions
+// Get all clinical logic submissions with caching
 export async function getClinicalLogicSubmissions(): Promise<ClinicalLogic[]> {
+  const cacheKey = 'clinical_logic_submissions';
+  
+  // Check cache first
+  const cached = getCachedData(cacheKey);
+  if (cached) {
+    return cached;
+  }
+  
   try {
+    await optimizeConnection();
+    
     const q = query(
       collection(db, COLLECTIONS.CLINICAL_LOGIC),
       orderBy('submissionDate', 'desc')
@@ -59,10 +115,38 @@ export async function getClinicalLogicSubmissions(): Promise<ClinicalLogic[]> {
       } as ClinicalLogic);
     });
     
+    // Cache the results
+    setCachedData(cacheKey, submissions);
+    
     return submissions;
   } catch (error) {
     console.error('Error fetching clinical logic:', error);
-    throw new Error('Failed to fetch clinical logic');
+    
+    // Try to reconnect and retry once
+    try {
+      await checkConnection();
+      const q = query(
+        collection(db, COLLECTIONS.CLINICAL_LOGIC),
+        orderBy('submissionDate', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const submissions: ClinicalLogic[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        submissions.push({
+          ...data,
+          submissionDate: data.submissionDate.toDate(),
+        } as ClinicalLogic);
+      });
+      
+      setCachedData(cacheKey, submissions);
+      return submissions;
+    } catch (retryError) {
+      console.error('Retry failed:', retryError);
+      throw new Error('Failed to fetch clinical logic after retry');
+    }
   }
 }
 
@@ -250,3 +334,129 @@ export async function updateAttributionConsent(
     throw new Error('Failed to update attribution consent');
   }
 } 
+
+// Get clinical logic submissions by physician name
+export async function getClinicalLogicByPhysician(physicianName: string): Promise<ClinicalLogic[]> {
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.CLINICAL_LOGIC),
+      where('physicianName', '==', physicianName),
+      orderBy('submissionDate', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const submissions: ClinicalLogic[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      submissions.push({
+        ...data,
+        submissionDate: data.submissionDate.toDate(),
+      } as ClinicalLogic);
+    });
+    
+    return submissions;
+  } catch (error) {
+    console.error('Error fetching clinical logic by physician:', error);
+    throw new Error('Failed to fetch clinical logic by physician');
+  }
+}
+
+// Real-time data listeners
+export function subscribeToClinicalLogic(
+  callback: (submissions: ClinicalLogic[]) => void,
+  errorCallback?: (error: Error) => void
+): () => void {
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.CLINICAL_LOGIC),
+      orderBy('submissionDate', 'desc')
+    );
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const submissions: ClinicalLogic[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        submissions.push({
+          ...data,
+          submissionDate: data.submissionDate.toDate(),
+        } as ClinicalLogic);
+      });
+      
+      // Update cache with real-time data
+      setCachedData('clinical_logic_submissions', submissions);
+      callback(submissions);
+    }, (error) => {
+      console.error('Real-time listener error:', error);
+      if (errorCallback) {
+        errorCallback(error);
+      }
+    });
+    
+    return unsubscribe;
+  } catch (error) {
+    console.error('Error setting up real-time listener:', error);
+    if (errorCallback) {
+      errorCallback(error as Error);
+    }
+    return () => {}; // Return empty unsubscribe function
+  }
+}
+
+// Real-time contributor updates
+export function subscribeToContributors(
+  callback: (contributors: Contributor[]) => void,
+  errorCallback?: (error: Error) => void
+): () => void {
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.CONTRIBUTORS),
+      orderBy('lastSubmission', 'desc')
+    );
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const contributors: Contributor[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        contributors.push({
+          id: doc.id,
+          ...data,
+          lastSubmission: data.lastSubmission.toDate(),
+        } as Contributor);
+      });
+      
+      // Update cache with real-time data
+      setCachedData('contributors', contributors);
+      callback(contributors);
+    }, (error) => {
+      console.error('Real-time contributor listener error:', error);
+      if (errorCallback) {
+        errorCallback(error);
+      }
+    });
+    
+    return unsubscribe;
+  } catch (error) {
+    console.error('Error setting up contributor listener:', error);
+    if (errorCallback) {
+      errorCallback(error as Error);
+    }
+    return () => {}; // Return empty unsubscribe function
+  }
+}
+
+// Performance monitoring
+export const getConnectionStatus = () => {
+  return {
+    isConnected: true, // This would be updated by the connection management
+    cacheSize: cache.size,
+    cacheKeys: Array.from(cache.keys())
+  };
+};
+
+// Clear cache function for manual cache management
+export const clearFirebaseCache = () => {
+  clearCache();
+}; 

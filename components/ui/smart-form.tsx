@@ -198,7 +198,7 @@ export function SmartForm({
               id={field.name}
               checked={value}
               onChange={(e) => handleInputChange(field.name, e.target.checked)}
-              className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+              className="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded"
             />
             <Label htmlFor={field.name} className="text-sm font-semibold">
               {field.label}

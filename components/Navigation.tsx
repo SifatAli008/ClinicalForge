@@ -3,12 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Heart, Menu, X, Sparkles } from 'lucide-react';
+import { Home, Menu, X, Sparkles, Shield, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useLanguage } from '@/lib/language-context';
 import { useAuth } from '@/lib/auth-context';
+import { useAdmin } from '@/lib/admin-context';
 import { LoginButton } from '@/components/auth/LoginButton';
 import { UserProfile } from '@/components/auth/UserProfile';
 
@@ -16,13 +17,13 @@ export default function Navigation() {
   const pathname = usePathname();
   const { t } = useLanguage();
   const { user, loading } = useAuth();
+  const { isAdmin, isAuthenticated, logout } = useAdmin();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const navigation = [
-    { name: t.header.home, href: '/', icon: Heart },
+    { name: t.header.home, href: '/', icon: Home },
     { name: t.header.about, href: '/about', icon: Sparkles },
-    { name: t.header.dashboard, href: '/dashboard', icon: Sparkles },
-    ...(user ? [{ name: 'Profile', href: '/profile', icon: Sparkles }] : []),
+    { name: t.header.dashboard, href: '/dashboard', icon: Shield },
   ];
 
   // Show language toggle only on home page
@@ -60,6 +61,7 @@ export default function Navigation() {
                       : 'text-muted-foreground hover:text-primary hover:bg-accent/50'
                   }`}
                 >
+                  <Icon className="h-4 w-4" />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -71,16 +73,34 @@ export default function Navigation() {
             {showLanguageToggle && <LanguageToggle />}
             <ThemeToggle />
             {!loading && (
-              user ? (
-                <div className="relative group">
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                    <img 
-                      src={user.photoURL || '/default-avatar.png'} 
-                      alt={user.displayName || 'User'} 
-                      className="w-6 h-6 rounded-full"
-                    />
-                    <span className="hidden sm:inline">{user.displayName}</span>
+              isAuthenticated ? (
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-green-100 dark:bg-green-900 rounded-full">
+                    <Shield className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <span className="text-sm font-medium text-green-700 dark:text-green-300">Admin</span>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={logout}
+                    className="flex items-center space-x-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
                   </Button>
+                </div>
+              ) : user ? (
+                <div className="relative group">
+                  <Link href="/profile">
+                    <Button variant="ghost" size="sm" className="flex items-center space-x-2 hover:bg-accent/50 transition-colors duration-200">
+                      <img 
+                        src={user.photoURL || '/default-avatar.png'} 
+                        alt={user.displayName || 'User'} 
+                        className="w-6 h-6 rounded-full"
+                      />
+                      <span className="hidden sm:inline">{user.displayName}</span>
+                    </Button>
+                  </Link>
                   <div className="absolute right-0 top-full mt-2 w-80 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                     <UserProfile />
                   </div>
@@ -125,6 +145,7 @@ export default function Navigation() {
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
+                    <Icon className="h-4 w-4" />
                     <span>{item.name}</span>
                   </Link>
                 );
@@ -133,9 +154,34 @@ export default function Navigation() {
                 {showLanguageToggle && <LanguageToggle />}
                 <ThemeToggle />
                 {!loading && (
-                  user ? (
+                  isAuthenticated ? (
+                    <div className="flex items-center space-x-2 w-full">
+                      <div className="flex items-center space-x-2 px-3 py-1 bg-green-100 dark:bg-green-900 rounded-full">
+                        <Shield className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        <span className="text-sm font-medium text-green-700 dark:text-green-300">Admin</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={logout}
+                        className="flex items-center space-x-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </Button>
+                    </div>
+                  ) : user ? (
                     <div className="w-full">
-                      <UserProfile />
+                      <Link href="/profile">
+                        <Button variant="ghost" size="sm" className="w-full justify-start flex items-center space-x-2 hover:bg-accent/50 transition-colors duration-200">
+                          <img 
+                            src={user.photoURL || '/default-avatar.png'} 
+                            alt={user.displayName || 'User'} 
+                            className="w-6 h-6 rounded-full"
+                          />
+                          <span>{user.displayName}</span>
+                        </Button>
+                      </Link>
                     </div>
                   ) : (
                     <LoginButton />

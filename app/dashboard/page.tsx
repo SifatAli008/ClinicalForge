@@ -13,18 +13,22 @@ import {
   Heart,
   Activity,
   Calendar,
-  MapPin
+  MapPin,
+  LogOut
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/lib/language-context';
-import { AuthGuard } from '@/components/auth/AuthGuard';
+import AdminGuard from '@/components/admin/AdminGuard';
+import { useAdmin } from '@/lib/admin-context';
 import { trackDashboardAccess } from '@/lib/analytics-service';
+import { FirebaseMonitor } from '@/components/ui/firebase-monitor';
 
 export default function DashboardPage() {
   const { t } = useLanguage();
+  const { logout } = useAdmin();
 
   // Track dashboard access
   React.useEffect(() => {
@@ -138,7 +142,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <AuthGuard>
+    <AdminGuard>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
@@ -152,10 +156,20 @@ export default function DashboardPage() {
                 {t.dashboard.subtitle}
               </p>
             </div>
-            <Button className="flex items-center gap-3 h-11 px-6 text-base font-semibold transition-colors duration-200">
-              <Download className="h-5 w-5" />
-              {t.dashboard.exportData}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button className="flex items-center gap-3 h-11 px-6 text-base font-semibold transition-colors duration-200">
+                <Download className="h-5 w-5" />
+                {t.dashboard.exportData}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={logout}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -186,6 +200,11 @@ export default function DashboardPage() {
               </Card>
             );
           })}
+        </div>
+
+        {/* Firebase Monitor */}
+        <div className="mb-8">
+          <FirebaseMonitor />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -238,7 +257,7 @@ export default function DashboardPage() {
                   {t.dashboard.insights}
                 </CardTitle>
                 <CardDescription>
-                  AI-generated risk assessments
+                  Clinical risk assessments and insights
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -250,25 +269,23 @@ export default function DashboardPage() {
                         <Badge 
                           variant={
                             insight.risk === 'high' ? 'destructive' : 
-                            insight.risk === 'medium' ? 'default' : 'secondary'
+                            insight.risk === 'medium' ? 'default' : 
+                            'secondary'
                           }
                         >
-                          {insight.risk === 'high' ? t.dashboard.highRisk :
-                           insight.risk === 'medium' ? t.dashboard.mediumRisk : t.dashboard.lowRisk}
+                          {insight.risk} risk
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{insight.description}</p>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">
-                          {t.dashboard.keyFactors}:
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {insight.factors.map((factor, factorIndex) => (
-                            <Badge key={factorIndex} variant="outline" className="text-xs">
-                              {factor}
-                            </Badge>
-                          ))}
-                        </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {insight.description}
+                      </p>
+                      <div className="space-y-1">
+                        {insight.factors.map((factor, factorIndex) => (
+                          <div key={factorIndex} className="flex items-center gap-2">
+                            <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                            <span className="text-xs text-muted-foreground">{factor}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -278,93 +295,83 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <Separator className="my-8" />
-
         {/* Synthetic Patient Profile */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="h-5 w-5" />
-              {t.dashboard.syntheticPatientProfile}
-            </CardTitle>
-            <CardDescription>
-              AI-generated patient profile based on collected clinical logic
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Demographics */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <UserCheck className="h-4 w-4" />
-                  {t.dashboard.demographics}
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t.dashboard.age}:</span>
-                    <span className="font-medium">{syntheticProfile.demographics.age} years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t.dashboard.gender}:</span>
-                    <span className="font-medium">{syntheticProfile.demographics.gender}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Location:</span>
-                    <span className="font-medium">{syntheticProfile.demographics.location}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Occupation:</span>
-                    <span className="font-medium">{syntheticProfile.demographics.occupation}</span>
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5" />
+                Research Patient Profile
+              </CardTitle>
+              <CardDescription>
+                Clinical patient profile for research and training
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Demographics */}
+                <div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    Demographics
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Age:</span>
+                      <span className="font-medium">{syntheticProfile.demographics.age} years</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Gender:</span>
+                      <span className="font-medium">{syntheticProfile.demographics.gender}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Location:</span>
+                      <span className="font-medium">{syntheticProfile.demographics.location}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Occupation:</span>
+                      <span className="font-medium">{syntheticProfile.demographics.occupation}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Clinical Profile */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Activity className="h-4 w-4" />
-                  {t.dashboard.clinicalProfile}
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Primary Diagnosis:</p>
-                    <p className="text-sm">{syntheticProfile.clinicalProfile.primaryDiagnosis}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">{t.dashboard.comorbidities}:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {syntheticProfile.clinicalProfile.comorbidities.map((comorbidity, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {comorbidity}
-                        </Badge>
-                      ))}
+                {/* Clinical Profile */}
+                <div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Clinical Profile
+                  </h4>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-muted-foreground">Primary Diagnosis:</span>
+                      <p className="font-medium">{syntheticProfile.clinicalProfile.primaryDiagnosis}</p>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">{t.dashboard.medications}:</p>
-                    <div className="space-y-1">
-                      {syntheticProfile.clinicalProfile.medications.map((medication, index) => (
-                        <p key={index} className="text-sm">{medication}</p>
-                      ))}
+                    <div>
+                      <span className="text-sm text-muted-foreground">Comorbidities:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {syntheticProfile.clinicalProfile.comorbidities.map((comorbidity, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {comorbidity}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">{t.dashboard.symptoms}:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {syntheticProfile.clinicalProfile.symptoms.map((symptom, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {symptom}
-                        </Badge>
-                      ))}
+                    <div>
+                      <span className="text-sm text-muted-foreground">Medications:</span>
+                      <div className="space-y-1 mt-1">
+                        {syntheticProfile.clinicalProfile.medications.map((medication, index) => (
+                          <p key={index} className="text-sm font-medium">{medication}</p>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-    </AuthGuard>
+    </AdminGuard>
   );
 } 

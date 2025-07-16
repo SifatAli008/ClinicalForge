@@ -5,34 +5,119 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth-context';
 import { UserProfile as UserProfileType } from '@/lib/auth-service';
-import { LogOut, Edit, Save, X, User as UserIcon } from 'lucide-react';
+import { 
+  Edit, 
+  Save, 
+  X, 
+  User as UserIcon,
+  Building,
+  MapPin,
+  Loader2
+} from 'lucide-react';
 
-export function UserProfile() {
-  const { user, userProfile, signOut, updateProfile } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
+interface UserProfileProps {
+  isEditing?: boolean;
+  setIsEditing?: (editing: boolean) => void;
+  onSave?: () => Promise<void>;
+}
+
+export function UserProfile({ isEditing: externalIsEditing, setIsEditing: externalSetIsEditing, onSave }: UserProfileProps) {
+  const { user, userProfile, updateProfile } = useAuth();
+  const [internalIsEditing, setInternalIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Use external state if provided, otherwise use internal state
+  const isEditing = externalIsEditing !== undefined ? externalIsEditing : internalIsEditing;
+  const setIsEditing = externalSetIsEditing || setInternalIsEditing;
   const [formData, setFormData] = useState({
     displayName: userProfile?.displayName || '',
+    username: userProfile?.username || '',
+    email: userProfile?.email || user?.email || '',
+    phoneNumber: userProfile?.phoneNumber || '',
     institution: userProfile?.institution || '',
     specialty: userProfile?.specialty || '',
     role: userProfile?.role || 'physician',
     experience: userProfile?.experience || 0,
     bio: userProfile?.bio || '',
+    location: userProfile?.location || '',
+    profilePicture: userProfile?.photoURL || user?.photoURL || '',
   });
 
-  if (!user || !userProfile) {
-    return null;
+  // Show loading state with better UX
+  if (!user) {
+    return (
+      <Card className="w-full">
+        <CardContent className="pt-6">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading user data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show profile loading with skeleton
+  if (!userProfile) {
+    return (
+      <Card className="w-full">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="flex items-center space-x-3">
+            <div className="h-6 w-32 bg-muted animate-pulse rounded"></div>
+            <div className="h-5 w-16 bg-muted animate-pulse rounded"></div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Profile Picture Skeleton */}
+          <div className="flex items-center space-x-4">
+            <div className="w-20 h-20 bg-muted animate-pulse rounded-full"></div>
+            <div className="space-y-2">
+              <div className="h-6 w-48 bg-muted animate-pulse rounded"></div>
+              <div className="h-4 w-32 bg-muted animate-pulse rounded"></div>
+              <div className="h-4 w-24 bg-muted animate-pulse rounded"></div>
+            </div>
+          </div>
+          
+          {/* Form Fields Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-4 w-20 bg-muted animate-pulse rounded"></div>
+                <div className="h-10 w-full bg-muted animate-pulse rounded"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      await updateProfile(formData);
+      const updateData = {
+        displayName: formData.displayName,
+        username: formData.username,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        institution: formData.institution,
+        specialty: formData.specialty,
+        role: formData.role,
+        experience: formData.experience,
+        bio: formData.bio,
+        location: formData.location,
+        photoURL: formData.profilePicture,
+      };
+      await updateProfile(updateData);
       setIsEditing(false);
+      // Call external save function if provided
+      if (onSave) {
+        await onSave();
+      }
     } catch (error) {
       console.error('Failed to update profile:', error);
     } finally {
@@ -43,185 +128,184 @@ export function UserProfile() {
   const handleCancel = () => {
     setFormData({
       displayName: userProfile.displayName,
+      username: userProfile.username || '',
+      email: userProfile.email || user?.email || '',
+      phoneNumber: userProfile.phoneNumber || '',
       institution: userProfile.institution || '',
       specialty: userProfile.specialty || '',
       role: userProfile.role || 'physician',
       experience: userProfile.experience || 0,
       bio: userProfile.bio || '',
+      location: userProfile.location || '',
+      profilePicture: userProfile.photoURL || user?.photoURL || '',
     });
     setIsEditing(false);
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Sign out failed:', error);
-    }
-  };
-
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-semibold">Profile</CardTitle>
-        <div className="flex gap-2">
-          {!isEditing ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit className="h-4 w-4 mr-1" />
-              Edit
-            </Button>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCancel}
-                disabled={isLoading}
-              >
-                <X className="h-4 w-4 mr-1" />
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={isLoading}
-              >
-                <Save className="h-4 w-4 mr-1" />
-                Save
-              </Button>
-            </>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSignOut}
-          >
-            <LogOut className="h-4 w-4 mr-1" />
-            Sign Out
-          </Button>
+        <div className="flex items-center space-x-3">
+          <CardTitle className="text-lg font-semibold">Doctor Profile</CardTitle>
+          <Badge variant="outline" className="flex items-center gap-1">
+            <UserIcon className="h-3 w-3" />
+            Doctor
+          </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {/* Profile Picture and Basic Info */}
         <div className="flex items-center space-x-4">
-          {userProfile.photoURL ? (
-            <img
-              src={userProfile.photoURL}
-              alt={userProfile.displayName}
-              className="w-16 h-16 rounded-full"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-              <UserIcon className="h-8 w-8 text-gray-500" />
-            </div>
-          )}
+          <div className="relative">
+            {isEditing ? (
+              <div className="relative">
+                <img
+                  src={formData.profilePicture || userProfile.photoURL}
+                  alt={userProfile.displayName}
+                  className="w-20 h-20 rounded-full object-cover border-2 border-slate-200"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full p-0"
+                  onClick={() => {
+                    // In a real app, this would open a file picker
+                    const newUrl = prompt('Enter profile picture URL:');
+                    if (newUrl) {
+                      setFormData({ ...formData, profilePicture: newUrl });
+                    }
+                  }}
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <img
+                src={userProfile.photoURL}
+                alt={userProfile.displayName}
+                className="w-20 h-20 rounded-full object-cover"
+              />
+            )}
+          </div>
           <div className="flex-1">
             {isEditing ? (
               <Input
                 value={formData.displayName}
                 onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                placeholder="Display Name"
+                placeholder="Doctor Name"
+                className="text-lg font-semibold"
               />
             ) : (
-              <h3 className="font-semibold">{userProfile.displayName}</h3>
+              <h3 className="text-lg font-semibold">{userProfile.displayName}</h3>
             )}
-            <p className="text-sm text-gray-500">{userProfile.email}</p>
+            {isEditing ? (
+              <Textarea
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                placeholder="Professional Bio"
+                className="mt-2 text-sm"
+                rows={3}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground mt-2">
+                {userProfile.bio || 'No professional bio provided'}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Profile Details */}
-        <div className="space-y-3">
+        {/* Professional Bio Section */}
+        {!isEditing && userProfile.bio && (
           <div>
-            <Label htmlFor="institution">Institution</Label>
-            {isEditing ? (
+            <Label className="text-sm font-medium">Professional Bio</Label>
+            <p className="text-sm text-muted-foreground mt-1">{userProfile.bio}</p>
+          </div>
+        )}
+
+        {/* Form Fields for Editing */}
+        {isEditing && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                placeholder="Username"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="Email"
+                type="email"
+              />
+            </div>
+            <div>
+              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Input
+                id="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                placeholder="Phone Number"
+              />
+            </div>
+            <div>
+              <Label htmlFor="institution">Institution</Label>
               <Input
                 id="institution"
                 value={formData.institution}
                 onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                placeholder="Your institution"
+                placeholder="Institution"
               />
-            ) : (
-              <p className="text-sm">{userProfile.institution || 'Not specified'}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="specialty">Specialty</Label>
-            {isEditing ? (
+            </div>
+            <div>
+              <Label htmlFor="specialty">Specialty</Label>
               <Input
                 id="specialty"
                 value={formData.specialty}
                 onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                placeholder="Your specialty"
+                placeholder="Specialty"
               />
-            ) : (
-              <p className="text-sm">{userProfile.specialty || 'Not specified'}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="role">Role</Label>
-            {isEditing ? (
-              <Select
-                value={formData.role}
-                onValueChange={(value) => setFormData({ ...formData, role: value as UserProfileType['role'] || 'physician' })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="physician">Physician</SelectItem>
-                  <SelectItem value="researcher">Researcher</SelectItem>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            ) : (
-              <p className="text-sm capitalize">{userProfile.role || 'Not specified'}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="experience">Years of Experience</Label>
-            {isEditing ? (
+            </div>
+            <div>
+              <Label htmlFor="experience">Years of Experience</Label>
               <Input
                 id="experience"
-                type="number"
                 value={formData.experience}
                 onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
-                placeholder="Years of experience"
+                placeholder="Years of Experience"
+                type="number"
               />
-            ) : (
-              <p className="text-sm">{userProfile.experience || 0} years</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="bio">Bio</Label>
-            {isEditing ? (
-              <Textarea
-                id="bio"
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                placeholder="Tell us about yourself..."
-                rows={3}
+            </div>
+            <div>
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="Location"
               />
-            ) : (
-              <p className="text-sm">{userProfile.bio || 'No bio provided'}</p>
-            )}
+            </div>
+            <div>
+              <Label htmlFor="role">Role</Label>
+              <select
+                id="role"
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'physician' | 'researcher' | 'student' | 'other' })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="physician">Physician</option>
+                <option value="researcher">Researcher</option>
+                <option value="student">Student</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
           </div>
-        </div>
-
-        {/* Member Since */}
-        <div className="pt-2 border-t">
-          <p className="text-xs text-gray-500">
-            Member since {userProfile.createdAt.toLocaleDateString()}
-          </p>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

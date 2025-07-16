@@ -23,11 +23,18 @@ export interface UserProfile {
   email: string;
   displayName: string;
   photoURL: string;
+  username?: string;
+  phoneNumber?: string;
+  designation?: string;
   institution?: string;
   specialty?: string;
   role?: 'physician' | 'researcher' | 'student' | 'other';
   experience?: number;
   bio?: string;
+  location?: string;
+  education?: string;
+  certifications?: string[];
+  researchInterests?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -104,19 +111,38 @@ async function createOrUpdateUserProfile(user: User): Promise<void> {
   }
 }
 
-// Get user profile from Firestore
+// Cache for user profiles
+const profileCache = new Map<string, { profile: UserProfile; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Get user profile from Firestore with caching
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   try {
+    // Check cache first
+    const cached = profileCache.get(uid);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.profile;
+    }
+
+    // Fetch from Firestore
     const userRef = doc(db, 'users', uid);
     const userSnap = await getDoc(userRef);
     
     if (userSnap.exists()) {
       const data = userSnap.data();
-      return {
+      const profile = {
         ...data,
         createdAt: data.createdAt.toDate(),
         updatedAt: data.updatedAt.toDate(),
       } as UserProfile;
+      
+      // Cache the profile
+      profileCache.set(uid, {
+        profile,
+        timestamp: Date.now()
+      });
+      
+      return profile;
     }
     
     return null;
@@ -134,6 +160,9 @@ export async function updateUserProfile(uid: string, updates: Partial<UserProfil
       ...updates,
       updatedAt: Timestamp.now(),
     });
+    
+    // Clear cache for this user to ensure fresh data
+    profileCache.delete(uid);
     
     // Track profile update event
     const updatedFields = Object.keys(updates);

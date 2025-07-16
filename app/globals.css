@@ -24,59 +24,39 @@ body {
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-primary-600 text-white font-medium py-2 px-4 rounded-lg;
   }
   
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-slate-200 text-slate-800 font-medium py-2 px-4 rounded-lg;
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-sm p-6 border border-gray-200;
+    @apply bg-card rounded-lg shadow-sm p-6 border border-border;
   }
   
   .form-input {
-    @apply w-full px-4 py-3 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200 bg-background text-foreground;
+    @apply w-full px-4 py-3 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground;
   }
   
   .form-label {
-    @apply block text-sm font-semibold text-gray-700 mb-2;
+    @apply block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2;
   }
   
   .medical-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4f5d75 0%, #22223b 100%);
   }
 
   .glass-effect {
-    @apply backdrop-blur-sm bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700;
-  }
-
-  .fade-in {
-    animation: fadeIn 0.4s ease-out;
-  }
-
-  .slide-in {
-    animation: slideIn 0.3s ease-out;
-  }
-
-  .step-card {
-    @apply transition-all duration-200 hover:shadow-md hover:scale-105;
-  }
-
-  .progress-ring {
-    @apply transition-all duration-200 ease-in-out;
-  }
-
-  .form-step {
-    @apply transition-all duration-300 ease-in-out;
+    @apply backdrop-blur-sm bg-white/95 dark:bg-card/95 border border-slate-200 dark:border-border;
   }
 
   .clinical-card {
-    @apply bg-black dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200;
+    @apply bg-card border border-border rounded-lg shadow-sm;
   }
 
   .medical-header {
-    @apply bg-gradient-to-r from-blue-600 to-blue-700 text-white;
+    @apply bg-gradient-to-r from-blue-700 to-blue-900 text-white;
   }
 }
 
@@ -129,24 +109,24 @@ body {
     --radius: 0.5rem;
   }
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 222 47% 11%; /* deep navy */
+    --foreground: 220 16% 92%; /* light slate */
+    --card: 220 26% 18%; /* slate card */
+    --card-foreground: 220 16% 92%;
+    --popover: 220 26% 18%;
+    --popover-foreground: 220 16% 92%;
+    --primary: 217 91% 60%; /* blue accent */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 16% 24%; /* muted slate */
+    --secondary-foreground: 220 16% 92%;
+    --muted: 220 16% 24%;
+    --muted-foreground: 220 10% 60%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 16% 24%;
+    --input: 220 16% 24%;
     --ring: 217 91% 60%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -171,15 +151,15 @@ body {
   }
   
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800;
+    @apply bg-slate-100 dark:bg-slate-800;
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+    @apply bg-slate-300 dark:bg-slate-600 rounded-full;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-gray-500;
+    @apply bg-slate-400 dark:bg-slate-500;
   }
   
   /* Focus styles */

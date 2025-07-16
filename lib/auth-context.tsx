@@ -15,6 +15,7 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  profileLoading: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -26,20 +27,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  // Cache for user profiles
+  const profileCache = new Map<string, { profile: UserProfile; timestamp: number }>();
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  const getCachedProfile = (uid: string): UserProfile | null => {
+    const cached = profileCache.get(uid);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.profile;
+    }
+    return null;
+  };
+
+  const setCachedProfile = (uid: string, profile: UserProfile) => {
+    profileCache.set(uid, {
+      profile,
+      timestamp: Date.now()
+    });
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChange(async (user) => {
       setUser(user);
       
       if (user) {
+        setProfileLoading(true);
         try {
+          // Check cache first
+          const cachedProfile = getCachedProfile(user.uid);
+          if (cachedProfile) {
+            setUserProfile(cachedProfile);
+            setProfileLoading(false);
+            return;
+          }
+
+          // Fetch from Firebase if not cached
           const profile = await getUserProfile(user.uid);
           setUserProfile(profile);
+          if (profile) {
+            setCachedProfile(user.uid, profile);
+          }
         } catch (error) {
           console.error('Error fetching user profile:', error);
+        } finally {
+          setProfileLoading(false);
         }
       } else {
         setUserProfile(null);
+        setProfileLoading(false);
       }
       
       setLoading(false);
@@ -90,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     userProfile,
     loading,
+    profileLoading,
     signIn,
     signOut,
     updateProfile,
