@@ -21,8 +21,17 @@ const nextConfig = {
         assert: false,
         os: false,
         path: false,
+        util: false,
+        buffer: false,
+        process: false,
       };
     }
+    
+    // Exclude problematic modules
+    config.externals = config.externals || [];
+    config.externals.push({
+      'undici': 'commonjs undici',
+    });
     
     // Handle Firebase modules
     config.module.rules.push({
@@ -34,6 +43,9 @@ const nextConfig = {
     });
     
     return config;
+  },
+  experimental: {
+    esmExternals: 'loose',
   },
 }
 

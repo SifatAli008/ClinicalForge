@@ -1,14 +1,19 @@
-import { analytics } from './firebase';
-import { logEvent } from 'firebase/analytics';
+import { logEvent, getAnalytics } from 'firebase/analytics';
+import app from './firebase';
 
 // Analytics event tracking
-export const trackEvent = (eventName: string, parameters?: Record<string, any>) => {
-  if (analytics) {
-    try {
-      logEvent(analytics, eventName, parameters);
-    } catch (error) {
-      console.error('Analytics error:', error);
+export const trackEvent = async (eventName: string, parameters?: Record<string, any>) => {
+  try {
+    if (typeof window !== 'undefined') {
+      const { isSupported } = await import('firebase/analytics');
+      const supported = await isSupported();
+      if (supported) {
+        const analyticsInstance = getAnalytics(app);
+        logEvent(analyticsInstance, eventName, parameters);
+      }
     }
+  } catch (error) {
+    console.error('Analytics error:', error);
   }
 };
 
@@ -41,54 +46,54 @@ export const AnalyticsEvents = {
 } as const;
 
 // Helper functions for common events
-export const trackUserSignIn = (method: string = 'google') => {
-  trackEvent(AnalyticsEvents.USER_SIGN_IN, { method });
+export const trackUserSignIn = async (method: string = 'google') => {
+  await trackEvent(AnalyticsEvents.USER_SIGN_IN, { method });
 };
 
-export const trackUserSignOut = () => {
-  trackEvent(AnalyticsEvents.USER_SIGN_OUT);
+export const trackUserSignOut = async () => {
+  await trackEvent(AnalyticsEvents.USER_SIGN_OUT);
 };
 
-export const trackProfileUpdate = (fields: string[]) => {
-  trackEvent(AnalyticsEvents.PROFILE_UPDATED, { fields });
+export const trackProfileUpdate = async (fields: string[]) => {
+  await trackEvent(AnalyticsEvents.PROFILE_UPDATED, { fields });
 };
 
-export const trackClinicalLogicStarted = () => {
-  trackEvent(AnalyticsEvents.CLINICAL_LOGIC_STARTED);
+export const trackClinicalLogicStarted = async () => {
+  await trackEvent(AnalyticsEvents.CLINICAL_LOGIC_STARTED);
 };
 
-export const trackClinicalLogicCompleted = (diseaseType: string) => {
-  trackEvent(AnalyticsEvents.CLINICAL_LOGIC_COMPLETED, { diseaseType });
+export const trackClinicalLogicCompleted = async (diseaseType: string) => {
+  await trackEvent(AnalyticsEvents.CLINICAL_LOGIC_COMPLETED, { diseaseType });
 };
 
-export const trackClinicalLogicAbandoned = (step: number) => {
-  trackEvent(AnalyticsEvents.CLINICAL_LOGIC_ABANDONED, { step });
+export const trackClinicalLogicAbandoned = async (step: number) => {
+  await trackEvent(AnalyticsEvents.CLINICAL_LOGIC_ABANDONED, { step });
 };
 
-export const trackPageView = (pageName: string) => {
-  trackEvent(AnalyticsEvents.PAGE_VIEW, { page_name: pageName });
+export const trackPageView = async (pageName: string) => {
+  await trackEvent(AnalyticsEvents.PAGE_VIEW, { page_name: pageName });
 };
 
-export const trackDashboardAccess = () => {
-  trackEvent(AnalyticsEvents.DASHBOARD_ACCESSED);
+export const trackDashboardAccess = async () => {
+  await trackEvent(AnalyticsEvents.DASHBOARD_ACCESSED);
 };
 
-export const trackProfileAccess = () => {
-  trackEvent(AnalyticsEvents.PROFILE_ACCESSED);
+export const trackProfileAccess = async () => {
+  await trackEvent(AnalyticsEvents.PROFILE_ACCESSED);
 };
 
-export const trackFormStepCompleted = (step: number, stepName: string) => {
-  trackEvent(AnalyticsEvents.FORM_STEP_COMPLETED, { step, step_name: stepName });
+export const trackFormStepCompleted = async (step: number, stepName: string) => {
+  await trackEvent(AnalyticsEvents.FORM_STEP_COMPLETED, { step, step_name: stepName });
 };
 
-export const trackFormValidationError = (field: string, error: string) => {
-  trackEvent(AnalyticsEvents.FORM_VALIDATION_ERROR, { field, error });
+export const trackFormValidationError = async (field: string, error: string) => {
+  await trackEvent(AnalyticsEvents.FORM_VALIDATION_ERROR, { field, error });
 };
 
-export const trackDataExport = (exportType: string) => {
-  trackEvent(AnalyticsEvents.DATA_EXPORTED, { export_type: exportType });
+export const trackDataExport = async (exportType: string) => {
+  await trackEvent(AnalyticsEvents.DATA_EXPORTED, { export_type: exportType });
 };
 
-export const trackError = (errorType: string, errorMessage: string) => {
-  trackEvent(AnalyticsEvents.ERROR_OCCURRED, { error_type: errorType, error_message: errorMessage });
+export const trackError = async (errorType: string, errorMessage: string) => {
+  await trackEvent(AnalyticsEvents.ERROR_OCCURRED, { error_type: errorType, error_message: errorMessage });
 }; 
