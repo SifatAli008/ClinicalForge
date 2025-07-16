@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Clinical Logic Collection
+    match /clinicalLogic/{document} {
+      // Allow read access to all authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow write access for creating new submissions
+      allow create: if request.auth != null 
+        && request.resource.data.consentGiven == true
+        && request.resource.data.physicianName is string
+        && request.resource.data.institution is string
+        && request.resource.data.specialty is string
+        && request.resource.data.diseaseName is string
+        && request.resource.data.diseaseType is string
+        && request.resource.data.typicalOnsetAge is number
+        && request.resource.data.typicalOnsetAge >= 0
+        && request.resource.data.typicalOnsetAge <= 120;
+      
+      // Allow update only for the document owner or admin
+      allow update: if request.auth != null 
+        && (request.auth.uid == resource.data.createdBy || 
+            request.auth.token.admin == true);
+      
+      // Allow delete only for admin
+      allow delete: if request.auth != null 
+        && request.auth.token.admin == true;
+    }
+    
+    // Contributors
+    match /contributors/{document} {
+      // Allow read access to all authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow create/update for contributor management
+      allow create, update: if request.auth != null;
+      
+      // Allow delete only for admin
+      allow delete: if request.auth != null 
+        && request.auth.token.admin == true;
+    }
+    
+    // Analytics (read-only for all authenticated users)
+    match /analytics/{document} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null 
+        && request.auth.token.admin == true;
+    }
+    
+    // User profiles (if implementing user authentication)
+    match /users/{userId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == userId;
+    }
+  }
+} 

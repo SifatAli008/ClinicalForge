@@ -1,0 +1,57 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "clinicalLogic",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "submissionDate",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "diseaseType",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "clinicalLogic",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "physicianName",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "institution",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "contributors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "lastSubmission",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "contributors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "name",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "institution",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+} 
