@@ -86,6 +86,10 @@ clinical-forge/
 │   ├── globals.css        # Global styles
 │   └── layout.tsx         # Root layout
 ├── components/            # Reusable components
+│   ├── auth/             # Authentication components
+│   │   ├── LoginButton.tsx
+│   │   ├── UserProfile.tsx
+│   │   └── AuthGuard.tsx
 │   └── Navigation.tsx     # Navigation component
 ├── lib/                   # Utility functions and configurations
 │   ├── firebase.ts        # Firebase configuration
@@ -93,12 +97,6 @@ clinical-forge/
 │   ├── auth-service.ts    # Authentication service
 │   ├── auth-context.tsx   # Authentication context
 │   └── types.ts           # TypeScript type definitions
-├── components/            # Reusable components
-│   ├── auth/             # Authentication components
-│   │   ├── LoginButton.tsx
-│   │   ├── UserProfile.tsx
-│   │   └── AuthGuard.tsx
-│   └── Navigation.tsx     # Navigation component
 ├── public/                # Static assets
 └── package.json           # Dependencies and scripts
 ```
