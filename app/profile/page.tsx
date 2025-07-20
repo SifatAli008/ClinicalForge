@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 interface UserProfile {
   id: string;
@@ -211,7 +212,8 @@ export default function ProfilePage() {
   }
 
     return (
-    <div className="container mx-auto px-4 py-8">
+    <AuthGuard requiredRole="any">
+      <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -438,5 +440,6 @@ export default function ProfilePage() {
         </Card>
       </div>
     </div>
+    </AuthGuard>
   );
 } 

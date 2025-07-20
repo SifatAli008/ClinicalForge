@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   signInWithPopup, 
   GoogleAuthProvider, 
@@ -8,23 +8,17 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
-  collection,
-  query,
-  where,
-  getDocs
-} from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase-config';
+
+export type UserRole = 'public' | 'contributor' | 'admin';
 
 interface User {
   uid: string;
   displayName: string;
   email: string;
   photoURL?: string;
+  role: UserRole;
 }
 
 interface ProfileData {
@@ -39,6 +33,7 @@ interface ProfileData {
   phoneNumber?: string;
   designation?: string;
   socialMedia?: string;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,11 +43,12 @@ interface AuthContextType {
   userProfile: ProfileData | null;
   loading: boolean;
   profileLoading: boolean;
-  isLoading: boolean;
-  signIn: () => Promise<void>;
+  signIn: (method: 'google' | 'admin') => Promise<void>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<ProfileData>) => Promise<void>;
-  createProfile: (profileData: Omit<ProfileData, 'uid' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateProfile: (data: Partial<ProfileData>) => Promise<void>;
+  isAdmin: boolean;
+  isContributor: boolean;
+  isPublic: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,17 +58,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // Check if this is an admin user (by email or special flag)
+        const isAdminUser = firebaseUser.email === 'admin@clinicalforge.com' || 
+                           firebaseUser.displayName?.includes('Admin');
+        
         const userData: User = {
           uid: firebaseUser.uid,
           displayName: firebaseUser.displayName || 'User',
           email: firebaseUser.email || '',
           photoURL: firebaseUser.photoURL || undefined,
+          role: isAdminUser ? 'admin' : 'contributor',
         };
         setUser(userData);
         
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const profileData = profileDoc.data() as ProfileData;
             setUserProfile(profileData);
           } else {
-            // Create default profile if doesn't exist
+            // Create default profile for new user
             const defaultProfile: ProfileData = {
               uid: firebaseUser.uid,
               displayName: firebaseUser.displayName || 'User',
@@ -93,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               location: 'Not specified',
               bio: 'No bio available',
               avatarUrl: firebaseUser.photoURL || '/default-avatar.svg',
+              role: isAdminUser ? 'admin' : 'contributor',
               createdAt: new Date(),
               updatedAt: new Date(),
             };
@@ -107,34 +108,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserProfile(null);
       }
       setLoading(false);
-      setIsLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const signIn = async () => {
+  const signIn = async (method: 'google' | 'admin') => {
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      
-      // Check if user profile exists in Firestore
-      const profileDoc = await getDoc(doc(db, 'users', result.user.uid));
-      if (!profileDoc.exists()) {
-        // Create new profile for new user
-        const newProfile: ProfileData = {
-          uid: result.user.uid,
-          displayName: result.user.displayName || 'User',
-          email: result.user.email || '',
-          institution: 'Not specified',
-          specialty: 'General Medicine',
-          location: 'Not specified',
-          bio: 'No bio available',
-          avatarUrl: result.user.photoURL || '/default-avatar.svg',
+      if (method === 'google') {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        
+        // Check if user profile exists in Firestore
+        const profileDoc = await getDoc(doc(db, 'users', result.user.uid));
+        if (!profileDoc.exists()) {
+          // Create new profile for new user
+          const newProfile: ProfileData = {
+            uid: result.user.uid,
+            displayName: result.user.displayName || 'User',
+            email: result.user.email || '',
+            institution: 'Not specified',
+            specialty: 'General Medicine',
+            location: 'Not specified',
+            bio: 'No bio available',
+            avatarUrl: result.user.photoURL || '/default-avatar.svg',
+            role: 'contributor',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          await setDoc(doc(db, 'users', result.user.uid), newProfile);
+        }
+      } else if (method === 'admin') {
+        // For admin login, we'll use a special approach
+        // This could be enhanced with a proper admin authentication system
+        const adminUser: User = {
+          uid: 'admin-uid',
+          displayName: 'Admin User',
+          email: 'admin@clinicalforge.com',
+          role: 'admin',
+        };
+        setUser(adminUser);
+        
+        const adminProfile: ProfileData = {
+          uid: 'admin-uid',
+          displayName: 'Admin User',
+          email: 'admin@clinicalforge.com',
+          institution: 'ClinicalForge Admin',
+          specialty: 'System Administration',
+          location: 'System',
+          bio: 'System Administrator',
+          avatarUrl: '/default-avatar.svg',
+          role: 'admin',
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        await setDoc(doc(db, 'users', result.user.uid), newProfile);
+        setUserProfile(adminProfile);
       }
     } catch (error) {
       console.error('Sign in error:', error);
@@ -144,69 +172,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      await firebaseSignOut(auth);
+      if (user?.role !== 'admin') {
+        await firebaseSignOut(auth);
+      } else {
+        // For admin, just clear the state
+        setUser(null);
+        setUserProfile(null);
+      }
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;
     }
   };
 
-  const updateProfile = async (updates: Partial<ProfileData>) => {
-    if (!user) throw new Error('No user signed in');
+  const updateProfile = async (data: Partial<ProfileData>) => {
+    if (!user) return;
     
     try {
       setProfileLoading(true);
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        ...updates,
-        updatedAt: new Date(),
-      });
-      
-      // Update local state
-      if (userProfile) {
-        setUserProfile({ ...userProfile, ...updates, updatedAt: new Date() });
-      }
-    } catch (error) {
-      console.error('Update profile error:', error);
-      throw error;
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  const createProfile = async (profileData: Omit<ProfileData, 'uid' | 'createdAt' | 'updatedAt'>) => {
-    if (!user) throw new Error('No user signed in');
-    
-    try {
-      setProfileLoading(true);
-      const newProfile: ProfileData = {
-        ...profileData,
-        uid: user.uid,
-        createdAt: new Date(),
+      const updatedProfile = {
+        ...userProfile,
+        ...data,
         updatedAt: new Date(),
       };
       
-      await setDoc(doc(db, 'users', user.uid), newProfile);
-      setUserProfile(newProfile);
+      await setDoc(doc(db, 'users', user.uid), updatedProfile);
+      setUserProfile(updatedProfile as ProfileData);
     } catch (error) {
-      console.error('Create profile error:', error);
+      console.error('Error updating profile:', error);
       throw error;
     } finally {
       setProfileLoading(false);
     }
   };
 
+  const isAdmin = user?.role === 'admin';
+  const isContributor = user?.role === 'contributor';
+  const isPublic = !user;
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      userProfile, 
-      loading, 
-      profileLoading, 
-      isLoading, 
-      signIn, 
-      signOut, 
+    <AuthContext.Provider value={{
+      user,
+      userProfile,
+      loading,
+      profileLoading,
+      signIn,
+      signOut,
       updateProfile,
-      createProfile
+      isAdmin,
+      isContributor,
+      isPublic,
     }}>
       {children}
     </AuthContext.Provider>

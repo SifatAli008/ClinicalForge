@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, CheckCircle, Clock, Users, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 interface FormCard {
   id: string;
@@ -67,74 +68,76 @@ const getTypeColor = (type: string) => {
 
 export default function FormsPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Clinical Data Collection Forms
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300">
-          Select a form to contribute to our clinical knowledge database
-        </p>
-      </div>
+    <AuthGuard requiredRole="contributor">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Clinical Data Collection Forms
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Select a form to contribute to our clinical knowledge database
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {forms.map((form) => (
-          <Link key={form.id} href={`/forms/${form.id}`}>
-            <Card className="h-full hover:shadow-lg transition-shadow duration-200 cursor-pointer border-2 hover:border-primary/20">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      {form.icon}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {forms.map((form) => (
+            <Link key={form.id} href={`/forms/${form.id}`}>
+              <Card className="h-full hover:shadow-lg transition-shadow duration-200 cursor-pointer border-2 hover:border-primary/20">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        {form.icon}
+                      </div>
+                      <Badge variant="secondary" className={getTypeColor(form.type)}>
+                        {form.type}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className={getTypeColor(form.type)}>
-                      {form.type}
+                    <Badge className={getStatusColor(form.status)}>
+                      {form.status}
                     </Badge>
                   </div>
-                  <Badge className={getStatusColor(form.status)}>
-                    {form.status}
-                  </Badge>
-                </div>
-                <CardTitle className="text-xl">{form.title}</CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
-                  {form.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center space-x-1">
-                    <Users className="h-4 w-4" />
-                    <span>{form.submissions} submissions</span>
+                  <CardTitle className="text-xl">{form.title}</CardTitle>
+                  <CardDescription className="text-sm leading-relaxed">
+                    {form.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center space-x-1">
+                      <Users className="h-4 w-4" />
+                      <span>{form.submissions} submissions</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{form.lastUpdated}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{form.lastUpdated}</span>
-                  </div>
-                </div>
-                <Button className="w-full mt-4" variant="outline">
-                  Start Form
-                </Button>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+                  <Button className="w-full mt-4" variant="outline">
+                    Start Form
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
 
-      <div className="mt-12 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <div className="flex items-start space-x-3">
-          <CheckCircle className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-1" />
-          <div>
-            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-              Why Collaborate?
-            </h3>
-            <p className="text-blue-700 dark:text-blue-300 text-sm leading-relaxed">
-              Your clinical expertise helps build a comprehensive database that improves patient care, 
-              enables better research, and creates more accurate diagnostic tools. Every contribution 
-              makes a difference in advancing healthcare knowledge.
-            </p>
+        <div className="mt-12 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="flex items-start space-x-3">
+            <CheckCircle className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-1" />
+            <div>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                Why Collaborate?
+              </h3>
+              <p className="text-blue-700 dark:text-blue-300 text-sm leading-relaxed">
+                Your clinical expertise helps build a comprehensive database that improves patient care, 
+                enables better research, and creates more accurate diagnostic tools. Every contribution 
+                makes a difference in advancing healthcare knowledge.
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 } 

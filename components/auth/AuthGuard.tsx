@@ -1,50 +1,71 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { LoginButton } from '@/components/auth/LoginButton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  fallback?: React.ReactNode;
+  requiredRole?: 'contributor' | 'admin' | 'any';
+  redirectTo?: string;
 }
 
-export function AuthGuard({ children, fallback }: AuthGuardProps) {
-  const { user, loading } = useAuth();
+export default function AuthGuard({ 
+  children, 
+  requiredRole = 'any',
+  redirectTo = '/login'
+}: AuthGuardProps) {
+  const { user, loading, isAdmin, isContributor } = useAuth();
+  const router = useRouter();
 
+  useEffect(() => {
+    if (!loading) {
+      // If no user is logged in, redirect to login
+      if (!user) {
+        router.push(redirectTo);
+        return;
+      }
+
+      // Check role requirements
+      if (requiredRole === 'admin' && !isAdmin) {
+        router.push('/login');
+        return;
+      }
+
+      if (requiredRole === 'contributor' && !isContributor) {
+        router.push('/login');
+        return;
+      }
+    }
+  }, [user, loading, isAdmin, isContributor, requiredRole, router, redirectTo]);
+
+  // Show loading spinner while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading...</span>
+        <div className="text-center space-y-4">
+          <LoadingSpinner size="lg" />
+          <p className="text-muted-foreground">Checking authentication...</p>
         </div>
       </div>
     );
   }
 
+  // If no user or role doesn't match, don't render children
   if (!user) {
-    if (fallback) {
-      return <>{fallback}</>;
-    }
-
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Authentication Required</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-muted-foreground mb-4">
-              Please sign in to access this page.
-            </p>
-            <LoginButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null;
   }
 
+  // Check role requirements
+  if (requiredRole === 'admin' && !isAdmin) {
+    return null;
+  }
+
+  if (requiredRole === 'contributor' && !isContributor) {
+    return null;
+  }
+
+  // User is authenticated and has required role
   return <>{children}</>;
 } 

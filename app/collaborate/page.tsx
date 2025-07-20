@@ -29,6 +29,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 
 interface BenefitCard {
   icon: React.ReactNode;
@@ -251,354 +252,354 @@ export default function CollaboratePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Hero Section */}
-      <div 
-        id="hero"
-        data-section="hero"
-        className={`text-center mb-12 transition-all duration-1000 ${
-          isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-      >
-        <div className="mb-6">
-          <Badge variant="secondary" className="mb-4">
-            <Users className="h-4 w-4 mr-2" />
-            Join the Movement
-          </Badge>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Why Collaborate with ClinicalForge?
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Your clinical expertise is the foundation of better healthcare. Join hundreds of healthcare professionals 
-            who are already making a difference in patient care through collaborative data collection and validation.
-          </p>
-        </div>
+        {/* Hero Section */}
+        <div 
+          id="hero"
+          data-section="hero"
+          className={`text-center mb-12 transition-all duration-1000 ${
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
+          <div className="mb-6">
+            <Badge variant="secondary" className="mb-4">
+              <Users className="h-4 w-4 mr-2" />
+              Join the Movement
+            </Badge>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Why Collaborate with ClinicalForge?
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Your clinical expertise is the foundation of better healthcare. Join hundreds of healthcare professionals 
+              who are already making a difference in patient care through collaborative data collection and validation.
+            </p>
+          </div>
 
-        {/* About Section - Key Features */}
-        <div className="mt-8 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            {/* No Patient Data Required */}
-            <Card className="border-2 bg-green-50 dark:bg-green-900/20">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+          {/* About Section - Key Features */}
+          <div className="mt-8 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              {/* No Patient Data Required */}
+              <Card className="border-2 bg-green-50 dark:bg-green-900/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-green-800 dark:text-green-200">No Patient Data Required</h3>
+                      <p className="text-sm text-green-700 dark:text-green-300">Only structured clinical knowledge</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-green-800 dark:text-green-200">No Patient Data Required</h3>
-                    <p className="text-sm text-green-700 dark:text-green-300">Only structured clinical knowledge</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* HIPAA Compliant */}
-            <Card className="border-2 bg-blue-50 dark:bg-blue-900/20">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                    <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              {/* HIPAA Compliant */}
+              <Card className="border-2 bg-blue-50 dark:bg-blue-900/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-blue-800 dark:text-blue-200">HIPAA Compliant</h3>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">Enterprise-grade security</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-blue-800 dark:text-blue-200">HIPAA Compliant</h3>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">Enterprise-grade security</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Professional Recognition */}
-            <Card className="border-2 bg-purple-50 dark:bg-purple-900/20">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                    <Award className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              {/* Professional Recognition */}
+              <Card className="border-2 bg-purple-50 dark:bg-purple-900/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                      <Award className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-purple-800 dark:text-purple-200">Professional Recognition</h3>
+                      <p className="text-sm text-purple-700 dark:text-purple-300">Dataset acknowledgment & access</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-purple-800 dark:text-purple-200">Professional Recognition</h3>
-                    <p className="text-sm text-purple-700 dark:text-purple-300">Dataset acknowledgment & access</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/forms">
+              <Button size="lg" className="flex items-center space-x-2">
+                <FileText className="h-5 w-5" />
+                <span>Start Contributing</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/profile">
+              <Button variant="outline" size="lg" className="flex items-center space-x-2">
+                <UserCheck className="h-5 w-5" />
+                <span>View Your Impact</span>
+              </Button>
+            </Link>
           </div>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/forms">
-            <Button size="lg" className="flex items-center space-x-2">
-              <FileText className="h-5 w-5" />
-              <span>Start Contributing</span>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/profile">
-            <Button variant="outline" size="lg" className="flex items-center space-x-2">
-              <UserCheck className="h-5 w-5" />
-              <span>View Your Impact</span>
-            </Button>
-          </Link>
-        </div>
-      </div>
 
-      {/* Impact Statistics */}
-      <div 
-        id="stats"
-        data-section="stats"
-        className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 transition-all duration-1000 ${
-          visibleSections.has('stats') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-      >
-        {impactStats.map((stat, index) => (
-          <Card key={index} className="border-2 text-center">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-center mb-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  {stat.icon}
+        {/* Impact Statistics */}
+        <div 
+          id="stats"
+          data-section="stats"
+          className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 transition-all duration-1000 ${
+            visibleSections.has('stats') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
+          {impactStats.map((stat, index) => (
+            <Card key={index} className="border-2 text-center">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    {stat.icon}
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-primary mb-2">{stat.number}</div>
-              <div className="font-medium text-gray-900 dark:text-white mb-1">{stat.label}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">{stat.description}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-             {/* Benefits Grid */}
-       <div 
-         id="benefits"
-         data-section="benefits"
-         className={`mb-12 transition-all duration-1000 ${
-           visibleSections.has('benefits') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-         }`}
-       >
-         <div className="text-center mb-8">
-           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-             Your Impact Matters
-           </h2>
-           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-             Every contribution you make has a ripple effect across the healthcare ecosystem. 
-             Here's how your expertise creates lasting change:
-           </p>
-         </div>
-
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-           {benefits.map((benefit, index) => (
-             <Card key={index} className={`border-2 ${benefit.color} hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group`}>
-               <CardHeader>
-                 <div className="flex items-center space-x-3 mb-3">
-                   <div className="p-2 bg-white dark:bg-gray-800 rounded-lg group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
-                     {benefit.icon}
-                   </div>
-                   <CardTitle className="text-lg">{benefit.title}</CardTitle>
-                 </div>
-                 <CardDescription className="text-base">
-                   {benefit.description}
-                 </CardDescription>
-               </CardHeader>
-               <CardContent>
-                 <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
-                   <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                     Impact:
-                   </p>
-                   <ul className="space-y-1">
-                     {benefit.impact.split(', ').map((impact, idx) => (
-                       <li key={idx} className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                         <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />
-                         <span>{impact}</span>
-                       </li>
-                     ))}
-                   </ul>
-                 </div>
-               </CardContent>
-             </Card>
-           ))}
-         </div>
-       </div>
-
-       {/* What You Gain from Collaboration */}
-       <div 
-         id="gains"
-         data-section="gains"
-         className={`mb-12 transition-all duration-1000 ${
-           visibleSections.has('gains') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-         }`}
-       >
-         <div className="text-center mb-8">
-           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-             What You Gain from Collaboration
-           </h2>
-           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-             Your clinical expertise is invaluable. Here's how collaboration benefits you and the global healthcare community.
-           </p>
-         </div>
-
-         {/* Warning Note */}
-         <div className="mb-8">
-           <Alert className="max-w-2xl mx-auto">
-             <AlertTriangle className="h-4 w-4" />
-             <AlertDescription>
-               <strong>Note:</strong> Recognition is only provided when information is properly filled and validated.
-             </AlertDescription>
-           </Alert>
-         </div>
-
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-           {personalGains.map((gain, index) => (
-             <Card key={index} className={`border-2 ${gain.color} hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group`}>
-               <CardHeader>
-                 <div className="flex items-center space-x-3 mb-3">
-                   <div className="p-2 bg-white dark:bg-gray-800 rounded-lg group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
-                     {gain.icon}
-                   </div>
-                   <CardTitle className="text-lg">{gain.title}</CardTitle>
-                 </div>
-                 <CardDescription className="text-base">
-                   {gain.description}
-                 </CardDescription>
-               </CardHeader>
-               <CardContent>
-                 <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
-                   <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                     Benefits:
-                   </p>
-                   <ul className="space-y-1">
-                     {gain.impact.split(', ').map((benefit, idx) => (
-                       <li key={idx} className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                         <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />
-                         <span>{benefit}</span>
-                       </li>
-                     ))}
-                   </ul>
-                 </div>
-               </CardContent>
-             </Card>
-           ))}
-         </div>
-       </div>
-
-      {/* How It Works */}
-      <Card className="border-2 mb-12">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            How Collaboration Works
-          </CardTitle>
-          <CardDescription className="text-lg">
-            Simple steps to make a big impact
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                         <div className="text-center">
-               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                 <FileText className="h-8 w-8 text-primary" />
-               </div>
-               <h3 className="text-xl font-semibold mb-2">1. Validate Forms</h3>
-               <p className="text-gray-600 dark:text-gray-300">
-                 Review and validate clinical data collection forms to ensure they capture all necessary information for comprehensive research.
-               </p>
-             </div>
-             
-             <div className="text-center">
-               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                 <Database className="h-8 w-8 text-primary" />
-               </div>
-               <h3 className="text-xl font-semibold mb-2">2. Contribute Data</h3>
-               <p className="text-gray-600 dark:text-gray-300">
-                 Fill in parameter validation forms with your clinical expertise and real-world experience for accurate data modeling.
-               </p>
-             </div>
-             
-             <div className="text-center">
-               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                 <TrendingUp className="h-8 w-8 text-primary" />
-               </div>
-               <h3 className="text-xl font-semibold mb-2">3. Drive Impact</h3>
-               <p className="text-gray-600 dark:text-gray-300">
-                 Watch as your contributions improve healthcare technology and patient outcomes worldwide through validated clinical insights.
-               </p>
-             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* The Collaboration Impact Chain */}
-      <div 
-        id="impact-chain"
-        data-section="impact-chain"
-        className={`mb-12 transition-all duration-1000 ${
-          visibleSections.has('impact-chain') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-      >
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            The Collaboration Impact Chain
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            See how your contributions create a ripple effect across the healthcare ecosystem, from data validation to global impact.
-          </p>
+                <div className="text-3xl font-bold text-primary mb-2">{stat.number}</div>
+                <div className="font-medium text-gray-900 dark:text-white mb-1">{stat.label}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">{stat.description}</div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-           {/* Step 1: Clinical Expertise */}
-           <Card className="border-2 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group">
-            <CardHeader className="text-center">
-                             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 group-hover:scale-110 transition-all duration-300">
-                 <UserCheck className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-               </div>
-              <CardTitle className="text-lg">1. Clinical Expertise</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
-                Healthcare professionals contribute validated clinical knowledge and real-world experience
-              </p>
-            </CardContent>
-          </Card>
+               {/* Benefits Grid */}
+         <div 
+           id="benefits"
+           data-section="benefits"
+           className={`mb-12 transition-all duration-1000 ${
+             visibleSections.has('benefits') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+           }`}
+         >
+           <div className="text-center mb-8">
+             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+               Your Impact Matters
+             </h2>
+             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+               Every contribution you make has a ripple effect across the healthcare ecosystem. 
+               Here's how your expertise creates lasting change:
+             </p>
+           </div>
 
-                     {/* Step 2: Data Validation */}
-           <Card className="border-2 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group">
-             <CardHeader className="text-center">
-               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 dark:group-hover:bg-green-900/50 group-hover:scale-110 transition-all duration-300">
-                 <Shield className="h-8 w-8 text-green-600 dark:text-green-400" />
-               </div>
-              <CardTitle className="text-lg">2. Data Validation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
-                Clinical insights are validated and structured into high-quality datasets for research
-              </p>
-            </CardContent>
-          </Card>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             {benefits.map((benefit, index) => (
+               <Card key={index} className={`border-2 ${benefit.color} hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group`}>
+                 <CardHeader>
+                   <div className="flex items-center space-x-3 mb-3">
+                     <div className="p-2 bg-white dark:bg-gray-800 rounded-lg group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
+                       {benefit.icon}
+                     </div>
+                     <CardTitle className="text-lg">{benefit.title}</CardTitle>
+                   </div>
+                   <CardDescription className="text-base">
+                     {benefit.description}
+                   </CardDescription>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                     <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                       Impact:
+                     </p>
+                     <ul className="space-y-1">
+                       {benefit.impact.split(', ').map((impact, idx) => (
+                         <li key={idx} className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                           <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />
+                           <span>{impact}</span>
+                         </li>
+                       ))}
+                     </ul>
+                   </div>
+                 </CardContent>
+               </Card>
+             ))}
+           </div>
+         </div>
 
-                     {/* Step 3: Technology Development */}
-           <Card className="border-2 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group">
-             <CardHeader className="text-center">
-               <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 group-hover:scale-110 transition-all duration-300">
-                 <Lightbulb className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-               </div>
-              <CardTitle className="text-lg">3. Technology Development</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
-                Validated data powers AI-powered diagnostic tools and clinical decision support systems
-              </p>
-            </CardContent>
-          </Card>
+         {/* What You Gain from Collaboration */}
+         <div 
+           id="gains"
+           data-section="gains"
+           className={`mb-12 transition-all duration-1000 ${
+             visibleSections.has('gains') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+           }`}
+         >
+           <div className="text-center mb-8">
+             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+               What You Gain from Collaboration
+             </h2>
+             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+               Your clinical expertise is invaluable. Here's how collaboration benefits you and the global healthcare community.
+             </p>
+           </div>
 
-                     {/* Step 4: Global Impact */}
-           <Card className="border-2 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group">
-             <CardHeader className="text-center">
-               <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50 group-hover:scale-110 transition-all duration-300">
-                 <Globe className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+           {/* Warning Note */}
+           <div className="mb-8">
+             <Alert className="max-w-2xl mx-auto">
+               <AlertTriangle className="h-4 w-4" />
+               <AlertDescription>
+                 <strong>Note:</strong> Recognition is only provided when information is properly filled and validated.
+               </AlertDescription>
+             </Alert>
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+             {personalGains.map((gain, index) => (
+               <Card key={index} className={`border-2 ${gain.color} hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group`}>
+                 <CardHeader>
+                   <div className="flex items-center space-x-3 mb-3">
+                     <div className="p-2 bg-white dark:bg-gray-800 rounded-lg group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
+                       {gain.icon}
+                     </div>
+                     <CardTitle className="text-lg">{gain.title}</CardTitle>
+                   </div>
+                   <CardDescription className="text-base">
+                     {gain.description}
+                   </CardDescription>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                     <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                       Benefits:
+                     </p>
+                     <ul className="space-y-1">
+                       {gain.impact.split(', ').map((benefit, idx) => (
+                         <li key={idx} className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                           <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />
+                           <span>{benefit}</span>
+                         </li>
+                       ))}
+                     </ul>
+                   </div>
+                 </CardContent>
+               </Card>
+             ))}
+           </div>
+         </div>
+
+        {/* How It Works */}
+        <Card className="border-2 mb-12">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              How Collaboration Works
+            </CardTitle>
+            <CardDescription className="text-lg">
+              Simple steps to make a big impact
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                           <div className="text-center">
+                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                   <FileText className="h-8 w-8 text-primary" />
+                 </div>
+                 <h3 className="text-xl font-semibold mb-2">1. Validate Forms</h3>
+                 <p className="text-gray-600 dark:text-gray-300">
+                   Review and validate clinical data collection forms to ensure they capture all necessary information for comprehensive research.
+                 </p>
                </div>
-              <CardTitle className="text-lg">4. Global Impact</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
-                Improved healthcare technology reaches millions of patients worldwide, enhancing diagnostic accuracy and treatment outcomes
-              </p>
-            </CardContent>
-          </Card>
+               
+               <div className="text-center">
+                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                   <Database className="h-8 w-8 text-primary" />
+                 </div>
+                 <h3 className="text-xl font-semibold mb-2">2. Contribute Data</h3>
+                 <p className="text-gray-600 dark:text-gray-300">
+                   Fill in parameter validation forms with your clinical expertise and real-world experience for accurate data modeling.
+                 </p>
+               </div>
+               
+               <div className="text-center">
+                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                   <TrendingUp className="h-8 w-8 text-primary" />
+                 </div>
+                 <h3 className="text-xl font-semibold mb-2">3. Drive Impact</h3>
+                 <p className="text-gray-600 dark:text-gray-300">
+                   Watch as your contributions improve healthcare technology and patient outcomes worldwide through validated clinical insights.
+                 </p>
+               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* The Collaboration Impact Chain */}
+        <div 
+          id="impact-chain"
+          data-section="impact-chain"
+          className={`mb-12 transition-all duration-1000 ${
+            visibleSections.has('impact-chain') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              The Collaboration Impact Chain
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              See how your contributions create a ripple effect across the healthcare ecosystem, from data validation to global impact.
+            </p>
+          </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Step 1: Clinical Expertise */}
+            <Card className="border-2 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group">
+             <CardHeader className="text-center">
+                              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 group-hover:scale-110 transition-all duration-300">
+                  <UserCheck className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
+               <CardTitle className="text-lg">1. Clinical Expertise</CardTitle>
+             </CardHeader>
+             <CardContent>
+               <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
+                 Healthcare professionals contribute validated clinical knowledge and real-world experience
+               </p>
+             </CardContent>
+           </Card>
+
+                      {/* Step 2: Data Validation */}
+            <Card className="border-2 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 dark:group-hover:bg-green-900/50 group-hover:scale-110 transition-all duration-300">
+                  <Shield className="h-8 w-8 text-green-600 dark:text-green-400" />
+                </div>
+               <CardTitle className="text-lg">2. Data Validation</CardTitle>
+             </CardHeader>
+             <CardContent>
+               <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
+                 Clinical insights are validated and structured into high-quality datasets for research
+               </p>
+             </CardContent>
+           </Card>
+
+                      {/* Step 3: Technology Development */}
+            <Card className="border-2 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 group-hover:scale-110 transition-all duration-300">
+                  <Lightbulb className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                </div>
+               <CardTitle className="text-lg">3. Technology Development</CardTitle>
+             </CardHeader>
+             <CardContent>
+               <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
+                 Validated data powers AI-powered diagnostic tools and clinical decision support systems
+               </p>
+             </CardContent>
+           </Card>
+
+                      {/* Step 4: Global Impact */}
+            <Card className="border-2 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50 group-hover:scale-110 transition-all duration-300">
+                  <Globe className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                </div>
+               <CardTitle className="text-lg">4. Global Impact</CardTitle>
+             </CardHeader>
+             <CardContent>
+               <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
+                 Improved healthcare technology reaches millions of patients worldwide, enhancing diagnostic accuracy and treatment outcomes
+               </p>
+             </CardContent>
+           </Card>
         </div>
 
         {/* Impact Chain Visualization */}
