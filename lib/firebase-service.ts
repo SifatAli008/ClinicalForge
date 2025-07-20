@@ -1,462 +1,291 @@
 import { 
   collection, 
+  doc, 
   addDoc, 
   getDocs, 
+  getDoc, 
+  updateDoc, 
+  setDoc,
+  deleteDoc, 
   query, 
   orderBy, 
+  limit, 
   where,
-  doc,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  Timestamp,
   onSnapshot,
-  enableNetwork,
-  disableNetwork
+  Timestamp,
+  serverTimestamp 
 } from 'firebase/firestore';
-import { db, checkConnection, optimizeConnection } from './firebase';
-import { ClinicalLogic, Contributor, DashboardAnalytics } from './types';
+import { 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  User as FirebaseUser 
+} from 'firebase/auth';
+import { db, auth } from './firebase-config';
+import { ClinicalLogic, UserProfile } from './types';
 
 // Cache for performance optimization
-const cache = new Map();
+const cache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Cache management
-const getCachedData = (key: string) => {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data;
-  }
-  return null;
-};
+// Connection status
+let isConnected = false;
+let connectionListeners: Array<(status: boolean) => void> = [];
 
-const setCachedData = (key: string, data: any) => {
-  cache.set(key, {
-    data,
-    timestamp: Date.now()
-  });
-};
+// Update connection status
+function updateConnectionStatus(status: boolean) {
+  isConnected = status;
+  connectionListeners.forEach(listener => listener(status));
+}
 
-const clearCache = () => {
+// Subscribe to connection status
+export function onConnectionChange(callback: (status: boolean) => void) {
+  connectionListeners.push(callback);
+  return () => {
+    connectionListeners = connectionListeners.filter(listener => listener !== callback);
+  };
+}
+
+// Get connection status
+export function getConnectionStatus() {
+  return {
+    isConnected,
+    cacheSize: cache.size,
+    cacheKeys: Array.from(cache.keys())
+  };
+}
+
+// Clear cache
+export function clearCache() {
   cache.clear();
-};
+  console.log('🗑️ Cache cleared');
+}
 
-// Collection names
-const COLLECTIONS = {
-  CLINICAL_LOGIC: 'clinicalLogic',
-  CONTRIBUTORS: 'contributors',
-  ANALYTICS: 'analytics',
-} as const;
-
-// Submit clinical logic data with connection optimization
+// Submit clinical logic data
 export async function submitClinicalLogic(data: ClinicalLogic): Promise<string> {
   try {
-    // Check connection before submitting
-    await optimizeConnection();
+    updateConnectionStatus(true);
     
-    const docRef = await addDoc(collection(db, COLLECTIONS.CLINICAL_LOGIC), {
+    const docData = {
       ...data,
-      submissionDate: Timestamp.fromDate(data.submissionDate),
-      createdAt: Timestamp.now(),
-    });
+      submissionDate: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
     
-    // Update contributor stats
-    await updateContributorStats(data.physicianName, data.institution, data.specialty);
+    const docRef = await addDoc(collection(db, 'clinicalLogic'), docData);
     
     // Clear cache to ensure fresh data
-    clearCache();
+    cache.delete('clinicalLogic');
     
+    console.log('📊 Analytics Event: clinical_data_submitted', { docId: docRef.id });
     return docRef.id;
   } catch (error) {
+    updateConnectionStatus(false);
     console.error('Error submitting clinical logic:', error);
-    
-    // Try to reconnect and retry once
-    try {
-      await checkConnection();
-      const docRef = await addDoc(collection(db, COLLECTIONS.CLINICAL_LOGIC), {
-        ...data,
-        submissionDate: Timestamp.fromDate(data.submissionDate),
-        createdAt: Timestamp.now(),
-      });
-      return docRef.id;
-    } catch (retryError) {
-      console.error('Retry failed:', retryError);
-      throw new Error('Failed to submit clinical logic after retry');
-    }
+    throw new Error('Failed to submit clinical data');
   }
 }
 
-// Get all clinical logic submissions with caching
-export async function getClinicalLogicSubmissions(): Promise<ClinicalLogic[]> {
-  const cacheKey = 'clinical_logic_submissions';
-  
-  // Check cache first
-  const cached = getCachedData(cacheKey);
-  if (cached) {
-    return cached;
-  }
-  
+// Get clinical logic submissions with caching
+export async function getClinicalLogicSubmissions(limitCount = 50): Promise<ClinicalLogic[]> {
   try {
-    await optimizeConnection();
+    const cacheKey = `clinicalLogic_${limitCount}`;
+    const cached = cache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
+    
+    updateConnectionStatus(true);
     
     const q = query(
-      collection(db, COLLECTIONS.CLINICAL_LOGIC),
-      orderBy('submissionDate', 'desc')
+      collection(db, 'clinicalLogic'),
+      orderBy('submissionDate', 'desc'),
+      limit(limitCount)
     );
     
     const querySnapshot = await getDocs(q);
-    const submissions: ClinicalLogic[] = [];
-    
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      submissions.push({
-        ...data,
-        submissionDate: data.submissionDate.toDate(),
-      } as ClinicalLogic);
-    });
+    const submissions = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as unknown as ClinicalLogic[];
     
     // Cache the results
-    setCachedData(cacheKey, submissions);
+    cache.set(cacheKey, {
+      data: submissions,
+      timestamp: Date.now()
+    });
     
     return submissions;
   } catch (error) {
+    updateConnectionStatus(false);
     console.error('Error fetching clinical logic:', error);
-    
-    // Try to reconnect and retry once
-    try {
-      await checkConnection();
-      const q = query(
-        collection(db, COLLECTIONS.CLINICAL_LOGIC),
-        orderBy('submissionDate', 'desc')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const submissions: ClinicalLogic[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        submissions.push({
-          ...data,
-          submissionDate: data.submissionDate.toDate(),
-        } as ClinicalLogic);
-      });
-      
-      setCachedData(cacheKey, submissions);
-      return submissions;
-    } catch (retryError) {
-      console.error('Retry failed:', retryError);
-      throw new Error('Failed to fetch clinical logic after retry');
-    }
+    throw new Error('Failed to fetch clinical data');
   }
 }
 
-// Get contributors
-export async function getContributors(): Promise<Contributor[]> {
+// Real-time listener for clinical logic
+export function subscribeToClinicalLogic(
+  callback: (submissions: ClinicalLogic[]) => void,
+  errorCallback?: (error: Error) => void
+) {
   try {
     const q = query(
-      collection(db, COLLECTIONS.CONTRIBUTORS),
-      orderBy('lastSubmission', 'desc')
+      collection(db, 'clinicalLogic'),
+      orderBy('submissionDate', 'desc'),
+      limit(50)
     );
     
-    const querySnapshot = await getDocs(q);
-    const contributors: Contributor[] = [];
-    
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      contributors.push({
-        id: doc.id,
-        ...data,
-        lastSubmission: data.lastSubmission.toDate(),
-      } as Contributor);
-    });
-    
-    return contributors;
+    return onSnapshot(q, 
+      (snapshot) => {
+        const submissions = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as unknown as ClinicalLogic[];
+        
+        // Update cache
+        cache.set('clinicalLogic_50', {
+          data: submissions,
+          timestamp: Date.now()
+        });
+        
+        callback(submissions);
+      },
+      (error) => {
+        updateConnectionStatus(false);
+        if (errorCallback) {
+          errorCallback(error);
+        }
+        console.error('Real-time listener error:', error);
+      }
+    );
   } catch (error) {
-    console.error('Error fetching contributors:', error);
-    throw new Error('Failed to fetch contributors');
+    updateConnectionStatus(false);
+    console.error('Error setting up real-time listener:', error);
+    throw new Error('Failed to set up real-time listener');
   }
 }
 
-// Update contributor statistics
-async function updateContributorStats(
-  physicianName: string, 
-  institution: string, 
-  specialty: string
-): Promise<void> {
+// Authentication functions
+export async function signInWithGoogle(): Promise<{ user: FirebaseUser }> {
   try {
-    // Check if contributor exists
-    const contributorQuery = query(
-      collection(db, COLLECTIONS.CONTRIBUTORS),
-      where('name', '==', physicianName),
-      where('institution', '==', institution)
-    );
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
     
-    const contributorSnapshot = await getDocs(contributorQuery);
+    console.log('📊 Analytics Event: user_sign_in', { method: 'google' });
+    return { user: result.user };
+  } catch (error) {
+    console.error('Error signing in with Google:', error);
+    throw new Error('Failed to sign in with Google');
+  }
+}
+
+export async function signOut(): Promise<void> {
+  try {
+    await firebaseSignOut(auth);
+    console.log('📊 Analytics Event: user_sign_out');
+  } catch (error) {
+    console.error('Error signing out:', error);
+    throw new Error('Failed to sign out');
+  }
+}
+
+// User profile functions
+export async function createOrUpdateUserProfile(user: FirebaseUser): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
     
-    if (contributorSnapshot.empty) {
-      // Create new contributor
-      await addDoc(collection(db, COLLECTIONS.CONTRIBUTORS), {
-        name: physicianName,
-        institution,
-        specialty,
-        submissionCount: 1,
-        lastSubmission: Timestamp.now(),
-        attributionConsent: true, // Default to true, can be updated later
-      });
-    } else {
-      // Update existing contributor
-      const contributorDoc = contributorSnapshot.docs[0];
-      const currentData = contributorDoc.data();
+    if (!userDoc.exists()) {
+      // Create new profile
+      const profile: UserProfile = {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        role: 'physician',
+        institution: '',
+        specialty: '',
+        location: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       
-      await updateDoc(doc(db, COLLECTIONS.CONTRIBUTORS, contributorDoc.id), {
-        submissionCount: currentData.submissionCount + 1,
-        lastSubmission: Timestamp.now(),
-      });
+      await setDoc(userRef, profile);
     }
   } catch (error) {
-    console.error('Error updating contributor stats:', error);
+    console.error('Error creating/updating user profile:', error);
+    throw new Error('Failed to create user profile');
   }
 }
 
-// Get dashboard analytics
-export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   try {
-    const submissions = await getClinicalLogicSubmissions();
+    const cacheKey = `userProfile_${uid}`;
+    const cached = cache.get(cacheKey);
     
-    // Calculate analytics
-    const totalSubmissions = submissions.length;
-    const averageOnsetAge = submissions.length > 0 
-      ? submissions.reduce((sum, sub) => sum + sub.typicalOnsetAge, 0) / submissions.length 
-      : 0;
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
     
-    // Calculate comorbidity frequency
-    const comorbidityCounts: { [key: string]: number } = {};
-    submissions.forEach(sub => {
-      if (sub.commonComorbidities) {
-        sub.commonComorbidities.forEach(comorbidity => {
-          comorbidityCounts[comorbidity] = (comorbidityCounts[comorbidity] || 0) + 1;
-        });
-      }
-    });
+    const userRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userRef);
     
-    const mostCommonComorbidities = Object.entries(comorbidityCounts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-    
-    // Calculate location distribution
-    const urbanCount = submissions.filter(sub => sub.urbanRuralBias === 'Urban').length;
-    const ruralCount = submissions.filter(sub => sub.urbanRuralBias === 'Rural').length;
-    
-    // Calculate disease type distribution
-    const diseaseTypeCounts: { [key: string]: number } = {};
-    submissions.forEach(sub => {
-      diseaseTypeCounts[sub.diseaseType] = (diseaseTypeCounts[sub.diseaseType] || 0) + 1;
-    });
-    
-    const diseaseTypeDistribution = Object.entries(diseaseTypeCounts)
-      .map(([type, count]) => ({ type, count }))
-      .sort((a, b) => b.count - a.count);
-    
-    return {
-      totalSubmissions,
-      averageOnsetAge: Math.round(averageOnsetAge * 10) / 10,
-      mostCommonComorbidities,
-      submissionLocations: {
-        urban: urbanCount,
-        rural: ruralCount,
-      },
-      diseaseTypeDistribution,
-    };
-  } catch (error) {
-    console.error('Error calculating analytics:', error);
-    throw new Error('Failed to calculate analytics');
-  }
-}
-
-// Export data as JSON
-export async function exportData(): Promise<string> {
-  try {
-    const submissions = await getClinicalLogicSubmissions();
-    const contributors = await getContributors();
-    const analytics = await getDashboardAnalytics();
-    
-    const exportData = {
-      submissions,
-      contributors,
-      analytics,
-      exportDate: new Date().toISOString(),
-      version: '1.0.0',
-    };
-    
-    return JSON.stringify(exportData, null, 2);
-  } catch (error) {
-    console.error('Error exporting data:', error);
-    throw new Error('Failed to export data');
-  }
-}
-
-// Get contributor by ID
-export async function getContributorById(id: string): Promise<Contributor | null> {
-  try {
-    const docRef = doc(db, COLLECTIONS.CONTRIBUTORS, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        ...data,
-        lastSubmission: data.lastSubmission.toDate(),
-      } as Contributor;
+    if (userDoc.exists()) {
+      const profile = userDoc.data() as UserProfile;
+      
+      // Cache the profile
+      cache.set(cacheKey, {
+        data: profile,
+        timestamp: Date.now()
+      });
+      
+      return profile;
     }
     
     return null;
   } catch (error) {
-    console.error('Error fetching contributor:', error);
-    throw new Error('Failed to fetch contributor');
+    console.error('Error fetching user profile:', error);
+    throw new Error('Failed to fetch user profile');
   }
 }
 
-// Update contributor attribution consent
-export async function updateAttributionConsent(
-  contributorId: string, 
-  consent: boolean
-): Promise<void> {
+export async function updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
   try {
-    const docRef = doc(db, COLLECTIONS.CONTRIBUTORS, contributorId);
-    await updateDoc(docRef, {
-      attributionConsent: consent,
-      updatedAt: Timestamp.now(),
-    });
-  } catch (error) {
-    console.error('Error updating attribution consent:', error);
-    throw new Error('Failed to update attribution consent');
-  }
-} 
-
-// Get clinical logic submissions by physician name
-export async function getClinicalLogicByPhysician(physicianName: string): Promise<ClinicalLogic[]> {
-  try {
-    const q = query(
-      collection(db, COLLECTIONS.CLINICAL_LOGIC),
-      where('physicianName', '==', physicianName),
-      orderBy('submissionDate', 'desc')
-    );
-    
-    const querySnapshot = await getDocs(q);
-    const submissions: ClinicalLogic[] = [];
-    
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      submissions.push({
-        ...data,
-        submissionDate: data.submissionDate.toDate(),
-      } as ClinicalLogic);
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, {
+      ...updates,
+      updatedAt: new Date()
     });
     
-    return submissions;
+    // Clear cache for this user
+    cache.delete(`userProfile_${uid}`);
+    
+    console.log('📊 Analytics Event: profile_updated', { fields: Object.keys(updates) });
   } catch (error) {
-    console.error('Error fetching clinical logic by physician:', error);
-    throw new Error('Failed to fetch clinical logic by physician');
+    console.error('Error updating user profile:', error);
+    throw new Error('Failed to update user profile');
   }
 }
 
-// Real-time data listeners
-export function subscribeToClinicalLogic(
-  callback: (submissions: ClinicalLogic[]) => void,
-  errorCallback?: (error: Error) => void
-): () => void {
-  try {
-    const q = query(
-      collection(db, COLLECTIONS.CLINICAL_LOGIC),
-      orderBy('submissionDate', 'desc')
-    );
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const submissions: ClinicalLogic[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        submissions.push({
-          ...data,
-          submissionDate: data.submissionDate.toDate(),
-        } as ClinicalLogic);
-      });
-      
-      // Update cache with real-time data
-      setCachedData('clinical_logic_submissions', submissions);
-      callback(submissions);
-    }, (error) => {
-      console.error('Real-time listener error:', error);
-      if (errorCallback) {
-        errorCallback(error);
-      }
-    });
-    
-    return unsubscribe;
-  } catch (error) {
-    console.error('Error setting up real-time listener:', error);
-    if (errorCallback) {
-      errorCallback(error as Error);
-    }
-    return () => {}; // Return empty unsubscribe function
-  }
+// Auth state listener
+export function onAuthStateChange(callback: (user: FirebaseUser | null) => void) {
+  return onAuthStateChanged(auth, callback);
 }
 
-// Real-time contributor updates
-export function subscribeToContributors(
-  callback: (contributors: Contributor[]) => void,
-  errorCallback?: (error: Error) => void
-): () => void {
-  try {
-    const q = query(
-      collection(db, COLLECTIONS.CONTRIBUTORS),
-      orderBy('lastSubmission', 'desc')
-    );
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const contributors: Contributor[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        contributors.push({
-          id: doc.id,
-          ...data,
-          lastSubmission: data.lastSubmission.toDate(),
-        } as Contributor);
-      });
-      
-      // Update cache with real-time data
-      setCachedData('contributors', contributors);
-      callback(contributors);
-    }, (error) => {
-      console.error('Real-time contributor listener error:', error);
-      if (errorCallback) {
-        errorCallback(error);
-      }
-    });
-    
-    return unsubscribe;
-  } catch (error) {
-    console.error('Error setting up contributor listener:', error);
-    if (errorCallback) {
-      errorCallback(error as Error);
-    }
-    return () => {}; // Return empty unsubscribe function
-  }
+// Get current user
+export function getCurrentUser(): FirebaseUser | null {
+  return auth.currentUser;
 }
 
 // Performance monitoring
-export const getConnectionStatus = () => {
+export function getPerformanceMetrics() {
   return {
-    isConnected: true, // This would be updated by the connection management
     cacheSize: cache.size,
-    cacheKeys: Array.from(cache.keys())
+    cacheKeys: Array.from(cache.keys()),
+    isConnected,
+    timestamp: Date.now()
   };
-};
-
-// Clear cache function for manual cache management
-export const clearFirebaseCache = () => {
-  clearCache();
-}; 
+} 

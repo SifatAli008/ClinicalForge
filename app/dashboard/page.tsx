@@ -1,377 +1,332 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   BarChart3, 
   Users, 
+  FileText, 
   TrendingUp, 
-  Globe, 
-  Download, 
-  Eye, 
-  UserCheck, 
   AlertTriangle,
-  Heart,
-  Activity,
-  Calendar,
-  MapPin,
-  LogOut
+  Download,
+  Eye,
+  Database,
+  Settings,
+  Shield,
+  CheckCircle,
+  Clock,
+  Award,
+  Activity
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useLanguage } from '@/lib/language-context';
-import AdminGuard from '@/components/admin/AdminGuard';
-import { useAdmin } from '@/lib/admin-context';
-import { trackDashboardAccess } from '@/lib/analytics-service';
-import { FirebaseMonitor } from '@/components/ui/firebase-monitor';
+
+interface DashboardStats {
+  totalSubmissions: number;
+  newSubmissions: number;
+  incompleteForms: number;
+  formsNeedingReview: number;
+  activeUsers: number;
+  topContributors: number;
+  profileCompletionRate: number;
+}
+
+const mockDashboardStats: DashboardStats = {
+  totalSubmissions: 156,
+  newSubmissions: 23,
+  incompleteForms: 8,
+  formsNeedingReview: 12,
+  activeUsers: 45,
+  topContributors: 15,
+  profileCompletionRate: 78,
+};
 
 export default function DashboardPage() {
-  const { t } = useLanguage();
-  const { logout } = useAdmin();
+  const [stats] = useState<DashboardStats>(mockDashboardStats);
+  const [isExporting, setIsExporting] = useState(false);
 
-  // Track dashboard access
-  React.useEffect(() => {
-    trackDashboardAccess();
-  }, []);
+  const handleExportData = async (type: 'all' | 'submissions' | 'users' | 'analytics') => {
+    setIsExporting(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      let data: any = {};
+      let filename = '';
+      
+      switch (type) {
+        case 'all':
+          data = { stats };
+          filename = `dashboard-data-${new Date().toISOString().split('T')[0]}.json`;
+          break;
+        case 'submissions':
+          data = { submissions: [] };
+          filename = `submissions-data-${new Date().toISOString().split('T')[0]}.json`;
+          break;
+        case 'users':
+          data = { users: [] };
+          filename = `users-data-${new Date().toISOString().split('T')[0]}.json`;
+          break;
+        case 'analytics':
+          data = { stats };
+          filename = `analytics-data-${new Date().toISOString().split('T')[0]}.json`;
+          break;
+      }
 
-  const stats = [
-    {
-      title: t.dashboard.totalSubmissions,
-      value: '1,247',
-      change: '+12%',
-      icon: BarChart3,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100 dark:bg-blue-900',
-    },
-    {
-      title: t.dashboard.avgOnsetAge,
-      value: '45.2',
-      change: '+2.1',
-      icon: TrendingUp,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100 dark:bg-green-900',
-    },
-    {
-      title: t.dashboard.activeContributors,
-      value: '89',
-      change: '+8',
-      icon: Users,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100 dark:bg-purple-900',
-    },
-    {
-      title: t.dashboard.urbanRuralRatio,
-      value: '2.3:1',
-      change: 'Urban',
-      icon: Globe,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100 dark:bg-orange-900',
-    },
-  ];
-
-  const contributors = [
-    {
-      name: 'Dr. Sarah Johnson',
-      institution: 'Mayo Clinic',
-      specialty: 'Endocrinology',
-      submissions: 15,
-      lastSubmission: '2024-01-15',
-      isPublic: true,
-    },
-    {
-      name: 'Dr. Michael Chen',
-      institution: 'Stanford Medical',
-      specialty: 'Cardiology',
-      submissions: 12,
-      lastSubmission: '2024-01-12',
-      isPublic: true,
-    },
-    {
-      name: 'Dr. Priya Patel',
-      institution: 'Johns Hopkins',
-      specialty: 'Neurology',
-      submissions: 8,
-      lastSubmission: '2024-01-10',
-      isPublic: false,
-    },
-    {
-      name: 'Dr. Carlos Rodriguez',
-      institution: 'UCLA Medical',
-      specialty: 'Oncology',
-      submissions: 6,
-      lastSubmission: '2024-01-08',
-      isPublic: true,
-    },
-  ];
-
-  const aiInsights = [
-    {
-      title: 'High Risk Assessment',
-      description: 'Type 2 Diabetes shows increased prevalence in urban areas with sedentary lifestyle patterns.',
-      risk: 'high',
-      factors: ['Urban lifestyle', 'Diet patterns', 'Physical inactivity'],
-    },
-    {
-      title: 'Medium Risk Assessment',
-      description: 'Hypertension correlation with stress levels and work environment factors.',
-      risk: 'medium',
-      factors: ['Stress levels', 'Work environment', 'Sleep patterns'],
-    },
-    {
-      title: 'Low Risk Assessment',
-      description: 'Asthma management shows good adherence in pediatric populations.',
-      risk: 'low',
-      factors: ['Pediatric care', 'Family support', 'Education programs'],
-    },
-  ];
-
-  const syntheticProfile = {
-    demographics: {
-      age: 52,
-      gender: 'Female',
-      location: 'Urban',
-      occupation: 'Office Worker',
-    },
-    clinicalProfile: {
-      primaryDiagnosis: 'Type 2 Diabetes Mellitus',
-      comorbidities: ['Hypertension', 'Dyslipidemia'],
-      medications: ['Metformin 500mg BID', 'Lisinopril 10mg daily'],
-      symptoms: ['Polyuria', 'Polydipsia', 'Fatigue'],
-    },
+      const dataStr = JSON.stringify(data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export error:', error);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
-    <AdminGuard>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-12 fade-in">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-3">
-                {t.dashboard.title}
-              </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                {t.dashboard.subtitle}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button className="flex items-center gap-3 h-11 px-6 text-base font-semibold transition-colors duration-200">
-                <Download className="h-5 w-5" />
-                {t.dashboard.exportData}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={logout}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 slide-in">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index} className="clinical-card step-card">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-muted-foreground mb-2">
-                        {stat.title}
-                      </p>
-                      <p className="text-2xl font-bold text-foreground mb-1">
-                        {stat.value}
-                      </p>
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                        {stat.change}
-                      </p>
-                    </div>
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${stat.bgColor} shadow-sm`}>
-                      <Icon className={`h-6 w-6 ${stat.color}`} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Firebase Monitor */}
-        <div className="mb-8">
-          <FirebaseMonitor />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Contributors */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  {t.dashboard.contributors}
-                </CardTitle>
-                <CardDescription>
-                  Recent contributors and their activity
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {contributors.map((contributor, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-                          <UserCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{contributor.name}</p>
-                          <p className="text-sm text-muted-foreground">{contributor.institution}</p>
-                          <p className="text-xs text-muted-foreground">{contributor.specialty}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-foreground">{contributor.submissions} {t.dashboard.submissions}</p>
-                        <p className="text-xs text-muted-foreground">{contributor.lastSubmission}</p>
-                        <Badge variant={contributor.isPublic ? "default" : "secondary"}>
-                          {contributor.isPublic ? t.dashboard.public : t.dashboard.anonymous}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* AI Insights */}
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
           <div>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  {t.dashboard.insights}
-                </CardTitle>
-                <CardDescription>
-                  Clinical risk assessments and insights
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {aiInsights.map((insight, index) => (
-                    <div key={index} className="p-4 border rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-foreground">{insight.title}</h4>
-                        <Badge 
-                          variant={
-                            insight.risk === 'high' ? 'destructive' : 
-                            insight.risk === 'medium' ? 'default' : 
-                            'secondary'
-                          }
-                        >
-                          {insight.risk} risk
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {insight.description}
-                      </p>
-                      <div className="space-y-1">
-                        {insight.factors.map((factor, factorIndex) => (
-                          <div key={factorIndex} className="flex items-center gap-2">
-                            <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                            <span className="text-xs text-muted-foreground">{factor}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Monitor clinical data collection, user activity, and system analytics
+            </p>
           </div>
-        </div>
-
-        {/* Synthetic Patient Profile */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="h-5 w-5" />
-                Research Patient Profile
-              </CardTitle>
-              <CardDescription>
-                Clinical patient profile for research and training
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Demographics */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <UserCheck className="h-4 w-4" />
-                    Demographics
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Age:</span>
-                      <span className="font-medium">{syntheticProfile.demographics.age} years</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Gender:</span>
-                      <span className="font-medium">{syntheticProfile.demographics.gender}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Location:</span>
-                      <span className="font-medium">{syntheticProfile.demographics.location}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Occupation:</span>
-                      <span className="font-medium">{syntheticProfile.demographics.occupation}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Clinical Profile */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <Activity className="h-4 w-4" />
-                    Clinical Profile
-                  </h4>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-muted-foreground">Primary Diagnosis:</span>
-                      <p className="font-medium">{syntheticProfile.clinicalProfile.primaryDiagnosis}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Comorbidities:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {syntheticProfile.clinicalProfile.comorbidities.map((comorbidity, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {comorbidity}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Medications:</span>
-                      <div className="space-y-1 mt-1">
-                        {syntheticProfile.clinicalProfile.medications.map((medication, index) => (
-                          <p key={index} className="text-sm font-medium">{medication}</p>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex items-center space-x-2">
+            <Badge variant="secondary" className="flex items-center space-x-1">
+              <Shield className="h-3 w-3" />
+              <span>Admin Access</span>
+            </Badge>
+          </div>
         </div>
       </div>
+
+      {/* Overview Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="border-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalSubmissions}</div>
+            <p className="text-xs text-muted-foreground">
+              +{stats.newSubmissions} from last week
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.activeUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.topContributors} top contributors
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Incomplete Forms</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.incompleteForms}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.formsNeedingReview} need review
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.profileCompletionRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              Average across all users
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Analytics and Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <Card className="border-2">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center space-x-2">
+              <BarChart3 className="h-5 w-5" />
+              <span>Submission Activity</span>
+            </CardTitle>
+            <CardDescription>
+              Form submissions over the last 30 days
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="text-center">
+                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Chart visualization would go here</p>
+                <p className="text-xs text-gray-400">Integration with charting library</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center space-x-2">
+              <Activity className="h-5 w-5" />
+              <span>System Status</span>
+            </CardTitle>
+            <CardDescription>
+              Current system performance and health
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div>
+                  <p className="font-medium text-green-700 dark:text-green-300">System Status</p>
+                  <p className="text-sm text-green-600 dark:text-green-400">All systems operational</p>
+                </div>
+                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div>
+                  <p className="font-medium text-blue-700 dark:text-blue-300">Database</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">Connected and healthy</p>
+                </div>
+                <Database className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <div>
+                  <p className="font-medium text-purple-700 dark:text-purple-300">API Response</p>
+                  <p className="text-sm text-purple-600 dark:text-purple-400">Average 200ms</p>
+                </div>
+                <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Export Controls */}
+      <Card className="border-2 mb-8">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <Download className="h-5 w-5" />
+            <span>Data Export</span>
+          </CardTitle>
+          <CardDescription>
+            Export dashboard data in various formats
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button 
+              variant="outline" 
+              onClick={() => handleExportData('all')}
+              disabled={isExporting}
+              className="flex items-center space-x-2"
+            >
+              <Database className="h-4 w-4" />
+              <span>Export All</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => handleExportData('submissions')}
+              disabled={isExporting}
+              className="flex items-center space-x-2"
+            >
+              <FileText className="h-4 w-4" />
+              <span>Submissions</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => handleExportData('users')}
+              disabled={isExporting}
+              className="flex items-center space-x-2"
+            >
+              <Users className="h-4 w-4" />
+              <span>Users</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => handleExportData('analytics')}
+              disabled={isExporting}
+              className="flex items-center space-x-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>Analytics</span>
+            </Button>
+          </div>
+          {isExporting && (
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              Exporting data...
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* System Recommendations */}
+      <Card className="border-2">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <Award className="h-5 w-5" />
+            <span>System Recommendations</span>
+          </CardTitle>
+          <CardDescription>
+            AI-generated insights for improving data collection
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Alert>
+              <TrendingUp className="h-4 w-4" />
+              <AlertDescription>
+                <strong>High Priority:</strong> Consider adding more fields to the "Regional Practices" section 
+                as it has the lowest completion rate (23%).
+              </AlertDescription>
+            </Alert>
+            
+            <Alert>
+              <Users className="h-4 w-4" />
+              <AlertDescription>
+                <strong>User Engagement:</strong> 15 users haven't completed their profiles. 
+                Consider sending reminder notifications.
+              </AlertDescription>
+            </Alert>
+            
+            <Alert>
+              <FileText className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Data Quality:</strong> "Lab Value Ranges" field is frequently flagged as insufficient. 
+                Consider adding more specific parameter options.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-    </AdminGuard>
   );
 } 

@@ -26,18 +26,10 @@ import {
 
 interface DoctorProfileData {
   displayName: string;
-  username: string;
-  email: string;
-  phoneNumber: string;
   designation: string;
-  institution: string;
-  specialty: string;
-  role: 'physician' | 'researcher' | 'student' | 'other';
-  experience: number;
   bio: string;
-  location: string;
-  certifications: string[];
   education: string;
+  certifications: string[];
   researchInterests: string[];
   publications: number;
   patientsSeen: number;
@@ -59,18 +51,10 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
   const setIsEditing = externalSetIsEditing || setInternalIsEditing;
   const [formData, setFormData] = useState<DoctorProfileData>({
     displayName: 'Dr. Sarah Johnson',
-    username: 'sarah.johnson',
-    email: 'sarah.johnson@mayoclinic.com',
-    phoneNumber: '+1 (555) 123-4567',
     designation: 'Senior Endocrinologist',
-    institution: 'Mayo Clinic',
-    specialty: 'Endocrinology',
-    role: 'physician',
-    experience: 15,
     bio: 'Experienced endocrinologist specializing in diabetes management and metabolic disorders. Passionate about clinical research and patient care.',
-    location: 'Rochester, MN',
-    certifications: ['Board Certified Endocrinology', 'Diabetes Management Specialist', 'Clinical Research Certification'],
     education: 'MD - Harvard Medical School, Residency - Johns Hopkins',
+    certifications: ['Board Certified Endocrinology', 'Diabetes Management Specialist', 'Clinical Research Certification'],
     researchInterests: ['Type 2 Diabetes', 'Metabolic Syndrome', 'Precision Medicine'],
     publications: 45,
     patientsSeen: 2500,
@@ -160,7 +144,7 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
             {isEditing ? (
               <div className="relative">
                 <img
-                  src={formData.profilePicture || '/default-avatar.png'}
+                  src={formData.profilePicture || '/default-avatar.svg'}
                   alt={formData.displayName}
                   className="w-20 h-20 rounded-full object-cover border-2 border-slate-200"
                 />
@@ -181,7 +165,7 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
               </div>
             ) : (
               <img
-                src={formData.profilePicture || '/default-avatar.png'}
+                src={formData.profilePicture || '/default-avatar.svg'}
                 alt={formData.displayName}
                 className="w-20 h-20 rounded-full object-cover"
               />
@@ -200,11 +184,11 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
             )}
             <div className="flex items-center space-x-2 mt-1">
               <Building className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{formData.institution}</span>
+              <span className="text-sm text-muted-foreground">{formData.designation}</span>
             </div>
             <div className="flex items-center space-x-2 mt-1">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{formData.location}</span>
+              <span className="text-sm text-muted-foreground">{formData.designation}</span>
             </div>
           </div>
         </div>
@@ -212,70 +196,26 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{formData.experience}</div>
-            <div className="text-xs text-muted-foreground">Years Experience</div>
-          </div>
-          <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{formData.publications}</div>
+            <div className="text-2xl font-bold text-blue-600">{formData.publications}</div>
             <div className="text-xs text-muted-foreground">Publications</div>
           </div>
-          <div className="text-center p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">{formData.patientsSeen}</div>
+          <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">{formData.patientsSeen}</div>
             <div className="text-xs text-muted-foreground">Patients Seen</div>
           </div>
-          <div className="text-center p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
-            <div className="text-2xl font-bold text-orange-600">{formData.certifications.length}</div>
+          <div className="text-center p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+            <div className="text-2xl font-bold text-purple-600">{formData.certifications.length}</div>
             <div className="text-xs text-muted-foreground">Certifications</div>
+          </div>
+          <div className="text-center p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+            <div className="text-2xl font-bold text-orange-600">{formData.researchInterests.length}</div>
+            <div className="text-xs text-muted-foreground">Research Interests</div>
           </div>
         </div>
 
         {/* Profile Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="username">Username</Label>
-              {isEditing ? (
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="Your username"
-                />
-              ) : (
-                <p className="text-sm font-medium">{formData.username}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="email">Email</Label>
-              {isEditing ? (
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Your email"
-                />
-              ) : (
-                <p className="text-sm">{formData.email}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="phoneNumber">Phone Number</Label>
-              {isEditing ? (
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  placeholder="Your phone number"
-                />
-              ) : (
-                <p className="text-sm">{formData.phoneNumber}</p>
-              )}
-            </div>
-
             <div>
               <Label htmlFor="designation">Designation</Label>
               {isEditing ? (
@@ -290,89 +230,6 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
               )}
             </div>
 
-            <div>
-              <Label htmlFor="institution">Institution</Label>
-              {isEditing ? (
-                <Input
-                  id="institution"
-                  value={formData.institution}
-                  onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                  placeholder="Your institution"
-                />
-              ) : (
-                <p className="text-sm">{formData.institution}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="specialty">Specialty</Label>
-              {isEditing ? (
-                <Input
-                  id="specialty"
-                  value={formData.specialty}
-                  onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                  placeholder="Your specialty"
-                />
-              ) : (
-                <p className="text-sm font-medium">{formData.specialty}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="role">Role</Label>
-              {isEditing ? (
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData({ ...formData, role: value as DoctorProfileData['role'] })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="physician">Physician</SelectItem>
-                    <SelectItem value="researcher">Researcher</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="text-sm capitalize">{formData.role}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="experience">Years of Experience</Label>
-              {isEditing ? (
-                <Input
-                  id="experience"
-                  type="number"
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
-                  placeholder="Years of experience"
-                />
-              ) : (
-                <p className="text-sm">{formData.experience} years</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="location">Location</Label>
-              {isEditing ? (
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="Your location"
-                />
-              ) : (
-                <p className="text-sm">{formData.location}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-4">
             <div>
               <Label htmlFor="education">Education</Label>
               {isEditing ? (
@@ -426,6 +283,46 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
               )}
             </div>
           </div>
+
+          <div className="space-y-4">
+            <div>
+              <Label>Research Interests</Label>
+              {isEditing ? (
+                <div className="space-y-2">
+                  {formData.researchInterests.map((interest, index) => (
+                    <Input
+                      key={index}
+                      value={interest}
+                      onChange={(e) => {
+                        const newInterests = [...formData.researchInterests];
+                        newInterests[index] = e.target.value;
+                        setFormData({ ...formData, researchInterests: newInterests });
+                      }}
+                      placeholder="Research interest"
+                    />
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFormData({
+                      ...formData,
+                      researchInterests: [...formData.researchInterests, '']
+                    })}
+                  >
+                    Add Research Interest
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {formData.researchInterests.map((interest, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {interest}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Bio */}
@@ -441,45 +338,6 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
             />
           ) : (
             <p className="text-sm text-muted-foreground">{formData.bio}</p>
-          )}
-        </div>
-
-        {/* Research Interests */}
-        <div>
-          <Label>Research Interests</Label>
-          {isEditing ? (
-            <div className="space-y-2">
-              {formData.researchInterests.map((interest, index) => (
-                <Input
-                  key={index}
-                  value={interest}
-                  onChange={(e) => {
-                    const newInterests = [...formData.researchInterests];
-                    newInterests[index] = e.target.value;
-                    setFormData({ ...formData, researchInterests: newInterests });
-                  }}
-                  placeholder="Research interest"
-                />
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setFormData({
-                  ...formData,
-                  researchInterests: [...formData.researchInterests, '']
-                })}
-              >
-                Add Research Interest
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-1">
-              {formData.researchInterests.map((interest, index) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {interest}
-                </Badge>
-              ))}
-            </div>
           )}
         </div>
       </CardContent>

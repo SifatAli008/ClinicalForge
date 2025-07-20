@@ -1,369 +1,441 @@
 'use client';
 
-import React from 'react';
-import { useAuth } from '@/lib/auth-context';
-import { useAdmin } from '@/lib/admin-context';
-import { UserProfile } from '@/components/auth/UserProfile';
-import { DoctorProfile } from '@/components/auth/DoctorProfile';
-import { LoginButton } from '@/components/auth/LoginButton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  Loader2, 
-  Shield, 
   User, 
-  Stethoscope, 
-  Building, 
-  MapPin, 
-  Calendar,
-  Award,
-  Activity,
-  Settings,
-  LogOut,
-  Phone,
   Edit,
   Save,
-  X
+  Download, 
+  FileText,
+  Clock, 
+  CheckCircle,
+  AlertCircle,
+  Activity,
+  Award,
+  Building,
+  Phone,
+  MapPin,
+  GraduationCap,
+  ArrowLeft
 } from 'lucide-react';
-import { trackProfileAccess } from '@/lib/analytics-service';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  photo: string;
+  bio: string;
+  expertise: string[];
+  institution: string;
+  contact: string;
+  location: string;
+  qualifications: string;
+  joinedDate: string;
+  formsCompleted: number;
+  formsIncomplete: number;
+  totalContributions: number;
+  completionRate: number;
+}
 
 export default function ProfilePage() {
-  const { user, userProfile, loading: authLoading, profileLoading, signOut, updateProfile } = useAuth();
-  const { isAuthenticated, loading: adminLoading, logout: adminLogout } = useAdmin();
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const router = useRouter();
+  const { user, userProfile, loading, updateProfile, profileLoading } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // Track profile access
-  React.useEffect(() => {
-    if (user || isAuthenticated) {
-      trackProfileAccess();
+  // Initialize profile from real user data
+  useEffect(() => {
+    if (user && userProfile) {
+      const realProfile: UserProfile = {
+        id: user.uid,
+        name: user.displayName || userProfile.displayName || 'User',
+        email: user.email || userProfile.email || '',
+        photo: user.photoURL || userProfile.avatarUrl || '/default-avatar.svg',
+        bio: userProfile.bio || 'No bio available',
+        expertise: userProfile.specialty ? [userProfile.specialty] : ['General Medicine'],
+        institution: userProfile.institution || 'Not specified',
+        contact: userProfile.phoneNumber || 'Not provided',
+        location: userProfile.location || 'Not specified',
+        qualifications: userProfile.designation || 'Medical Professional',
+        joinedDate: userProfile.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : 'Recently',
+        formsCompleted: 0, // Will be updated with real data
+        formsIncomplete: 0, // Will be updated with real data
+        totalContributions: 0, // Will be updated with real data
+        completionRate: 0, // Will be updated with real data
+      };
+      setProfile(realProfile);
+      setEditedProfile(realProfile);
     }
-  }, [user, isAuthenticated]);
+  }, [user, userProfile]);
 
-  const handleLogout = async () => {
-    try {
-      if (isAuthenticated) {
-        adminLogout();
-      } else if (user) {
-        await signOut();
-      }
-    } catch (error) {
-      console.error('Logout failed:', error);
+  const handleEdit = () => {
+    if (profile) {
+      setIsEditing(true);
+      setEditedProfile(profile);
+      setSaveMessage(null);
     }
   };
 
   const handleSave = async () => {
+    if (!editedProfile || !user) return;
+    
+    setIsSaving(true);
     try {
-      setIsLoading(true);
-      // The save logic is handled by the UserProfile component
-      // We just need to close the editing mode
+      // Update profile in Firebase
+          await updateProfile({
+        displayName: editedProfile.name,
+        bio: editedProfile.bio,
+        institution: editedProfile.institution,
+        location: editedProfile.location,
+        specialty: editedProfile.expertise.join(', '),
+        designation: editedProfile.qualifications,
+        phoneNumber: editedProfile.contact,
+      });
+      
+      setProfile(editedProfile);
       setIsEditing(false);
+      setSaveMessage('Profile updated successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
-      console.error('Failed to save profile:', error);
+      console.error('Save error:', error);
+      setSaveMessage('Failed to update profile. Please try again.');
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleProfileSave = async () => {
-    try {
-      setIsLoading(true);
-      // This will be called by the UserProfile component when it saves
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to save profile:', error);
-    } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
-    setIsEditing(false);
+    if (profile) {
+      setIsEditing(false);
+      setEditedProfile(profile);
+      setSaveMessage(null);
+    }
   };
 
+  const handleInputChange = (field: keyof UserProfile, value: string | string[]) => {
+    if (editedProfile) {
+      setEditedProfile(prev => prev ? ({
+        ...prev,
+        [field]: value,
+      }) : null);
+    }
+  };
 
-  if (authLoading || adminLoading) {
+  const handleDownloadData = async () => {
+    if (!profile) return;
+    
+    setIsDownloading(true);
+    try {
+      // Simulate API call to get user data
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const userData = {
+        profile,
+        user: user,
+        userProfile: userProfile,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Create and download JSON file
+      const dataStr = JSON.stringify(userData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `clinical-data-${profile.id}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // Show loading state
+  if (loading || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading state while userProfile is being fetched
-  if (user && profileLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading profile data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user && !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 mb-4">
-              <Stethoscope className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-            </div>
-            <CardTitle className="text-2xl font-bold">Doctor Login Required</CardTitle>
-            <p className="text-muted-foreground">
-              Please sign in to access your doctor profile and clinical data.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <LoginButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold">Doctor Profile</h1>
-                {isAuthenticated && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <Shield className="h-3 w-3" />
-                    Admin
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading profile...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no user
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">Profile Not Available</CardTitle>
+              <CardDescription className="text-center">
+                Please sign in to view your profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <Link href="/">
+                <Button>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Home
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+    return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link href="/" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Home</span>
+              </Link>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" onClick={handleDownloadData} disabled={isDownloading}>
+                <Download className="h-4 w-4 mr-2" />
+                {isDownloading ? 'Downloading...' : 'Download Data'}
+              </Button>
+            </div>
+          </div>
+      </div>
+
+        {/* Success/Error Message */}
+        {saveMessage && (
+          <Alert className={`mb-6 ${saveMessage.includes('successfully') ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>{saveMessage}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Profile Overview */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <img 
+                    src={profile.photo} 
+                    alt={profile.name}
+                    className="w-20 h-20 rounded-full border-4 border-white shadow-lg"
+                  />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <CheckCircle className="h-3 w-3 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold">{profile.name}</h1>
+                  <p className="text-muted-foreground">{profile.email}</p>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Badge variant="secondary" className="flex items-center space-x-1">
+                      <Building className="h-3 w-3" />
+                      <span>{profile.institution}</span>
                   </Badge>
-                )}
-                {user && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    Doctor
+                    <Badge variant="outline" className="flex items-center space-x-1">
+                      <MapPin className="h-3 w-3" />
+                      <span>{profile.location}</span>
                   </Badge>
-                )}
-                {isEditing && (
-                  <Badge variant="default" className="flex items-center gap-1 bg-orange-500">
-                    <Edit className="h-3 w-3" />
-                    Editing
-                  </Badge>
-                )}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center space-x-2">
                 {!isEditing ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <Edit className="h-4 w-4" />
+                  <Button onClick={handleEdit} variant="outline" disabled={profileLoading}>
+                    <Edit className="h-4 w-4 mr-2" />
                     Edit Profile
                   </Button>
                 ) : (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={handleCancel}
-                      disabled={isLoading}
-                      className="flex items-center gap-2"
-                    >
-                      <X className="h-4 w-4" />
-                      Cancel Edit
+                  <div className="flex items-center space-x-2">
+                    <Button onClick={handleSave} disabled={isSaving || profileLoading}>
+                      <Save className="h-4 w-4 mr-2" />
+                      {isSaving ? 'Saving...' : 'Save Changes'}
                     </Button>
-                    <Button
-                      onClick={handleSave}
-                      disabled={isLoading}
-                      className="flex items-center gap-2"
-                    >
-                      <Save className="h-4 w-4" />
-                      Save Edit
+                    <Button onClick={handleCancel} variant="outline">
+                      Cancel
                     </Button>
-                  </>
+                  </div>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={handleLogout}
-                  className="flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
               </div>
             </div>
-            <p className="text-lg text-muted-foreground">
-              Manage your professional profile, clinical data, and account settings.
-            </p>
-          </div>
+                    </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold mb-2">Bio</h3>
+                                {isEditing ? (
+                  <Textarea
+                    value={editedProfile?.bio || ''}
+                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    rows={4}
+                    className="mb-4"
+                    placeholder="Tell us about your medical expertise and experience..."
+                                  />
+                                ) : (
+                  <p className="text-muted-foreground mb-4">{profile.bio}</p>
+                )}
+                
+                <h3 className="font-semibold mb-2">Qualifications</h3>
+                                {isEditing ? (
+                                  <Input
+                    value={editedProfile?.qualifications || ''}
+                    onChange={(e) => handleInputChange('qualifications', e.target.value)}
+                    className="mb-4"
+                    placeholder="e.g., MBBS, MD, PhD, etc."
+                                  />
+                                ) : (
+                  <p className="text-muted-foreground mb-4">{profile.qualifications}</p>
+                )}
+                
+                <h3 className="font-semibold mb-2">Contact Information</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{profile.contact}</span>
+                              </div>
+                  <div className="flex items-center space-x-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{profile.location}</span>
+                              </div>
+                            </div>
+                          </div>
+              
+                              <div>
+                <h3 className="font-semibold mb-2">Expertise</h3>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {profile.expertise.map((skill, index) => (
+                    <Badge key={index} variant="secondary">
+                      {skill}
+                    </Badge>
+                  ))}
+                              </div>
+                
+                <h3 className="font-semibold mb-2">Member Since</h3>
+                <p className="text-muted-foreground mb-4">{profile.joinedDate}</p>
+                              </div>
+                            </div>
+          </CardContent>
+        </Card>
 
-          <div className="grid gap-8 lg:grid-cols-3">
-            {/* Main Profile Section */}
-            <div className="lg:col-span-2">
-              {isAuthenticated ? (
-                <DoctorProfile isEditing={isEditing} setIsEditing={setIsEditing} />
-              ) : user ? (
-                <UserProfile 
-                  isEditing={isEditing} 
-                  setIsEditing={setIsEditing} 
-                  onSave={handleProfileSave} 
-                />
-              ) : (
-                <Card className="w-full">
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                      <p className="text-muted-foreground">Loading profile...</p>
+        {/* Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Forms Completed</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{profile.formsCompleted}</div>
+              <p className="text-xs text-muted-foreground">
+                Successfully submitted
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Forms Incomplete</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{profile.formsIncomplete}</div>
+              <p className="text-xs text-muted-foreground">
+                Pending completion
+              </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Contributions</CardTitle>
+              <Award className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{profile.totalContributions}</div>
+                          <p className="text-xs text-muted-foreground">
+                Data points contributed
+              </p>
+                    </CardContent>
+                  </Card>
+
+                    <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{profile.completionRate}%</div>
+              <p className="text-xs text-muted-foreground">
+                Average completion
+              </p>
+                      </CardContent>
+                    </Card>
+            </div>
+
+        {/* Recent Activity */}
+              <Card>
+                <CardHeader>
+            <CardTitle className="text-lg flex items-center space-x-2">
+              <Clock className="h-5 w-5" />
+              <span>Recent Activity</span>
+                  </CardTitle>
+            <CardDescription>
+              Your recent form submissions and contributions
+            </CardDescription>
+                </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {profile.totalContributions > 0 ? (
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <h4 className="font-medium">Clinical Data Submission</h4>
+                      <p className="text-sm text-muted-foreground">Your contributions to medical research</p>
                     </div>
-                  </CardContent>
-                </Card>
+                        </div>
+                  <Badge className="bg-green-100 text-green-800">Active</Badge>
+                        </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No recent activity</p>
+                  <p className="text-sm text-muted-foreground">Start contributing to see your activity here</p>
+                      </div>
               )}
             </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-
-              {/* Account Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-semibold leading-none tracking-tight flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Account Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {user ? (
-                    <>
-                      <div className="flex items-center space-x-3">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Username</p>
-                          <p className="text-sm text-muted-foreground">{userProfile?.username || 'Not specified'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Institution</p>
-                          <p className="text-sm text-muted-foreground">{userProfile?.institution || 'Not specified'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Stethoscope className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Specialty</p>
-                          <p className="text-sm text-muted-foreground">{userProfile?.specialty || 'Not specified'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Years of Experience</p>
-                          <p className="text-sm text-muted-foreground">{userProfile?.experience || 0} years</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Location</p>
-                          <p className="text-sm text-muted-foreground">{userProfile?.location || 'Not specified'}</p>
-                        </div>
-                      </div>
-                      <Separator />
-                      <div className="flex items-center space-x-3">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Email</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Phone Number</p>
-                          <p className="text-sm text-muted-foreground">{userProfile?.phoneNumber || 'Not specified'}</p>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center space-x-3">
-                        <Shield className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Account Type</p>
-                          <p className="text-sm text-muted-foreground">Administrator</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Award className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Access Level</p>
-                          <p className="text-sm text-muted-foreground">Full System Access</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Settings className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Authentication</p>
-                          <p className="text-sm text-muted-foreground">Password Protected</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    Recent Activity
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div>
-                      <p className="text-sm font-medium">Diabetes Data Submitted</p>
-                      <p className="text-xs text-muted-foreground">2 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <div>
-                      <p className="text-sm font-medium">Profile Updated</p>
-                      <p className="text-xs text-muted-foreground">1 day ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <div>
-                      <p className="text-sm font-medium">Hypertension Data Added</p>
-                      <p className="text-xs text-muted-foreground">3 days ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <div>
-                      <p className="text-sm font-medium">Research Data Validated</p>
-                      <p className="text-xs text-muted-foreground">1 week ago</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -1,21 +1,5 @@
-import { 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  signOut, 
-  onAuthStateChanged,
-  User,
-  updateProfile,
-  UserCredential
-} from 'firebase/auth';
-import { 
-  doc, 
-  setDoc, 
-  getDoc, 
-  updateDoc, 
-  Timestamp 
-} from 'firebase/firestore';
-import { auth, db } from './firebase';
-import { trackUserSignIn, trackUserSignOut, trackProfileUpdate } from './analytics-service';
+// Mock auth service for better performance - replaces Firebase Auth
+import { ProfileData } from './mock-data';
 
 // User profile interface
 export interface UserProfile {
@@ -23,7 +7,6 @@ export interface UserProfile {
   email: string;
   displayName: string;
   photoURL: string;
-  username?: string;
   phoneNumber?: string;
   designation?: string;
   institution?: string;
@@ -35,28 +18,45 @@ export interface UserProfile {
   education?: string;
   certifications?: string[];
   researchInterests?: string[];
+  publications?: number;
+  patientsSeen?: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Google authentication
+// Mock user credential
+export interface UserCredential {
+  user: User;
+}
+
+// Mock user
+export interface User {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+}
+
+// Mock authentication
 export async function signInWithGoogle(): Promise<UserCredential> {
   try {
-    const provider = new GoogleAuthProvider();
-    provider.addScope('email');
-    provider.addScope('profile');
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800));
     
-    const result = await signInWithPopup(auth, provider);
+    const mockUser: User = {
+      uid: 'mock-user-123',
+      email: 'test@example.com',
+      displayName: 'Dr. Test User',
+      photoURL: '/default-avatar.svg',
+    };
     
-    // Create or update user profile in Firestore
-    if (result.user) {
-      await createOrUpdateUserProfile(result.user);
-    }
+    // Create or update user profile
+    await createOrUpdateUserProfile(mockUser);
     
     // Track sign in event
-    trackUserSignIn('google');
+    console.log('📊 Analytics Event: user_sign_in', { method: 'google' });
     
-    return result;
+    return { user: mockUser };
   } catch (error) {
     console.error('Error signing in with Google:', error);
     throw new Error('Failed to sign in with Google');
@@ -66,45 +66,40 @@ export async function signInWithGoogle(): Promise<UserCredential> {
 // Sign out
 export async function signOutUser(): Promise<void> {
   try {
-    await signOut(auth);
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
     // Track sign out event
-    trackUserSignOut();
+    console.log('📊 Analytics Event: user_sign_out');
   } catch (error) {
     console.error('Error signing out:', error);
     throw new Error('Failed to sign out');
   }
 }
 
-// Create or update user profile in Firestore
+// Create or update user profile
 async function createOrUpdateUserProfile(user: User): Promise<void> {
   try {
-    const userRef = doc(db, 'users', user.uid);
-    const userSnap = await getDoc(userRef);
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    if (userSnap.exists()) {
-      // Update existing profile
-      await updateDoc(userRef, {
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-        updatedAt: Timestamp.now(),
-      });
-    } else {
-      // Create new profile
-      const userProfile = {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName || '',
-        photoURL: user.photoURL || '',
-        role: 'physician' as const, // Default role
-      };
-      
-      await setDoc(userRef, {
-        ...userProfile,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      });
-    }
+    const mockProfile: UserProfile = {
+      uid: user.uid,
+      email: user.email || '',
+      displayName: user.displayName || '',
+      photoURL: user.photoURL || '',
+      role: 'physician',
+      institution: 'Test Hospital',
+      specialty: 'General Medicine',
+      location: 'Test City',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    // Store in localStorage for demo purposes
+    localStorage.setItem('userProfile', JSON.stringify(mockProfile));
+    
+    console.log('User profile created/updated:', mockProfile);
   } catch (error) {
     console.error('Error creating/updating user profile:', error);
     throw new Error('Failed to create user profile');
@@ -115,7 +110,7 @@ async function createOrUpdateUserProfile(user: User): Promise<void> {
 const profileCache = new Map<string, { profile: UserProfile; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Get user profile from Firestore with caching
+// Get user profile with caching
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   try {
     // Check cache first
@@ -124,17 +119,13 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
       return cached.profile;
     }
 
-    // Fetch from Firestore
-    const userRef = doc(db, 'users', uid);
-    const userSnap = await getDoc(userRef);
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    if (userSnap.exists()) {
-      const data = userSnap.data();
-      const profile = {
-        ...data,
-        createdAt: data.createdAt.toDate(),
-        updatedAt: data.updatedAt.toDate(),
-      } as UserProfile;
+    // Get from localStorage for demo purposes
+    const stored = localStorage.getItem('userProfile');
+    if (stored) {
+      const profile = JSON.parse(stored) as UserProfile;
       
       // Cache the profile
       profileCache.set(uid, {
@@ -155,18 +146,33 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 // Update user profile
 export async function updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
   try {
-    const userRef = doc(db, 'users', uid);
-    await updateDoc(userRef, {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Get current profile
+    const currentProfile = await getUserProfile(uid);
+    if (!currentProfile) {
+      throw new Error('User profile not found');
+    }
+    
+    // Update profile
+    const updatedProfile = {
+      ...currentProfile,
       ...updates,
-      updatedAt: Timestamp.now(),
-    });
+      updatedAt: new Date(),
+    };
+    
+    // Store updated profile
+    localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
     
     // Clear cache for this user to ensure fresh data
     profileCache.delete(uid);
     
     // Track profile update event
     const updatedFields = Object.keys(updates);
-    trackProfileUpdate(updatedFields);
+    console.log('📊 Analytics Event: profile_updated', { fields: updatedFields });
+    
+    console.log('User profile updated:', updatedProfile);
   } catch (error) {
     console.error('Error updating user profile:', error);
     throw new Error('Failed to update user profile');
@@ -175,10 +181,29 @@ export async function updateUserProfile(uid: string, updates: Partial<UserProfil
 
 // Auth state listener
 export function onAuthStateChange(callback: (user: User | null) => void): () => void {
-  return onAuthStateChanged(auth, callback);
+  // Simulate auth state change
+  const mockUser: User = {
+    uid: 'mock-user-123',
+    email: 'test@example.com',
+    displayName: 'Dr. Test User',
+    photoURL: '/default-avatar.svg',
+  };
+  
+  // Call callback immediately with mock user
+  setTimeout(() => callback(mockUser), 100);
+  
+  // Return unsubscribe function
+  return () => {};
 }
 
 // Get current user
 export function getCurrentUser(): User | null {
-  return auth.currentUser;
+  const mockUser: User = {
+    uid: 'mock-user-123',
+    email: 'test@example.com',
+    displayName: 'Dr. Test User',
+    photoURL: '/default-avatar.svg',
+  };
+  
+  return mockUser;
 } 

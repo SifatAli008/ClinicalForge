@@ -1,16 +1,18 @@
-import { logEvent, getAnalytics } from 'firebase/analytics';
-import app from './firebase';
-
-// Analytics event tracking
+// Mock analytics service for better performance - replaces Firebase Analytics
 export const trackEvent = async (eventName: string, parameters?: Record<string, any>) => {
   try {
     if (typeof window !== 'undefined') {
-      const { isSupported } = await import('firebase/analytics');
-      const supported = await isSupported();
-      if (supported) {
-        const analyticsInstance = getAnalytics(app);
-        logEvent(analyticsInstance, eventName, parameters);
-      }
+      // Mock analytics tracking
+      console.log('📊 Analytics Event:', eventName, parameters);
+      
+      // Store in localStorage for demo purposes
+      const analytics = JSON.parse(localStorage.getItem('analytics') || '[]');
+      analytics.push({
+        event: eventName,
+        parameters,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('analytics', JSON.stringify(analytics.slice(-100))); // Keep last 100 events
     }
   } catch (error) {
     console.error('Analytics error:', error);

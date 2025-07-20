@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth-context';
 import { UserProfile as UserProfileType } from '@/lib/auth-service';
+import { ProfileData } from '@/lib/mock-data';
 import { 
   Edit, 
   Save, 
@@ -23,29 +24,50 @@ interface UserProfileProps {
   isEditing?: boolean;
   setIsEditing?: (editing: boolean) => void;
   onSave?: () => Promise<void>;
+  realtimeProfileData?: ProfileData | null;
 }
 
-export function UserProfile({ isEditing: externalIsEditing, setIsEditing: externalSetIsEditing, onSave }: UserProfileProps) {
+export function UserProfile({ 
+  isEditing: externalIsEditing, 
+  setIsEditing: externalSetIsEditing, 
+  onSave,
+  realtimeProfileData
+}: UserProfileProps) {
   const { user, userProfile, updateProfile } = useAuth();
   const [internalIsEditing, setInternalIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Use external state if provided, otherwise use internal state
   const isEditing = externalIsEditing !== undefined ? externalIsEditing : internalIsEditing;
   const setIsEditing = externalSetIsEditing || setInternalIsEditing;
+  
   const [formData, setFormData] = useState({
-    displayName: userProfile?.displayName || '',
-    username: userProfile?.username || '',
-    email: userProfile?.email || user?.email || '',
-    phoneNumber: userProfile?.phoneNumber || '',
-    institution: userProfile?.institution || '',
-    specialty: userProfile?.specialty || '',
-    role: userProfile?.role || 'physician',
-    experience: userProfile?.experience || 0,
-    bio: userProfile?.bio || '',
-    location: userProfile?.location || '',
-    profilePicture: userProfile?.photoURL || user?.photoURL || '',
+    displayName: '',
+    profilePicture: '',
   });
+
+  // Initialize form data when userProfile or realtimeProfileData changes
+  useEffect(() => {
+    if (userProfile || realtimeProfileData) {
+      console.log('UserProfile: Updating form data from userProfile:', userProfile, 'realtimeProfileData:', realtimeProfileData);
+      setFormData({
+        displayName: realtimeProfileData?.displayName || userProfile?.displayName || '',
+        profilePicture: realtimeProfileData?.profilePicture || userProfile?.photoURL || user?.photoURL || '',
+      });
+    }
+  }, [userProfile, realtimeProfileData, user]);
+
+  // Sync form data when external editing state changes
+  useEffect(() => {
+    if (externalIsEditing !== undefined && (userProfile || realtimeProfileData)) {
+      console.log('UserProfile: Syncing form data for external editing:', userProfile, realtimeProfileData);
+      setFormData({
+        displayName: realtimeProfileData?.displayName || userProfile?.displayName || '',
+        profilePicture: realtimeProfileData?.profilePicture || userProfile?.photoURL || user?.photoURL || '',
+      });
+    }
+  }, [externalIsEditing, userProfile, realtimeProfileData, user]);
 
   // Show loading state with better UX
   if (!user) {
@@ -99,46 +121,46 @@ export function UserProfile({ isEditing: externalIsEditing, setIsEditing: extern
   const handleSave = async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      
+      console.log('UserProfile: Starting save with form data:', formData);
+      
       const updateData = {
         displayName: formData.displayName,
-        username: formData.username,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        institution: formData.institution,
-        specialty: formData.specialty,
-        role: formData.role,
-        experience: formData.experience,
-        bio: formData.bio,
-        location: formData.location,
         photoURL: formData.profilePicture,
       };
+      
+      console.log('UserProfile: Updating profile with data:', updateData);
       await updateProfile(updateData);
+      
+      console.log('UserProfile: Profile update completed');
       setIsEditing(false);
+      
       // Call external save function if provided
       if (onSave) {
+        console.log('UserProfile: Calling external save function');
         await onSave();
       }
+      
+      console.log('UserProfile: Save completed, profile should be updated');
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error('UserProfile: Failed to update profile:', error);
+      setError('Failed to save profile. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
-    setFormData({
-      displayName: userProfile.displayName,
-      username: userProfile.username || '',
-      email: userProfile.email || user?.email || '',
-      phoneNumber: userProfile.phoneNumber || '',
-      institution: userProfile.institution || '',
-      specialty: userProfile.specialty || '',
-      role: userProfile.role || 'physician',
-      experience: userProfile.experience || 0,
-      bio: userProfile.bio || '',
-      location: userProfile.location || '',
-      profilePicture: userProfile.photoURL || user?.photoURL || '',
-    });
+    console.log('UserProfile: Canceling edit, resetting form data');
+    // Reset form data to original values
+    if (userProfile) {
+      setFormData({
+        displayName: userProfile.displayName || '',
+        profilePicture: userProfile.photoURL || user?.photoURL || '',
+      });
+    }
+    setError(null);
     setIsEditing(false);
   };
 
@@ -146,23 +168,25 @@ export function UserProfile({ isEditing: externalIsEditing, setIsEditing: extern
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center space-x-3">
-          <CardTitle className="text-lg font-semibold">Doctor Profile</CardTitle>
-          <Badge variant="outline" className="flex items-center gap-1">
-            <UserIcon className="h-3 w-3" />
-            Doctor
-          </Badge>
         </div>
+        {/* Remove edit button: do not render edit controls */}
       </CardHeader>
       <CardContent className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+        
         {/* Profile Picture and Basic Info */}
         <div className="flex items-center space-x-4">
           <div className="relative">
             {isEditing ? (
               <div className="relative">
                 <img
-                  src={formData.profilePicture || userProfile.photoURL}
-                  alt={userProfile.displayName}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-slate-200"
+                  src={formData.profilePicture || realtimeProfileData?.profilePicture || userProfile?.photoURL}
+                  alt={userProfile?.displayName}
+                  className="w-32 h-32 rounded-full object-cover border-2 border-slate-200"
                 />
                 <Button
                   size="sm"
@@ -181,9 +205,9 @@ export function UserProfile({ isEditing: externalIsEditing, setIsEditing: extern
               </div>
             ) : (
               <img
-                src={userProfile.photoURL}
-                alt={userProfile.displayName}
-                className="w-20 h-20 rounded-full object-cover"
+                src={realtimeProfileData?.profilePicture || userProfile?.photoURL}
+                alt={userProfile?.displayName}
+                className="w-32 h-32 rounded-full object-cover"
               />
             )}
           </div>
@@ -193,119 +217,16 @@ export function UserProfile({ isEditing: externalIsEditing, setIsEditing: extern
                 value={formData.displayName}
                 onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                 placeholder="Doctor Name"
-                className="text-lg font-semibold"
+                className="text-3xl font-bold"
               />
             ) : (
-              <h3 className="text-lg font-semibold">{userProfile.displayName}</h3>
+              <h3 className="text-4xl font-bold">{userProfile?.displayName}</h3>
             )}
-            {isEditing ? (
-              <Textarea
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                placeholder="Professional Bio"
-                className="mt-2 text-sm"
-                rows={3}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground mt-2">
-                {userProfile.bio || 'No professional bio provided'}
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground mt-2">
+              Dedicated medical professional committed to advancing healthcare through collaborative research and clinical excellence.
+            </p>
           </div>
         </div>
-
-        {/* Professional Bio Section */}
-        {!isEditing && userProfile.bio && (
-          <div>
-            <Label className="text-sm font-medium">Professional Bio</Label>
-            <p className="text-sm text-muted-foreground mt-1">{userProfile.bio}</p>
-          </div>
-        )}
-
-        {/* Form Fields for Editing */}
-        {isEditing && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder="Username"
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Email"
-                type="email"
-              />
-            </div>
-            <div>
-              <Label htmlFor="phoneNumber">Phone Number</Label>
-              <Input
-                id="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                placeholder="Phone Number"
-              />
-            </div>
-            <div>
-              <Label htmlFor="institution">Institution</Label>
-              <Input
-                id="institution"
-                value={formData.institution}
-                onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                placeholder="Institution"
-              />
-            </div>
-            <div>
-              <Label htmlFor="specialty">Specialty</Label>
-              <Input
-                id="specialty"
-                value={formData.specialty}
-                onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                placeholder="Specialty"
-              />
-            </div>
-            <div>
-              <Label htmlFor="experience">Years of Experience</Label>
-              <Input
-                id="experience"
-                value={formData.experience}
-                onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
-                placeholder="Years of Experience"
-                type="number"
-              />
-            </div>
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder="Location"
-              />
-            </div>
-            <div>
-              <Label htmlFor="role">Role</Label>
-              <select
-                id="role"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'physician' | 'researcher' | 'student' | 'other' })}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="physician">Physician</option>
-                <option value="researcher">Researcher</option>
-                <option value="student">Student</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

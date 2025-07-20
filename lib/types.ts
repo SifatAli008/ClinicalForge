@@ -5,9 +5,9 @@ export const ClinicalLogicSchema = z.object({
   // Section 1: Disease Overview
   diseaseName: z.string().min(1, "Disease name is required"),
   commonName: z.string().optional(),
-  diseaseType: z.enum(["Acute", "Chronic", "Recurrent", "Congenital"]),
-  typicalOnsetAge: z.number().min(0).max(120),
-  genderBias: z.enum(["Equal", "Male", "Female", "Context-dependent"]),
+  diseaseType: z.enum(["Acute", "Chronic", "Recurrent", "Congenital"]).optional(),
+  typicalOnsetAge: z.number().min(0).max(120).optional(),
+  genderBias: z.enum(["Equal", "Male", "Female", "Context-dependent"]).optional(),
   urbanRuralBias: z.string().optional(),
   
   // Section 2: Disease Subtypes & Family History
@@ -18,14 +18,14 @@ export const ClinicalLogicSchema = z.object({
   geneticRiskFactors: z.array(z.string()).optional(),
   inheritancePatterns: z.array(z.string()).optional(),
   geneticInfluence: z.array(z.string()).optional(),
-  familyHistoryRelevance: z.boolean(),
+  familyHistoryRelevance: z.boolean().optional(),
   
   // Section 3: Clinical Staging & Symptoms
   stages: z.array(z.object({
     description: z.string(),
     duration: z.string().optional(),
     triggers: z.string().optional(),
-  })).min(1, "At least one stage is required"),
+  })).optional(),
   
   stageSymptoms: z.array(z.object({
     major: z.string().optional(),
@@ -112,13 +112,56 @@ export const ClinicalLogicSchema = z.object({
   
   // Section 17: Consent
   consentGiven: z.boolean().refine(val => val === true, "Consent is required"),
-  attributionConsent: z.boolean(),
+  attributionConsent: z.boolean().optional(),
   
   // Section 18: Metadata
   submissionDate: z.date(),
+  
+  // Section 19: Draft Status
+  isDraft: z.boolean().optional(),
+  completionPercentage: z.number().min(0).max(100).optional(),
+  
+  // Section 20: User Information
+  userId: z.string().optional(),
+  userEmail: z.string().optional(),
+});
+
+// Minimal schema for partial submissions
+export const MinimalClinicalLogicSchema = z.object({
+  diseaseName: z.string().min(1, "Disease name is required"),
+  physicianName: z.string().min(1, "Physician name is required"),
+  institution: z.string().min(1, "Institution is required"),
+  specialty: z.string().min(1, "Specialty is required"),
+  consentGiven: z.boolean().refine(val => val === true, "Consent is required"),
+  submissionDate: z.date(),
+  isDraft: z.boolean().optional(),
 });
 
 export type ClinicalLogic = z.infer<typeof ClinicalLogicSchema>;
+export type MinimalClinicalLogic = z.infer<typeof MinimalClinicalLogicSchema>;
+
+// User Profile Type
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+  phoneNumber?: string;
+  designation?: string;
+  institution?: string;
+  specialty?: string;
+  role?: 'physician' | 'researcher' | 'student' | 'other';
+  experience?: number;
+  bio?: string;
+  location?: string;
+  education?: string;
+  certifications?: string[];
+  researchInterests?: string[];
+  publications?: number;
+  patientsSeen?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 // Dashboard Analytics Types
 export interface DashboardAnalytics {

@@ -10,16 +10,29 @@ interface LoadingSpinnerProps {
 export function LoadingSpinner({ size = 'md', text, className = '' }: LoadingSpinnerProps) {
   const sizeClasses = {
     sm: 'h-4 w-4',
-    md: 'h-6 w-6',
-    lg: 'h-8 w-8'
+    md: 'h-8 w-8',
+    lg: 'h-12 w-12',
   };
 
   return (
-    <div className={`flex items-center justify-center gap-3 ${className}`}>
-      <Loader2 className={`${sizeClasses[size]} animate-spin text-primary`} />
+    <div className={`flex flex-col items-center justify-center space-y-4 ${className}`}>
+      <Loader2 className={`animate-spin text-primary ${sizeClasses[size]}`} />
       {text && (
-        <span className="text-sm font-medium text-muted-foreground">{text}</span>
+        <p className="text-sm text-muted-foreground animate-pulse">{text}</p>
       )}
+    </div>
+  );
+}
+
+export function PageLoadingSpinner() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950 flex items-center justify-center">
+      <div className="text-center">
+        <LoadingSpinner size="lg" text="Loading ClinicalForge..." />
+        <p className="mt-4 text-sm text-muted-foreground">
+          Initializing healthcare data platform...
+        </p>
+      </div>
     </div>
   );
 }

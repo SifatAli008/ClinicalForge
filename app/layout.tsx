@@ -5,14 +5,13 @@ import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider } from '@/lib/language-context';
 import { AuthProvider } from '@/lib/auth-context';
-import { AdminProvider } from '@/lib/admin-context';
 import Navigation from '@/components/Navigation';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'HDMS Web Portal',
-  description: 'Healthcare Data Management System - Clinical Logic Collection',
+  title: 'ClinicalForge - Clinical Data Collection Platform',
+  description: 'Streamline medical data collection and analysis with our comprehensive platform',
 };
 
 export default function RootLayout({
@@ -31,12 +30,12 @@ export default function RootLayout({
         >
           <LanguageProvider>
             <AuthProvider>
-              <AdminProvider>
+              <div className="min-h-screen bg-background">
                 <Navigation />
-                <main className="min-h-screen bg-background">
+                <main className="flex-1">
                   {children}
                 </main>
-              </AdminProvider>
+              </div>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
