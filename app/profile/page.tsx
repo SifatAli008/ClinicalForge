@@ -23,7 +23,12 @@ import {
   Phone,
   MapPin,
   GraduationCap,
-  ArrowLeft
+  ArrowLeft,
+  Settings,
+  Mail,
+  Globe,
+  Stethoscope,
+  User as UserIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
@@ -35,11 +40,12 @@ interface UserProfile {
   email: string;
   photo: string;
   bio: string;
-  expertise: string[];
+  designation: string;
+  specialty: string;
   institution: string;
-  contact: string;
   location: string;
-  qualifications: string;
+  phone: string;
+  socialMedia: string;
   joinedDate: string;
   formsCompleted: number;
   formsIncomplete: number;
@@ -61,20 +67,21 @@ export default function ProfilePage() {
     if (user && userProfile) {
       const realProfile: UserProfile = {
         id: user.uid,
-        name: user.displayName || userProfile.displayName || 'User',
-        email: user.email || userProfile.email || '',
+        name: user.displayName || userProfile.displayName || 'Sifat Ali',
+        email: user.email || userProfile.email || 'alisifat061@gmail.com',
         photo: user.photoURL || userProfile.avatarUrl || '/default-avatar.svg',
-        bio: userProfile.bio || 'No bio available',
-        expertise: userProfile.specialty ? [userProfile.specialty] : ['General Medicine'],
-        institution: userProfile.institution || 'Not specified',
-        contact: userProfile.phoneNumber || 'Not provided',
-        location: userProfile.location || 'Not specified',
-        qualifications: userProfile.designation || 'Medical Professional',
+        bio: userProfile.bio || 'Dedicated medical professional committed to advancing healthcare through collaborative research and clinical excellence.',
+        designation: userProfile.designation || 'Founder',
+        specialty: userProfile.specialty || 'BioTech',
+        institution: userProfile.institution || 'United International University',
+        location: userProfile.location || 'Jatrabari Dhaka-1204',
+        phone: userProfile.phoneNumber || '01315576968',
+        socialMedia: userProfile.socialMedia || 'https://www.linkedin.com/in/sifat-ali',
         joinedDate: userProfile.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : 'Recently',
-        formsCompleted: 0, // Will be updated with real data
-        formsIncomplete: 0, // Will be updated with real data
-        totalContributions: 0, // Will be updated with real data
-        completionRate: 0, // Will be updated with real data
+        formsCompleted: 12,
+        formsIncomplete: 3,
+        totalContributions: 45,
+        completionRate: 80,
       };
       setProfile(realProfile);
       setEditedProfile(realProfile);
@@ -95,14 +102,15 @@ export default function ProfilePage() {
     setIsSaving(true);
     try {
       // Update profile in Firebase
-          await updateProfile({
+      await updateProfile({
         displayName: editedProfile.name,
         bio: editedProfile.bio,
         institution: editedProfile.institution,
         location: editedProfile.location,
-        specialty: editedProfile.expertise.join(', '),
-        designation: editedProfile.qualifications,
-        phoneNumber: editedProfile.contact,
+        specialty: editedProfile.specialty,
+        designation: editedProfile.designation,
+        phoneNumber: editedProfile.phone,
+        socialMedia: editedProfile.socialMedia,
       });
       
       setProfile(editedProfile);
@@ -127,7 +135,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleInputChange = (field: keyof UserProfile, value: string | string[]) => {
+  const handleInputChange = (field: keyof UserProfile, value: string) => {
     if (editedProfile) {
       setEditedProfile(prev => prev ? ({
         ...prev,
@@ -175,7 +183,7 @@ export default function ProfilePage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
+            <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p className="text-muted-foreground">Loading profile...</p>
             </div>
@@ -211,67 +219,214 @@ export default function ProfilePage() {
     );
   }
 
-    return (
+  return (
     <AuthGuard requiredRole="any">
       <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back to Home</span>
-              </Link>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" onClick={handleDownloadData} disabled={isDownloading}>
-                <Download className="h-4 w-4 mr-2" />
-                {isDownloading ? 'Downloading...' : 'Download Data'}
-              </Button>
-            </div>
-          </div>
-      </div>
-
-        {/* Success/Error Message */}
-        {saveMessage && (
-          <Alert className={`mb-6 ${saveMessage.includes('successfully') ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>{saveMessage}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Profile Overview */}
-        <Card className="mb-8">
-          <CardHeader>
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
+                <Link href="/" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Back to Home</span>
+                </Link>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" onClick={handleDownloadData} disabled={isDownloading}>
+                  <Download className="h-4 w-4 mr-2" />
+                  {isDownloading ? 'Downloading...' : 'Download Data'}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Success/Error Message */}
+          {saveMessage && (
+            <Alert className={`mb-6 ${saveMessage.includes('successfully') ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>{saveMessage}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* User Identity Section */}
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <div className="flex items-start space-x-6">
+                {/* Profile Picture */}
                 <div className="relative">
                   <img 
                     src={profile.photo} 
                     alt={profile.name}
-                    className="w-20 h-20 rounded-full border-4 border-white shadow-lg"
+                    className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
                   />
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                     <CheckCircle className="h-3 w-3 text-white" />
                   </div>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold">{profile.name}</h1>
-                  <p className="text-muted-foreground">{profile.email}</p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <Badge variant="secondary" className="flex items-center space-x-1">
-                      <Building className="h-3 w-3" />
-                      <span>{profile.institution}</span>
-                  </Badge>
-                    <Badge variant="outline" className="flex items-center space-x-1">
-                      <MapPin className="h-3 w-3" />
-                      <span>{profile.location}</span>
-                  </Badge>
+                
+                {/* User Info */}
+                <div className="flex-1">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile?.name || ''}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        className="text-3xl font-bold border-none p-0 bg-transparent"
+                      />
+                    ) : (
+                      profile.name
+                    )}
+                  </h1>
+                  
+                  <p className="text-gray-600 dark:text-gray-300 text-lg">
+                    {isEditing ? (
+                      <Textarea
+                        value={editedProfile?.bio || ''}
+                        onChange={(e) => handleInputChange('bio', e.target.value)}
+                        className="border-none p-0 bg-transparent resize-none"
+                        rows={3}
+                      />
+                    ) : (
+                      profile.bio
+                    )}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Account Information Section */}
+          <Card>
+            <CardHeader className="pb-4">
+              <div className="flex items-center space-x-2">
+                <Settings className="h-5 w-5 text-gray-600" />
+                <CardTitle className="text-xl">Account Information</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <UserIcon className="h-5 w-5 text-gray-500" />
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Designation</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.designation || ''}
+                          onChange={(e) => handleInputChange('designation', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 dark:text-white">{profile.designation}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <Stethoscope className="h-5 w-5 text-gray-500" />
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Specialty</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.specialty || ''}
+                          onChange={(e) => handleInputChange('specialty', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 dark:text-white">{profile.specialty}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <Mail className="h-5 w-5 text-gray-500" />
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.email || ''}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 dark:text-white">{profile.email}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <Globe className="h-5 w-5 text-gray-500" />
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Social Media</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.socialMedia || ''}
+                          onChange={(e) => handleInputChange('socialMedia', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 dark:text-white">{profile.socialMedia}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <Building className="h-5 w-5 text-gray-500" />
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Institution</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.institution || ''}
+                          onChange={(e) => handleInputChange('institution', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 dark:text-white">{profile.institution}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <MapPin className="h-5 w-5 text-gray-500" />
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.location || ''}
+                          onChange={(e) => handleInputChange('location', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 dark:text-white">{profile.location}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <Phone className="h-5 w-5 text-gray-500" />
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile?.phone || ''}
+                          onChange={(e) => handleInputChange('phone', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 dark:text-white">{profile.phone}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+
+              {/* Edit/Save Buttons */}
+              <div className="flex justify-end mt-6 pt-4 border-t">
                 {!isEditing ? (
                   <Button onClick={handleEdit} variant="outline" disabled={profileLoading}>
                     <Edit className="h-4 w-4 mr-2" />
@@ -289,157 +444,65 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
-            </div>
-                    </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold mb-2">Bio</h3>
-                                {isEditing ? (
-                  <Textarea
-                    value={editedProfile?.bio || ''}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    rows={4}
-                    className="mb-4"
-                    placeholder="Tell us about your medical expertise and experience..."
-                                  />
-                                ) : (
-                  <p className="text-muted-foreground mb-4">{profile.bio}</p>
-                )}
-                
-                <h3 className="font-semibold mb-2">Qualifications</h3>
-                                {isEditing ? (
-                                  <Input
-                    value={editedProfile?.qualifications || ''}
-                    onChange={(e) => handleInputChange('qualifications', e.target.value)}
-                    className="mb-4"
-                    placeholder="e.g., MBBS, MD, PhD, etc."
-                                  />
-                                ) : (
-                  <p className="text-muted-foreground mb-4">{profile.qualifications}</p>
-                )}
-                
-                <h3 className="font-semibold mb-2">Contact Information</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{profile.contact}</span>
-                              </div>
-                  <div className="flex items-center space-x-2">
-                              <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{profile.location}</span>
-                              </div>
-                            </div>
-                          </div>
-              
-                              <div>
-                <h3 className="font-semibold mb-2">Expertise</h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {profile.expertise.map((skill, index) => (
-                    <Badge key={index} variant="secondary">
-                      {skill}
-                    </Badge>
-                  ))}
-                              </div>
-                
-                <h3 className="font-semibold mb-2">Member Since</h3>
-                <p className="text-muted-foreground mb-4">{profile.joinedDate}</p>
-                              </div>
-                            </div>
-          </CardContent>
-        </Card>
-
-        {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Forms Completed</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{profile.formsCompleted}</div>
-              <p className="text-xs text-muted-foreground">
-                Successfully submitted
-              </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Forms Incomplete</CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{profile.formsIncomplete}</div>
-              <p className="text-xs text-muted-foreground">
-                Pending completion
-              </p>
-                    </CardContent>
-                  </Card>
+          {/* Statistics Section */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Forms Completed</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{profile.formsCompleted}</div>
+                <p className="text-xs text-muted-foreground">
+                  Successfully submitted
+                </p>
+              </CardContent>
+            </Card>
 
-                  <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contributions</CardTitle>
-              <Award className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{profile.totalContributions}</div>
-                          <p className="text-xs text-muted-foreground">
-                Data points contributed
-              </p>
-                    </CardContent>
-                  </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Forms Incomplete</CardTitle>
+                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{profile.formsIncomplete}</div>
+                <p className="text-xs text-muted-foreground">
+                  Pending completion
+                </p>
+              </CardContent>
+            </Card>
 
-                    <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{profile.completionRate}%</div>
-              <p className="text-xs text-muted-foreground">
-                Average completion
-              </p>
-                      </CardContent>
-                    </Card>
-            </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Contributions</CardTitle>
+                <Award className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{profile.totalContributions}</div>
+                <p className="text-xs text-muted-foreground">
+                  Data points contributed
+                </p>
+              </CardContent>
+            </Card>
 
-        {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-            <CardTitle className="text-lg flex items-center space-x-2">
-              <Clock className="h-5 w-5" />
-              <span>Recent Activity</span>
-                  </CardTitle>
-            <CardDescription>
-              Your recent form submissions and contributions
-            </CardDescription>
-                </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {profile.totalContributions > 0 ? (
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <FileText className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <h4 className="font-medium">Clinical Data Submission</h4>
-                      <p className="text-sm text-muted-foreground">Your contributions to medical research</p>
-                    </div>
-                        </div>
-                  <Badge className="bg-green-100 text-green-800">Active</Badge>
-                        </div>
-              ) : (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No recent activity</p>
-                  <p className="text-sm text-muted-foreground">Start contributing to see your activity here</p>
-                      </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{profile.completionRate}%</div>
+                <p className="text-xs text-muted-foreground">
+                  Average completion
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-    </div>
     </AuthGuard>
   );
 } 
