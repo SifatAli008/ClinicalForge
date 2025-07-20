@@ -501,6 +501,74 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Recent Activity Section */}
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center space-x-2">
+                <Clock className="h-5 w-5" />
+                <span>Recent Activity</span>
+              </CardTitle>
+              <CardDescription>
+                Your recent form submissions and contributions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {profile.totalContributions > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <h4 className="font-medium">Data Field Validation Form</h4>
+                          <p className="text-sm text-muted-foreground">Clinical Logic Collection Template validation</p>
+                          <p className="text-xs text-muted-foreground">2 hours ago</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-purple-500" />
+                        <div>
+                          <h4 className="font-medium">Parameter Validation Form</h4>
+                          <p className="text-sm text-muted-foreground">Type 2 Diabetes Mellitus parameters</p>
+                          <p className="text-xs text-muted-foreground">1 day ago</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-orange-500" />
+                        <div>
+                          <h4 className="font-medium">Data Field Validation Form</h4>
+                          <p className="text-sm text-muted-foreground">Cardiovascular disease template review</p>
+                          <p className="text-xs text-muted-foreground">3 days ago</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-yellow-100 text-yellow-800">In Progress</Badge>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No recent activity</p>
+                    <p className="text-sm text-muted-foreground">Start contributing to see your activity here</p>
+                    <Link href="/forms">
+                      <Button className="mt-4">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Start Contributing
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </AuthGuard>
