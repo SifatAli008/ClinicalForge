@@ -5,50 +5,40 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "submissionDate",
           "order": "DESCENDING"
-        },
-        {
-          "fieldPath": "diseaseType",
-          "order": "ASCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "clinicalLogic",
+      "collectionGroup": "comprehensiveParameterValidation",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "physicianName",
+          "fieldPath": "userId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "institution",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "contributors",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "lastSubmission",
+          "fieldPath": "submissionDate",
           "order": "DESCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "contributors",
+      "collectionGroup": "advancedClinicalAnalytics",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "name",
+          "fieldPath": "userId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "institution",
-          "order": "ASCENDING"
+          "fieldPath": "submissionDate",
+          "order": "DESCENDING"
         }
       ]
     }

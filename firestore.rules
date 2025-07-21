@@ -28,6 +28,42 @@ service cloud.firestore {
         && request.auth.token.admin == true;
     }
     
+    // Comprehensive Parameter Validation
+    match /comprehensiveParameterValidation/{document} {
+      // Allow read access to all authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow write access for creating new submissions
+      allow create: if request.auth != null;
+      
+      // Allow update only for the document owner or admin
+      allow update: if request.auth != null 
+        && (request.auth.uid == resource.data.userId || 
+            request.auth.token.admin == true);
+      
+      // Allow delete only for admin
+      allow delete: if request.auth != null 
+        && request.auth.token.admin == true;
+    }
+    
+    // Advanced Clinical Analytics
+    match /advancedClinicalAnalytics/{document} {
+      // Allow read access to all authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow write access for creating new submissions
+      allow create: if request.auth != null;
+      
+      // Allow update only for the document owner or admin
+      allow update: if request.auth != null 
+        && (request.auth.uid == resource.data.userId || 
+            request.auth.token.admin == true);
+      
+      // Allow delete only for admin
+      allow delete: if request.auth != null 
+        && request.auth.token.admin == true;
+    }
+    
     // Contributors
     match /contributors/{document} {
       // Allow read access to all authenticated users

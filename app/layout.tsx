@@ -10,6 +10,7 @@ import { LanguageProvider } from '@/lib/language-context';
 import { AdminProvider } from '@/lib/admin-context';
 import { Loader2, Database } from 'lucide-react';
 import Footer from '@/components/Footer';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -93,6 +94,7 @@ export default function RootLayout({
                   </main>
                   <Footer />
                 </div>
+                <Toaster />
               </AdminProvider>
             </LanguageProvider>
           </AuthProvider>
