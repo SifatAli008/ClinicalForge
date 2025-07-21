@@ -310,6 +310,36 @@ ADMIN_PASSWORD=Data Debo Na
 * **Role-based Loading**: Efficient loading based on user permissions
 * **Hydration Optimization**: Fixed browser extension warnings
 
+## 🧹 Code Quality & Error Checking
+
+This project uses ESLint and TypeScript for code quality and error prevention.
+
+### Linting (ESLint)
+
+A standard ESLint configuration is provided in `.eslintrc.js` for Next.js, React, and TypeScript. To check for code style and common errors, run:
+
+```bash
+npx eslint "app/**/*.{js,jsx,ts,tsx}" "components/**/*.{js,jsx,ts,tsx}" "lib/**/*.{js,jsx,ts,tsx}"
+```
+
+- Fix issues as reported by ESLint for best code quality.
+
+### Type Checking (TypeScript)
+
+To check for type errors across the project, run:
+
+```bash
+npx tsc --noEmit
+```
+
+### Build Check (Next.js)
+
+To ensure the project builds without errors, run:
+
+```bash
+npx next build
+```
+
 ## 🤝 Contributing
 
 1. Fork the repository
