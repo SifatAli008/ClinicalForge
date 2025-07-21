@@ -115,7 +115,7 @@ export default function Navigation() {
     if (isPublic) {
       return [
         ...baseItems,
-        { href: '/collaborate', icon: Users, label: 'Collaborations' },
+        { href: '/collaborate', icon: Users, label: 'Why Need to Collaborate?' },
         { href: '/findings', icon: BookOpen, label: 'Findings' }
       ];
     }
@@ -123,8 +123,8 @@ export default function Navigation() {
     if (isContributor) {
       return [
         ...baseItems,
+        { href: '/collaborate', icon: Users, label: 'Why Need to Collaborate?' },
         { href: '/forms', icon: FileText, label: 'Forms' },
-        { href: '/collaborate', icon: Users, label: 'Collaborations' },
         { href: '/findings', icon: BookOpen, label: 'Findings' }
       ];
     }
@@ -173,99 +173,89 @@ export default function Navigation() {
             
             {!loading && (
               user ? (
-                <div className="relative profile-dropdown">
-                  {/* Profile Button */}
+                isAdmin ? (
+                  // Simple logout button for admin users
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm" 
-                    onClick={toggleProfileDropdown}
-                    className="flex items-center space-x-3 hover:bg-accent transition-all duration-200 group"
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 hover:border-red-300"
                   >
-                    <div className="relative">
-                      <img 
-                        src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
-                        alt={user.displayName || userProfile?.displayName || 'User'} 
-                        className="w-8 h-8 rounded-full border-2 border-border transition-all duration-200 group-hover:border-primary/50"
-                      />
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-                      {isAdmin && (
-                        <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-background flex items-center justify-center">
-                          <Crown className="h-2 w-2 text-white" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="hidden lg:block text-left">
-                      <p className="text-sm font-medium">{user.displayName || userProfile?.displayName || 'User'}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                      {isAdmin && (
-                        <Badge variant="destructive" className="text-xs">
-                          <Shield className="h-2 w-2 mr-1" />
-                          Admin
-                        </Badge>
-                      )}
-                    </div>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden lg:inline">Logout</span>
                   </Button>
+                ) : (
+                  // Full profile dropdown for non-admin users
+                  <div className="relative profile-dropdown">
+                    {/* Profile Button */}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={toggleProfileDropdown}
+                      className="flex items-center space-x-3 hover:bg-accent transition-all duration-200 group"
+                    >
+                      <div className="relative">
+                        <img 
+                          src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
+                          alt={user.displayName || userProfile?.displayName || 'User'} 
+                          className="w-8 h-8 rounded-full border-2 border-border transition-all duration-200 group-hover:border-primary/50"
+                        />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                      </div>
+                      <div className="hidden lg:block text-left">
+                        <p className="text-sm font-medium">{user.displayName || userProfile?.displayName || 'User'}</p>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+                    </Button>
 
-                  {/* Profile Dropdown */}
-                  {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-background border border-border rounded-xl shadow-lg z-50 animate-in slide-in-from-top-2 duration-200">
-                      <div className="p-4 border-b border-border">
-                        <div className="flex items-center space-x-3">
-                          <div className="relative">
-                            <img 
-                              src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
-                              alt={user.displayName || userProfile?.displayName || 'User'} 
-                              className="w-12 h-12 rounded-full border-2 border-border"
-                            />
-                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
-                            {isAdmin && (
-                              <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full border-2 border-background flex items-center justify-center">
-                                <Crown className="h-2 w-2 text-white" />
+                    {/* Profile Dropdown */}
+                    {isProfileDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-64 bg-background border border-border rounded-xl shadow-lg z-50 animate-in slide-in-from-top-2 duration-200">
+                        <div className="p-4 border-b border-border">
+                          <div className="flex items-center space-x-3">
+                            <div className="relative">
+                              <img 
+                                src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
+                                alt={user.displayName || userProfile?.displayName || 'User'} 
+                                className="w-12 h-12 rounded-full border-2 border-border"
+                              />
+                              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{user.displayName || userProfile?.displayName || 'User'}</p>
+                              <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                              <div className="flex items-center space-x-1 mt-1">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span className="text-xs text-muted-foreground">
+                                  {isContributor ? 'Contributor' : 'Online'}
+                                </span>
                               </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{user.displayName || userProfile?.displayName || 'User'}</p>
-                            <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-                            <div className="flex items-center space-x-1 mt-1">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-xs text-muted-foreground">
-                                {isAdmin ? 'Admin' : isContributor ? 'Contributor' : 'Online'}
-                              </span>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="p-2">
-                        <Link href="/profile" onClick={closeProfileDropdown}>
-                          <Button variant="ghost" size="sm" className="w-full justify-start hover:bg-accent">
-                            <User className="h-4 w-4 mr-3" />
-                            Profile
-                          </Button>
-                        </Link>
-                        {isAdmin && (
-                          <Link href="/dashboard" onClick={closeProfileDropdown}>
+                        <div className="p-2">
+                          <Link href="/profile" onClick={closeProfileDropdown}>
                             <Button variant="ghost" size="sm" className="w-full justify-start hover:bg-accent">
-                              <Settings className="h-4 w-4 mr-3" />
-                              Admin Panel
+                              <User className="h-4 w-4 mr-3" />
+                              Profile
                             </Button>
                           </Link>
-                        )}
-                        <div className="h-px bg-border my-1"></div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={handleSignOut}
-                          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        >
-                          <LogOut className="h-4 w-4 mr-3" />
-                          Sign Out
-                        </Button>
+                          <div className="h-px bg-border my-1"></div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={handleSignOut}
+                            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          >
+                            <LogOut className="h-4 w-4 mr-3" />
+                            Sign Out
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )
               ) : (
                 <Link href="/login">
                   <Button 
@@ -302,7 +292,7 @@ export default function Navigation() {
           <div className="md:hidden animate-in slide-in-from-top-2 duration-200">
             <div className="px-2 pt-2 pb-3 space-y-1 border-t border-border bg-background/95 backdrop-blur">
               {/* User Profile Section for Mobile */}
-              {!loading && user && (
+              {!loading && user && !isAdmin && (
                 <div className="px-3 py-4 border-b border-border bg-accent/50 rounded-lg mx-2 mb-2">
                   <div className="flex items-center space-x-3">
                     <div className="relative">
@@ -312,11 +302,6 @@ export default function Navigation() {
                         className="w-12 h-12 rounded-full border-2 border-border"
                       />
                       <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
-                      {isAdmin && (
-                        <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full border-2 border-background flex items-center justify-center">
-                          <Crown className="h-2 w-2 text-white" />
-                        </div>
-                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{user.displayName || userProfile?.displayName || 'User'}</p>
@@ -324,7 +309,7 @@ export default function Navigation() {
                       <div className="flex items-center space-x-1 mt-1">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span className="text-xs text-muted-foreground">
-                          {isAdmin ? 'Admin' : isContributor ? 'Contributor' : 'Online'}
+                          {isContributor ? 'Contributor' : 'Online'}
                         </span>
                       </div>
                     </div>
@@ -340,17 +325,12 @@ export default function Navigation() {
                 ))}
                 
                 {/* Profile Link for Mobile */}
-                {!loading && user && (
+                {!loading && user && !isAdmin && (
                   <>
                     <div className="h-px bg-border my-2"></div>
                     <NavLink href="/profile" icon={User} className="w-full justify-start">
                       Profile
                     </NavLink>
-                    {isAdmin && (
-                      <NavLink href="/dashboard" icon={Settings} className="w-full justify-start">
-                        Admin Panel
-                      </NavLink>
-                    )}
                   </>
                 )}
               </div>

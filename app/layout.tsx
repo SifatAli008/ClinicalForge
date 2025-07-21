@@ -9,6 +9,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import { LanguageProvider } from '@/lib/language-context';
 import { AdminProvider } from '@/lib/admin-context';
 import { Loader2, Database } from 'lucide-react';
+import Footer from '@/components/Footer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -51,7 +52,7 @@ export default function RootLayout({
   if (isLoading) {
     return (
       <html lang="en">
-        <body className={inter.className}>
+        <body className={inter.className} suppressHydrationWarning={true}>
           <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
             <div className="text-center space-y-6">
               <div className="relative">
@@ -75,7 +76,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning={true}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -85,11 +86,12 @@ export default function RootLayout({
           <AuthProvider>
             <LanguageProvider>
               <AdminProvider>
-                <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+                <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
                   <Navigation />
-                  <main className={`transition-all duration-300 ${isScrolling ? 'scale-[0.995]' : 'scale-100'}`}>
+                  <main className={`transition-all duration-300 ${isScrolling ? 'scale-[0.995]' : 'scale-100'} flex-1`}>
                     {children}
                   </main>
+                  <Footer />
                 </div>
               </AdminProvider>
             </LanguageProvider>

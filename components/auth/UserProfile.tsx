@@ -53,7 +53,7 @@ export function UserProfile({
       console.log('UserProfile: Updating form data from userProfile:', userProfile, 'realtimeProfileData:', realtimeProfileData);
       setFormData({
         displayName: realtimeProfileData?.displayName || userProfile?.displayName || '',
-        profilePicture: realtimeProfileData?.profilePicture || userProfile?.photoURL || user?.photoURL || '',
+        profilePicture: realtimeProfileData?.profilePicture || userProfile?.avatarUrl || user?.photoURL || '',
       });
     }
   }, [userProfile, realtimeProfileData, user]);
@@ -64,7 +64,7 @@ export function UserProfile({
       console.log('UserProfile: Syncing form data for external editing:', userProfile, realtimeProfileData);
       setFormData({
         displayName: realtimeProfileData?.displayName || userProfile?.displayName || '',
-        profilePicture: realtimeProfileData?.profilePicture || userProfile?.photoURL || user?.photoURL || '',
+        profilePicture: realtimeProfileData?.profilePicture || userProfile?.avatarUrl || user?.photoURL || '',
       });
     }
   }, [externalIsEditing, userProfile, realtimeProfileData, user]);
@@ -157,7 +157,7 @@ export function UserProfile({
     if (userProfile) {
       setFormData({
         displayName: userProfile.displayName || '',
-        profilePicture: userProfile.photoURL || user?.photoURL || '',
+        profilePicture: userProfile.avatarUrl || user?.photoURL || '',
       });
     }
     setError(null);
@@ -184,7 +184,7 @@ export function UserProfile({
             {isEditing ? (
               <div className="relative">
                 <img
-                  src={formData.profilePicture || realtimeProfileData?.profilePicture || userProfile?.photoURL}
+                  src={formData.profilePicture || realtimeProfileData?.profilePicture || userProfile?.avatarUrl}
                   alt={userProfile?.displayName}
                   className="w-32 h-32 rounded-full object-cover border-2 border-slate-200"
                 />
@@ -205,7 +205,7 @@ export function UserProfile({
               </div>
             ) : (
               <img
-                src={realtimeProfileData?.profilePicture || userProfile?.photoURL}
+                src={realtimeProfileData?.profilePicture || userProfile?.avatarUrl}
                 alt={userProfile?.displayName}
                 className="w-32 h-32 rounded-full object-cover"
               />

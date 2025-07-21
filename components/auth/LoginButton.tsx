@@ -12,7 +12,7 @@ export function LoginButton() {
   const handleSignIn = async () => {
     try {
       setIsSigningIn(true);
-      await signIn();
+      await signIn('google');
     } catch (error) {
       console.error('Sign in failed:', error);
     } finally {
