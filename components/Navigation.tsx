@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -11,21 +12,14 @@ import {
   Users,
   Menu,
   X,
-  Globe,
-  Sun,
-  Moon,
   LogOut,
   FileText,
   BookOpen,
   User,
   ChevronDown,
-  Info,
-  Settings,
-  Shield,
-  Crown
+  Info
 } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { useLanguage } from '@/lib/language-context';
+
 import { useAuth } from '@/lib/auth-context';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -33,17 +27,13 @@ export default function Navigation() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = React.useState(false);
-  const { theme, setTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
-  const { user, userProfile, signIn, signOut, loading, isAdmin, isContributor, isPublic } = useAuth();
+  const { user, userProfile, signOut, loading, isAdmin, isContributor, isPublic } = useAuth();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+
 
   const toggleProfileDropdown = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
@@ -195,10 +185,12 @@ export default function Navigation() {
                     className="flex items-center space-x-3 hover:bg-accent transition-all duration-200 group"
                   >
                     <div className="relative">
-                      <img 
+                      <Image 
                         src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
                         alt={user.displayName || userProfile?.displayName || 'User'} 
-                        className="w-8 h-8 rounded-full border-2 border-border transition-all duration-200 group-hover:border-primary/50"
+                        width={32}
+                        height={32}
+                        className="rounded-full border-2 border-border transition-all duration-200 group-hover:border-primary/50"
                       />
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
                     </div>
@@ -215,10 +207,12 @@ export default function Navigation() {
                       <div className="p-4 border-b border-border">
                         <div className="flex items-center space-x-3">
                           <div className="relative">
-                            <img 
+                            <Image 
                               src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
                               alt={user.displayName || userProfile?.displayName || 'User'} 
-                              className="w-12 h-12 rounded-full border-2 border-border"
+                              width={48}
+                              height={48}
+                              className="rounded-full border-2 border-border"
                             />
                             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
                           </div>
@@ -296,10 +290,12 @@ export default function Navigation() {
                 <div className="px-3 py-4 border-b border-border bg-accent/50 rounded-lg mx-2 mb-2">
                   <div className="flex items-center space-x-3">
                     <div className="relative">
-                      <img 
+                      <Image 
                         src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
                         alt={user.displayName || userProfile?.displayName || 'User'} 
-                        className="w-12 h-12 rounded-full border-2 border-border"
+                        width={48}
+                        height={48}
+                        className="rounded-full border-2 border-border"
                       />
                       <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
                     </div>

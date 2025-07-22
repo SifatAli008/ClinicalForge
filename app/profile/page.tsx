@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  User, 
   Edit,
   Save,
   Download, 
@@ -17,12 +17,9 @@ import {
   Clock, 
   CheckCircle,
   AlertCircle,
-  Activity,
-  Award,
   Building,
   Phone,
   MapPin,
-  GraduationCap,
   ArrowLeft,
   Settings,
   Mail,
@@ -115,9 +112,9 @@ export default function ProfilePage() {
         const data = await getProfileAnalytics(user.uid);
         console.log('✅ Analytics loaded:', data);
         setAnalyticsData(data);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ Analytics error:', error);
-        setAnalyticsError(error?.message || 'Failed to load analytics');
+        setAnalyticsError((error as Error)?.message || 'Failed to load analytics');
       } finally {
         setAnalyticsLoading(false);
       }
@@ -427,10 +424,12 @@ export default function ProfilePage() {
                   <div className="flex items-start space-x-6">
                     {/* Profile Picture */}
                     <div className="relative">
-                      <img 
+                      <Image 
                         src={profile.photo} 
                         alt={profile.name}
-                        className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
+                        width={96}
+                        height={96}
+                        className="rounded-full border-4 border-white shadow-lg object-cover"
                       />
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                         <CheckCircle className="h-3 w-3 text-white" />

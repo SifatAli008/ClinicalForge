@@ -4,28 +4,21 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+
 import { 
   Activity, 
   TrendingUp, 
   Users, 
-  Clock, 
-  CheckCircle,
-  Heart,
   Database,
   Zap,
-  Microscope,
+
   Bell,
   BarChart3,
-  PieChart,
-  LineChart,
-  Target,
-  Globe,
   Play,
   Pause,
   RefreshCw
 } from 'lucide-react';
-import { RealTimeMedicalParams } from '@/components/ui/real-time-medical-params';
+
 import { MedicalParamsDashboard } from '@/components/ui/medical-params-dashboard';
 import { CompactMedicalParams } from '@/components/ui/compact-medical-params';
 import { RealTimeNotifications } from '@/components/ui/real-time-notifications';
@@ -68,7 +61,7 @@ export default function DemoRealTimePage() {
     const sampleData: ClinicalLogic = {
       diseaseName: randomDisease,
       commonName: randomDisease,
-      diseaseType: randomDiseaseType as any,
+      diseaseType: randomDiseaseType as 'Acute' | 'Chronic' | 'Recurrent' | 'Congenital',
       typicalOnsetAge: randomAge,
       genderBias: 'Equal',
       urbanRuralBias: 'Urban',
@@ -142,13 +135,13 @@ export default function DemoRealTimePage() {
     }, 5000); // Submit every 5 seconds
 
     // Store interval ID for cleanup
-    (window as any).simulationInterval = interval;
+          (window as unknown as { simulationInterval?: NodeJS.Timeout }).simulationInterval = interval;
   };
 
   const stopSimulation = () => {
     setIsSimulating(false);
-    if ((window as any).simulationInterval) {
-      clearInterval((window as any).simulationInterval);
+    if ((window as unknown as { simulationInterval?: NodeJS.Timeout }).simulationInterval) {
+      clearInterval((window as unknown as { simulationInterval?: NodeJS.Timeout }).simulationInterval);
     }
   };
 

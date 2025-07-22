@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -143,10 +144,12 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
           <div className="relative">
             {isEditing ? (
               <div className="relative">
-                <img
+                <Image
                   src={formData.profilePicture || '/default-avatar.svg'}
                   alt={formData.displayName}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-slate-200"
+                  width={80}
+                  height={80}
+                  className="rounded-full object-cover border-2 border-slate-200"
                 />
                 <Button
                   size="sm"
@@ -164,10 +167,12 @@ export function DoctorProfile({ isEditing: externalIsEditing, setIsEditing: exte
                 </Button>
               </div>
             ) : (
-              <img
+              <Image
                 src={formData.profilePicture || '/default-avatar.svg'}
                 alt={formData.displayName}
-                className="w-20 h-20 rounded-full object-cover"
+                width={80}
+                height={80}
+                className="rounded-full object-cover"
               />
             )}
           </div>

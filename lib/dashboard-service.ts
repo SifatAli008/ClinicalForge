@@ -9,7 +9,9 @@ import {
   Timestamp,
   serverTimestamp,
   count,
-  getCountFromServer
+  getCountFromServer,
+  DocumentData,
+  QueryDocumentSnapshot
 } from 'firebase/firestore';
 import { db } from './firebase-config';
 import { ClinicalLogic, UserProfile } from './types';
@@ -51,21 +53,87 @@ export interface SystemMetrics {
   systemStatus: 'healthy' | 'warning' | 'error';
 }
 
+// Helper function to check if data is test/dummy
+function isTestData(data: any): boolean {
+  const diseaseName = data.diseaseName?.clinical || data.diseaseName || '';
+  
+  // Check for empty or invalid disease names
+  if (!diseaseName || diseaseName.trim() === '' || diseaseName === 'Unknown') {
+    return true;
+  }
+  
+  // Check for test-related keywords
+  const testKeywords = ['test', 'dummy', 'sample', 'example', 'demo', 'fake'];
+  const lowerDiseaseName = diseaseName.toLowerCase();
+  
+  if (testKeywords.some(keyword => lowerDiseaseName.includes(keyword))) {
+    return true;
+  }
+  
+  // Check for specific test disease names
+  const testDiseases = [
+    'Test Disease',
+    'Lupus',
+    'Fibromyalgia', 
+    'Alzheimer\'s Disease',
+    'Parkinson\'s Disease',
+    'Multiple Sclerosis',
+    'Test Lupus',
+    'Test Fibromyalgia'
+  ];
+  
+  if (testDiseases.includes(diseaseName)) {
+    return true;
+  }
+  
+  // Check for test user names
+  const userName = data.physicianName || '';
+  if (userName.toLowerCase().includes('test') || userName.toLowerCase().includes('demo')) {
+    return true;
+  }
+  
+  // Check for test institutions
+  const institution = data.institution || '';
+  if (institution.toLowerCase().includes('test') || institution.toLowerCase().includes('demo')) {
+    return true;
+  }
+  
+  return false;
+}
+
 // Get comprehensive dashboard statistics
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
     console.log('📊 Fetching dashboard statistics...');
     
-    // Get counts from different collections
+    // Get counts from different collections - only count real data
     const [clinicalLogicCount, parameterValidationCount, analyticsCount] = await Promise.all([
       getCountFromServer(collection(db, 'clinicalLogic')),
       getCountFromServer(collection(db, 'comprehensiveParameterValidation')),
       getCountFromServer(collection(db, 'advancedClinicalAnalytics'))
     ]);
 
-    const totalForms = clinicalLogicCount.data().count + parameterValidationCount.data().count + analyticsCount.data().count;
+    // Get all submissions to filter out test data
+    const allSubmissionsQuery = query(
+      collection(db, 'clinicalLogic'),
+      orderBy('submissionDate', 'desc'),
+      limit(1000) // Get more to ensure we have enough real data
+    );
     
-    // Get recent submissions (last 7 days)
+    const allSubmissionsSnapshot = await getDocs(allSubmissionsQuery);
+    
+    // Filter out test data and count real submissions
+    let realSubmissionsCount = 0;
+    allSubmissionsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+      const data = doc.data();
+      if (!isTestData(data)) {
+        realSubmissionsCount++;
+      }
+    });
+
+    const totalForms = realSubmissionsCount;
+    
+    // Get recent submissions (last 7 days) - only real data
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
@@ -76,22 +144,25 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     );
     
     const recentSubmissionsSnapshot = await getDocs(recentSubmissionsQuery);
-    const recentSubmissions = recentSubmissionsSnapshot.size;
+    let recentSubmissions = 0;
+    recentSubmissionsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+      const data = doc.data();
+      if (!isTestData(data)) {
+        recentSubmissions++;
+      }
+    });
 
-    // Get top diseases
-    const allSubmissionsQuery = query(
-      collection(db, 'clinicalLogic'),
-      orderBy('submissionDate', 'desc'),
-      limit(100)
-    );
-    
-    const submissionsSnapshot = await getDocs(allSubmissionsQuery);
+    // Get top diseases - only real data
     const diseaseCounts = new Map<string, number>();
     
-    submissionsSnapshot.forEach(doc => {
+    allSubmissionsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       const data = doc.data();
-      const diseaseName = data.diseaseName?.clinical || data.diseaseName || 'Unknown Disease';
-      diseaseCounts.set(diseaseName, (diseaseCounts.get(diseaseName) || 0) + 1);
+      if (!isTestData(data)) {
+        const diseaseName = data.diseaseName?.clinical || data.diseaseName || '';
+        if (diseaseName && diseaseName.trim() !== '') {
+          diseaseCounts.set(diseaseName, (diseaseCounts.get(diseaseName) || 0) + 1);
+        }
+      }
     });
 
     const topDiseases = Array.from(diseaseCounts.entries())
@@ -99,16 +170,18 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    // Calculate completion rate (simplified)
+    // Calculate completion rate based on real data
     const completionRate = totalForms > 0 ? Math.round((recentSubmissions / totalForms) * 100) : 0;
 
-    // Get monthly contributions
+    // Get monthly contributions - only real data
     const monthlyCounts = new Map<string, number>();
-    submissionsSnapshot.forEach(doc => {
+    allSubmissionsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       const data = doc.data();
-      const date = data.submissionDate?.toDate() || new Date();
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyCounts.set(monthKey, (monthlyCounts.get(monthKey) || 0) + 1);
+      if (!isTestData(data)) {
+        const date = data.submissionDate?.toDate() || new Date();
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthlyCounts.set(monthKey, (monthlyCounts.get(monthKey) || 0) + 1);
+      }
     });
 
     const monthlyContributions = Array.from(monthlyCounts.entries())
@@ -116,25 +189,84 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .sort((a, b) => a.month.localeCompare(b.month))
       .slice(-6);
 
-    // Mock user activity (in real app, you'd query user profiles)
-    const userActivity = [
-      { userId: 'user1', displayName: 'Dr. Sarah Johnson', submissions: 12, lastActive: new Date() },
-      { userId: 'user2', displayName: 'Dr. Michael Chen', submissions: 8, lastActive: new Date() },
-      { userId: 'user3', displayName: 'Dr. Emily Davis', submissions: 6, lastActive: new Date() }
-    ];
+    // Get user activity from real data only
+    const userActivity: Array<{ userId: string; displayName: string; submissions: number; lastActive: Date }> = [];
+    
+    if (allSubmissionsSnapshot.size > 0) {
+      const userSubmissions = new Map<string, { submissions: number; lastActive: Date; displayName: string }>();
+      
+      allSubmissionsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+        const data = doc.data();
+        if (!isTestData(data)) {
+          const userId = data.userId || 'unknown';
+          const displayName = data.physicianName || 'Unknown User';
+          const submissionDate = data.submissionDate?.toDate() || new Date();
+          
+          if (userSubmissions.has(userId)) {
+            const existing = userSubmissions.get(userId)!;
+            existing.submissions += 1;
+            if (submissionDate > existing.lastActive) {
+              existing.lastActive = submissionDate;
+            }
+          } else {
+            userSubmissions.set(userId, {
+              submissions: 1,
+              lastActive: submissionDate,
+              displayName
+            });
+          }
+        }
+      });
+      
+      userActivity.push(...Array.from(userSubmissions.entries())
+        .map(([userId, data]) => ({
+          userId,
+          displayName: data.displayName,
+          submissions: data.submissions,
+          lastActive: data.lastActive
+        }))
+        .sort((a, b) => b.submissions - a.submissions)
+        .slice(0, 5)
+      );
+    }
+
+    // Calculate real data points from actual submissions
+    let totalDataPoints = 0;
+    allSubmissionsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+      const data = doc.data();
+      if (!isTestData(data)) {
+        // Count actual data fields from the submission
+        const dataFields = Object.keys(data).length;
+        totalDataPoints += dataFields;
+      }
+    });
+
+    // Calculate active collaborations from real data
+    let activeCollaborations = 0;
+    if (allSubmissionsSnapshot.size > 0) {
+      // Count unique institutions as a proxy for collaborations
+      const uniqueInstitutions = new Set<string>();
+      allSubmissionsSnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+        const data = doc.data();
+        if (!isTestData(data) && data.institution) {
+          uniqueInstitutions.add(data.institution);
+        }
+      });
+      activeCollaborations = uniqueInstitutions.size;
+    }
 
     const stats: DashboardStats = {
       totalForms,
-      totalUsers: userActivity.length, // Mock for now
-      totalDataPoints: totalForms * 50, // Estimate
+      totalUsers: userActivity.length,
+      totalDataPoints,
       completionRate,
       recentSubmissions,
-      activeCollaborations: 3, // Mock
+      activeCollaborations,
       topDiseases,
       monthlyContributions,
       userActivity,
       systemHealth: {
-        isConnected: true,
+        isConnected: allSubmissionsSnapshot.size >= 0, // True if we can access the database
         cacheSize: 0,
         lastUpdate: new Date()
       }
@@ -176,31 +308,41 @@ export async function getRecentActivity(limitCount = 10): Promise<RecentActivity
     const recentSubmissionsQuery = query(
       collection(db, 'clinicalLogic'),
       orderBy('submissionDate', 'desc'),
-      limit(limitCount)
+      limit(limitCount * 3) // Get more to filter out test data
     );
     
     const snapshot = await getDocs(recentSubmissionsQuery);
     const activities: RecentActivity[] = [];
     
-    snapshot.forEach(doc => {
+    snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       const data = doc.data();
-      activities.push({
-        id: doc.id,
-        type: 'form_submitted',
-        title: 'New Clinical Data Submitted',
-        description: `Disease: ${data.diseaseName?.clinical || data.diseaseName || 'Unknown'}`,
-        timestamp: data.submissionDate?.toDate() || new Date(),
-        userId: data.userId,
-        userName: data.physicianName,
-        metadata: {
-          diseaseName: data.diseaseName,
-          institution: data.institution
+      
+      // Only include real, meaningful submissions
+      if (!isTestData(data)) {
+        const diseaseName = data.diseaseName?.clinical || data.diseaseName || '';
+        if (diseaseName && diseaseName.trim() !== '') {
+          activities.push({
+            id: doc.id,
+            type: 'form_submitted',
+            title: 'New Clinical Data Submitted',
+            description: `Disease: ${diseaseName}`,
+            timestamp: data.submissionDate?.toDate() || new Date(),
+            userId: data.userId,
+            userName: data.physicianName,
+            metadata: {
+              diseaseName: data.diseaseName,
+              institution: data.institution
+            }
+          });
         }
-      });
+      }
     });
 
-    console.log('✅ Recent activity loaded:', activities.length, 'items');
-    return activities;
+    // Limit to requested count after filtering
+    const filteredActivities = activities.slice(0, limitCount);
+
+    console.log('✅ Recent activity loaded:', filteredActivities.length, 'real items (filtered out test data)');
+    return filteredActivities;
   } catch (error) {
     console.warn('⚠️ Firebase permission error, showing empty recent activity:', error);
     
@@ -277,13 +419,23 @@ export async function getSystemMetrics(): Promise<SystemMetrics> {
         submissions: user.submissions
       }));
 
+    // Calculate system status based on real data
+    let systemStatus: 'healthy' | 'warning' | 'error' = 'healthy';
+    if (stats.totalForms === 0) {
+      systemStatus = 'warning'; // No data available
+    } else if (stats.completionRate < 50) {
+      systemStatus = 'warning'; // Low completion rate
+    } else if (stats.completionRate < 25) {
+      systemStatus = 'error'; // Very low completion rate
+    }
+
     const metrics: SystemMetrics = {
       totalSubmissions: stats.totalForms,
       uniqueUsers: stats.totalUsers,
       averageCompletionRate: stats.completionRate,
       topContributors,
       recentActivity,
-      systemStatus: 'healthy' // You could add logic to determine this
+      systemStatus
     };
 
     console.log('✅ System metrics loaded:', metrics);

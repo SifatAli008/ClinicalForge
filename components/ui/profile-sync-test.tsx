@@ -126,8 +126,8 @@ export function ProfileSyncTest() {
             <li>1. Go to the main profile page</li>
             <li>2. Edit some profile information</li>
             <li>3. Save the changes</li>
-            <li>4. Come back here and click "Check Sync"</li>
-            <li>5. Verify the data shows as "Synced"</li>
+                            <li>4. Come back here and click &quot;Check Sync&quot;</li>
+                            <li>5. Verify the data shows as &quot;Synced&quot;</li>
           </ol>
         </div>
       </CardContent>

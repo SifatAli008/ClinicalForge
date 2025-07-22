@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Activity, 
   Users, 
   FileText, 
   Database,
@@ -22,14 +21,13 @@ import {
   TrendingUp,
   Lock,
   Sparkles,
-  Star,
   ArrowUpRight
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [activeFeature, setActiveFeature] = useState(0);
+
 
   useEffect(() => {
     // Simulate loading effect
@@ -43,7 +41,7 @@ export default function HomePage() {
   useEffect(() => {
     // Auto-rotate through features
     const interval = setInterval(() => {
-      setActiveFeature((prev) => (prev + 1) % 6);
+      // Feature rotation logic removed for now
     }, 3000);
 
     return () => clearInterval(interval);

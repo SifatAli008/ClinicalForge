@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Shield, Users, Database, AlertTriangle, CheckCircle, Scale, Gavel, Clock, Mail } from 'lucide-react';
+import { FileText, Shield, Users, Database, AlertTriangle, CheckCircle, Scale, Gavel, Clock } from 'lucide-react';
 
 export default function TermsConditionsPage() {
   const lastUpdated = 'December 2024';

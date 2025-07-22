@@ -6,14 +6,13 @@ import { ProfileSaveTest } from '@/components/ui/profile-save-test';
 import { ProfileSyncTest } from '@/components/ui/profile-sync-test';
 import { RealtimeTest } from '@/components/ui/realtime-test';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth-context';
 import { useAdmin } from '@/lib/admin-context';
 import { 
   User, 
   Shield, 
-  Database, 
   CheckCircle, 
   XCircle, 
   Loader2,
@@ -23,7 +22,7 @@ import {
 
 export default function ProfileTestPage() {
   const { user, userProfile, loading: authLoading, profileLoading } = useAuth();
-  const { isAuthenticated, loading: adminLoading } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   const getAuthStatus = () => {
     if (authLoading) return { status: 'loading', message: 'Authentication loading...', icon: Loader2 };
@@ -143,7 +142,7 @@ export default function ProfileTestPage() {
               <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
                 <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Before Running Tests:</h3>
                 <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800 dark:text-blue-200">
-                  <li>Make sure you're signed in (either as a doctor or admin)</li>
+                  <li>Make sure you&apos;re signed in (either as a doctor or admin)</li>
                   <li>Ensure Firebase connection is working</li>
                   <li>Check that profile data is loaded</li>
                   <li>Have the browser console open to see detailed logs</li>
@@ -221,7 +220,7 @@ export default function ProfileTestPage() {
                   <li>If authentication fails, check Firebase configuration in .env.local</li>
                   <li>If profile loading fails, check Firestore security rules</li>
                   <li>If tests timeout, check internet connection</li>
-                  <li>If updates don't save, check Firebase console for errors</li>
+                  <li>If updates don&apos;t save, check Firebase console for errors</li>
                 </ul>
               </div>
               

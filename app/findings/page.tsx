@@ -5,28 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Search,
   FileText,
-  Database,
-  TrendingUp,
-  Users,
   Calendar,
-  Tag,
-  ExternalLink,
-  Download,
-  Eye,
-  BarChart3,
-  Globe,
-  Lightbulb,
-  Shield,
-  Award,
   BookOpen,
-  MapPin,
-  Clock,
-  ArrowRight,
-  Star,
   CheckCircle,
-  User
+  User,
+  Eye,
+  Clock,
+  ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -75,10 +61,7 @@ const researchFindings: ResearchFinding[] = [
   }
 ];
 
-const categories = [
-  { name: 'All', count: researchFindings.length },
-  { name: 'Public Health Research', count: researchFindings.filter(f => f.category === 'Public Health Research').length }
-];
+
 
 export default function FindingsPage() {
   const [isLoaded, setIsLoaded] = useState(false);

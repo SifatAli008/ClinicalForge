@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle, AlertCircle, MessageSquare, Users, Database } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle, MessageSquare, Users, Database } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -73,7 +73,7 @@ export default function ContactPage() {
     {
       icon: Clock,
       title: 'Hours',
-      description: 'When we\'re available',
+      description: 'When we&apos;re available',
       value: 'Mon-Fri: 9AM-6PM EST',
       link: '#',
     },
@@ -118,7 +118,7 @@ export default function ContactPage() {
             Contact Us
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Have questions about ClinicalForge? We're here to help. Reach out to our team for support, 
+                            Have questions about ClinicalForge? We&apos;re here to help. Reach out to our team for support, 
             technical assistance, or partnership opportunities.
           </p>
         </div>
@@ -132,7 +132,7 @@ export default function ContactPage() {
                   Get in Touch
                 </CardTitle>
                 <CardDescription className="text-blue-700 dark:text-blue-300">
-                  We're here to help with any questions or concerns
+                  We&apos;re here to help with any questions or concerns
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
@@ -207,7 +207,7 @@ export default function ContactPage() {
                   Send us a Message
                 </CardTitle>
                 <CardDescription className="text-indigo-700 dark:text-indigo-300">
-                  Fill out the form below and we'll get back to you as soon as possible
+                  Fill out the form below and we&apos;ll get back to you as soon as possible
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
@@ -215,7 +215,7 @@ export default function ContactPage() {
                   <Alert className="mb-6 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
                     <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                     <AlertDescription className="text-green-800 dark:text-green-200">
-                      Thank you for your message! We'll get back to you within 24 hours.
+                      Thank you for your message! We&apos;ll get back to you within 24 hours.
                     </AlertDescription>
                   </Alert>
                 )}

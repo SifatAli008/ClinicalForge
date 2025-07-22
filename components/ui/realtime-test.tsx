@@ -200,10 +200,10 @@ export function RealtimeTest() {
         <div className="p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
           <h4 className="font-medium text-yellow-900 dark:text-yellow-100 mb-1">How to Test:</h4>
           <ol className="text-xs text-yellow-800 dark:text-yellow-200 space-y-1">
-            <li>1. Click "Test Real-time Update"</li>
-            <li>2. Watch the "Updates Received" counter increase</li>
-            <li>3. Check that "Current Profile Data" updates immediately</li>
-            <li>4. Verify "Last Update" timestamp changes</li>
+                            <li>1. Click &quot;Test Real-time Update&quot;</li>
+                            <li>2. Watch the &quot;Updates Received&quot; counter increase</li>
+                            <li>3. Check that &quot;Current Profile Data&quot; updates immediately</li>
+                            <li>4. Verify &quot;Last Update&quot; timestamp changes</li>
             <li>5. Check browser console for real-time logs</li>
           </ol>
         </div>
@@ -214,7 +214,7 @@ export function RealtimeTest() {
           <ul className="text-xs text-green-800 dark:text-green-200 space-y-1">
             <li>✅ Profile data should update immediately after save</li>
             <li>✅ No page refresh should be needed</li>
-            <li>✅ Console should show "Real-time profile update received"</li>
+                            <li>✅ Console should show &quot;Real-time profile update received&quot;</li>
             <li>✅ Update counter should increment with each change</li>
             <li>✅ All form fields should reflect the latest data</li>
           </ul>

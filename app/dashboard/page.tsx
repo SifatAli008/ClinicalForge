@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Activity, 
@@ -12,33 +12,23 @@ import {
   FileText, 
   TrendingUp,
   BarChart3,
-  Calendar,
   Clock,
   CheckCircle,
   AlertCircle,
-  Plus,
-  ArrowRight,
   Database,
   Zap,
   Target,
-  Award,
   Download,
   RefreshCw,
   Wifi,
-  WifiOff,
-  Loader2,
-  Eye,
-  EyeOff,
-  Settings,
   Shield,
-  Heart,
-  Stethoscope,
-  MapPin,
-  BookOpen
+  Inbox,
+  Plus,
+  Eye
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { useScrollAnimation, useScrollProgress, useScrollTrigger } from '@/lib/scroll-animations';
+import { useScrollAnimation, useScrollProgress } from '@/lib/scroll-animations';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { 
   getDashboardStats, 
@@ -54,7 +44,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { MonthlyChart, DiseaseChart } from '@/components/ui/dashboard-chart';
 
 export default function DashboardPage() {
-  const { user, userProfile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
@@ -63,14 +53,9 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [showSensitiveData, setShowSensitiveData] = useState(false);
-  
   const scrollProgress = useScrollProgress();
-  const hasScrolled = useScrollTrigger(50);
-  
   const { elementRef: heroRef, isVisible: heroVisible } = useScrollAnimation();
   const { elementRef: statsRef, isVisible: statsVisible } = useScrollAnimation();
-  const { elementRef: recentRef, isVisible: recentVisible } = useScrollAnimation();
 
   // Load dashboard data
   const loadDashboardData = async () => {
@@ -95,9 +80,9 @@ export default function DashboardPage() {
         title: "Dashboard Updated",
         description: "Real-time data has been refreshed.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error loading dashboard data:', error);
-      setError(error?.message || 'Failed to load dashboard data');
+      setError((error as Error)?.message || 'Failed to load dashboard data');
       toast({
         title: "Error",
         description: "Failed to load dashboard data. Please try again.",
@@ -130,7 +115,7 @@ export default function DashboardPage() {
         title: "Export Successful",
         description: "Dashboard data has been exported.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error exporting data:', error);
       toast({
         title: "Export Failed",
@@ -202,18 +187,18 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-2">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div 
               ref={heroRef}
-              className={`mb-8 transition-all duration-1000 ${
+              className={`mb-1 transition-all duration-1000 ${
                 heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
             >
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-1">
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-0">
                     Admin Dashboard
                   </h1>
                   <p className="text-gray-600 dark:text-gray-300">
@@ -243,7 +228,7 @@ export default function DashboardPage() {
 
             {/* Error Alert */}
             {error && (
-              <Alert className="mb-6 border-red-200 bg-red-50">
+              <Alert className="mb-1 border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   <strong>Error:</strong> {error}
@@ -251,110 +236,121 @@ export default function DashboardPage() {
               </Alert>
             )}
 
-            {/* System Status */}
-            {dashboardStats && (
-              <div className="mb-6">
-                <Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                      <Wifi className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                        System Status: Connected • Last Update: {dashboardStats.systemHealth.lastUpdate.toLocaleTimeString()}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            {/* System Status - Compact */}
+            <div className="mb-1">
+              <Card className={`border ${
+                dashboardStats?.systemHealth.isConnected 
+                  ? 'border-green-200 bg-green-50 dark:bg-green-900/20' 
+                  : 'border-red-200 bg-red-50 dark:bg-red-900/20'
+              }`}>
+                <CardContent className="p-2">
+                  <div className="flex items-center space-x-2">
+                    <Wifi className={`h-4 w-4 ${
+                      dashboardStats?.systemHealth.isConnected ? 'text-green-600' : 'text-red-600'
+                    }`} />
+                    <span className={`text-sm font-medium ${
+                      dashboardStats?.systemHealth.isConnected 
+                        ? 'text-green-700 dark:text-green-300' 
+                        : 'text-red-700 dark:text-red-300'
+                    }`}>
+                      System Status: {dashboardStats?.systemHealth.isConnected ? 'Connected' : 'Disconnected'} • 
+                      Last Update: {dashboardStats?.systemHealth.lastUpdate?.toLocaleTimeString() || 'Unknown'}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* Stats Grid */}
-            {dashboardStats && (
-              <div 
-                ref={statsRef}
-                className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 transition-all duration-1000 delay-300 ${
-                  statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                }`}
-              >
-                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Forms
-                    </CardTitle>
-                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20 group-hover:scale-110 transition-transform duration-300">
-                      <FileText className="h-4 w-4 text-blue-600" />
+            {/* Stats Grid - Always show */}
+            <div 
+              ref={statsRef}
+              className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-2 transition-all duration-1000 delay-300 ${
+                statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+            >
+              {/* Total Forms */}
+              <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Total Forms</p>
+                      <p className="text-2xl font-bold text-blue-600">{dashboardStats?.totalForms || 0}</p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.totalForms}</div>
-                    <p className="text-xs text-muted-foreground flex items-center mt-1">
-                      <TrendingUp className="h-3 w-3 mr-1 text-green-600" />
-                      +{dashboardStats.recentSubmissions} this week
-                    </p>
-                  </CardContent>
-                </Card>
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center text-xs text-muted-foreground">
+                    <TrendingUp className="h-3 w-3 mr-1 text-green-600" />
+                    +{dashboardStats?.recentSubmissions || 0} this week
+                  </div>
+                </CardContent>
+              </Card>
 
-                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Active Users
-                    </CardTitle>
-                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/20 group-hover:scale-110 transition-transform duration-300">
-                      <Users className="h-4 w-4 text-green-600" />
+              {/* Total Users */}
+              <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Active Users</p>
+                      <p className="text-2xl font-bold text-green-600">{dashboardStats?.totalUsers || 0}</p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.totalUsers}</div>
-                    <p className="text-xs text-muted-foreground flex items-center mt-1">
-                      <Activity className="h-3 w-3 mr-1 text-blue-600" />
-                      {dashboardStats.activeCollaborations} collaborations
-                    </p>
-                  </CardContent>
-                </Card>
+                    <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-full">
+                      <Users className="h-5 w-5 text-green-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center text-xs text-muted-foreground">
+                    <Activity className="h-3 w-3 mr-1 text-blue-600" />
+                    {dashboardStats?.userActivity.length || 0} contributors
+                  </div>
+                </CardContent>
+              </Card>
 
-                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Data Points
-                    </CardTitle>
-                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20 group-hover:scale-110 transition-transform duration-300">
-                      <BarChart3 className="h-4 w-4 text-purple-600" />
+              {/* Data Points */}
+              <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Data Points</p>
+                      <p className="text-2xl font-bold text-purple-600">{dashboardStats?.totalDataPoints.toLocaleString() || 0}</p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.totalDataPoints.toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground flex items-center mt-1">
-                      <Database className="h-3 w-3 mr-1 text-purple-600" />
-                      Collected across all forms
-                    </p>
-                  </CardContent>
-                </Card>
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-full">
+                      <Database className="h-5 w-5 text-purple-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center text-xs text-muted-foreground">
+                    <BarChart3 className="h-3 w-3 mr-1 text-purple-600" />
+                    From {dashboardStats?.totalForms || 0} submissions
+                  </div>
+                </CardContent>
+              </Card>
 
-                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Completion Rate
-                    </CardTitle>
-                    <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/20 group-hover:scale-110 transition-transform duration-300">
-                      <Target className="h-4 w-4 text-orange-600" />
+              {/* Completion Rate */}
+              <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Completion Rate</p>
+                      <p className="text-2xl font-bold text-orange-600">{dashboardStats?.completionRate || 0}%</p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.completionRate}%</div>
-                    <p className="text-xs text-muted-foreground flex items-center mt-1">
-                      <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
-                      Average form completion
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                    <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-full">
+                      <CheckCircle className="h-5 w-5 text-orange-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3 mr-1 text-orange-600" />
+                    Last 7 days
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
               {/* Recent Activity */}
               <div className="lg:col-span-2">
                 <Card className="h-full">
-                  <CardHeader>
+                  <CardHeader className="pb-1">
                     <CardTitle className="flex items-center space-x-2">
                       <Activity className="h-5 w-5" />
                       <span>Recent Activity</span>
@@ -365,9 +361,9 @@ export default function DashboardPage() {
                   </CardHeader>
                   <CardContent>
                     {isLoading ? (
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {[...Array(5)].map((_, i) => (
-                          <div key={i} className="flex items-start space-x-3 p-3">
+                          <div key={i} className="flex items-start space-x-3 p-2">
                             <div className="w-8 h-8 bg-muted rounded-full animate-pulse"></div>
                             <div className="flex-1 space-y-2">
                               <div className="h-4 bg-muted rounded animate-pulse"></div>
@@ -377,11 +373,11 @@ export default function DashboardPage() {
                         ))}
                       </div>
                     ) : recentActivity.length > 0 ? (
-                      <div className="space-y-4">
-                        {recentActivity.map((activity, index) => (
+                      <div className="space-y-3">
+                        {recentActivity.map((activity) => (
                           <div 
                             key={activity.id}
-                            className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors group"
+                            className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group"
                           >
                             <div className="p-2 rounded-full bg-muted group-hover:scale-110 transition-transform duration-300">
                               <FileText className="h-4 w-4 text-blue-600" />
@@ -398,9 +394,12 @@ export default function DashboardPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">No recent activity</p>
+                      <div className="text-center py-6">
+                        <Activity className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground mb-1">No recent activity</p>
+                        <p className="text-sm text-muted-foreground">
+                          Activity will appear here once forms are submitted
+                        </p>
                       </div>
                     )}
                   </CardContent>
@@ -408,78 +407,211 @@ export default function DashboardPage() {
               </div>
 
               {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Charts */}
-                {dashboardStats && (
-                  <>
-                    <DiseaseChart data={dashboardStats.topDiseases} />
-                    <MonthlyChart data={dashboardStats.monthlyContributions} />
-                  </>
-                )}
+              <div className="space-y-2">
+                {/* Charts - Always show, even when empty */}
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-1">
+                    <CardTitle className="flex items-center space-x-2">
+                      <BarChart3 className="h-5 w-5" />
+                      <span>Top Diseases</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Most frequently studied conditions
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {dashboardStats && dashboardStats.topDiseases.length > 0 ? (
+                      <DiseaseChart data={dashboardStats.topDiseases} />
+                    ) : (
+                      <div className="text-center py-6">
+                        <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground">No disease data available</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Disease analytics will appear once forms are submitted
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-green-500">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center space-x-2">
+                      <BarChart3 className="h-5 w-5" />
+                      <span>Monthly Contributions</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Form submissions over the last 6 months
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {dashboardStats && dashboardStats.monthlyContributions.length > 0 ? (
+                      <MonthlyChart data={dashboardStats.monthlyContributions} />
+                    ) : (
+                      <div className="text-center py-6">
+                        <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground">No monthly data available</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Monthly trends will appear once forms are submitted
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* User Activity - Always show */}
+                <Card className="border-l-4 border-l-purple-500">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Users className="h-5 w-5" />
+                      <span>Top Contributors</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Most active users and their contributions
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {dashboardStats && dashboardStats.userActivity.length > 0 ? (
+                      <div className="space-y-2">
+                        {dashboardStats.userActivity.slice(0, 5).map((user, index) => (
+                          <div key={user.userId} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
+                                <span className="text-sm font-medium text-purple-600">
+                                  {user.displayName.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{user.displayName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Last active: {user.lastActive.toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-sm text-purple-600">{user.submissions}</p>
+                              <p className="text-xs text-muted-foreground">submissions</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground">No user activity available</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          User contributions will appear once forms are submitted
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* System Metrics - Always show */}
+                <Card className="border-l-4 border-l-orange-500">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Shield className="h-5 w-5" />
+                      <span>System Metrics</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Platform performance and health indicators
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">Total Submissions</span>
+                      <span className="font-semibold text-orange-600">{systemMetrics?.totalSubmissions || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">Unique Users</span>
+                      <span className="font-semibold text-orange-600">{systemMetrics?.uniqueUsers || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">Avg Completion Rate</span>
+                      <span className="font-semibold text-orange-600">{systemMetrics?.averageCompletionRate || 0}%</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">System Status</span>
+                      <Badge variant={systemMetrics?.systemStatus === 'healthy' ? 'default' : 'destructive'}>
+                        {systemMetrics?.systemStatus || 'unknown'}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Quick Actions */}
-                <Card>
-                  <CardHeader>
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-3">
                     <CardTitle className="flex items-center space-x-2">
                       <Zap className="h-5 w-5" />
                       <span>Quick Actions</span>
                     </CardTitle>
+                    <CardDescription>
+                      Common tasks and navigation shortcuts
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-2">
                     <Link href="/forms">
-                      <Button variant="outline" className="w-full justify-start group">
+                      <Button variant="outline" className="w-full justify-start group hover:bg-blue-50 dark:hover:bg-blue-900/20">
                         <FileText className="h-4 w-4 mr-2 transition-transform group-hover:scale-110" />
                         View Forms
                       </Button>
                     </Link>
                     <Link href="/collaborate">
-                      <Button variant="outline" className="w-full justify-start group">
+                      <Button variant="outline" className="w-full justify-start group hover:bg-green-50 dark:hover:bg-green-900/20">
                         <Users className="h-4 w-4 mr-2 transition-transform group-hover:scale-110" />
                         Manage Users
                       </Button>
                     </Link>
                     <Link href="/findings">
-                      <Button variant="outline" className="w-full justify-start group">
+                      <Button variant="outline" className="w-full justify-start group hover:bg-purple-50 dark:hover:bg-purple-900/20">
                         <BarChart3 className="h-4 w-4 mr-2 transition-transform group-hover:scale-110" />
                         View Reports
                       </Button>
                     </Link>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start group hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                      onClick={handleExportData}
+                      disabled={isExporting}
+                    >
+                      <Download className={`h-4 w-4 mr-2 ${isExporting ? 'animate-spin' : ''}`} />
+                      Export Data
+                    </Button>
                   </CardContent>
                 </Card>
 
-                {/* System Health */}
-                {systemMetrics && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Shield className="h-5 w-5" />
-                        <span>System Health</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span>System Status</span>
-                          <Badge variant={systemMetrics.systemStatus === 'healthy' ? 'default' : 'destructive'}>
-                            {systemMetrics.systemStatus}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span>Unique Users</span>
-                          <span>{systemMetrics.uniqueUsers}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span>Avg Completion</span>
-                          <span>{systemMetrics.averageCompletionRate}%</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                {/* Data Summary - Always show */}
+                <Card className="border-l-4 border-l-purple-500">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Database className="h-5 w-5" />
+                      <span>Data Summary</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Overview of collected data and statistics
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">Total Data Points</span>
+                      <span className="font-semibold text-purple-600">{dashboardStats?.totalDataPoints.toLocaleString() || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">Active Collaborations</span>
+                      <span className="font-semibold text-purple-600">{dashboardStats?.activeCollaborations || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">Recent Submissions</span>
+                      <span className="font-semibold text-purple-600">{dashboardStats?.recentSubmissions || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">Completion Rate</span>
+                      <span className="font-semibold text-purple-600">{dashboardStats?.completionRate || 0}%</span>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>

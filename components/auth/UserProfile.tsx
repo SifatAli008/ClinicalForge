@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -183,10 +184,12 @@ export function UserProfile({
           <div className="relative">
             {isEditing ? (
               <div className="relative">
-                <img
+                <Image
                   src={formData.profilePicture || realtimeProfileData?.profilePicture || userProfile?.avatarUrl}
                   alt={userProfile?.displayName}
-                  className="w-32 h-32 rounded-full object-cover border-2 border-slate-200"
+                  width={128}
+                  height={128}
+                  className="rounded-full object-cover border-2 border-slate-200"
                 />
                 <Button
                   size="sm"
@@ -204,10 +207,12 @@ export function UserProfile({
                 </Button>
               </div>
             ) : (
-              <img
+              <Image
                 src={realtimeProfileData?.profilePicture || userProfile?.avatarUrl}
                 alt={userProfile?.displayName}
-                className="w-32 h-32 rounded-full object-cover"
+                width={128}
+                height={128}
+                className="rounded-full object-cover"
               />
             )}
           </div>

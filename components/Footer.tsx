@@ -3,10 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { Database, Mail, Shield, FileText, Heart, Github, Twitter, Linkedin } from 'lucide-react';
-import { useTheme } from 'next-themes';
+
 
 export default function Footer() {
-  const { theme } = useTheme();
+
   const currentYear = new Date().getFullYear();
 
   return (

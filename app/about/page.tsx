@@ -16,14 +16,13 @@ import {
   ArrowRight,
   Lightbulb,
   Database,
-  BarChart3,
   ArrowRightCircle,
   Activity,
   Brain,
   Microscope,
   Stethoscope
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -521,7 +520,7 @@ export default function AboutPage() {
               What You Gain from Collaboration
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Your clinical expertise is invaluable. Here's how collaboration benefits you and the global healthcare community.
+                              Your clinical expertise is invaluable. Here&apos;s how collaboration benefits you and the global healthcare community.
             </p>
             <div className="mt-6 flex items-center justify-center space-x-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-white">

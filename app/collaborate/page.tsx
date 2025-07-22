@@ -18,18 +18,13 @@ import {
   CheckCircle,
   ArrowRight,
   Star,
-  Target,
   Zap,
-  BarChart3,
   UserCheck,
   Building,
-  GraduationCap,
-  MapPin,
-  Clock,
   AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth-context';
+
 
 interface BenefitCard {
   icon: React.ReactNode;
@@ -379,7 +374,7 @@ export default function CollaboratePage() {
              </h2>
              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                Every contribution you make has a ripple effect across the healthcare ecosystem. 
-               Here's how your expertise creates lasting change:
+               Here&apos;s how your expertise creates lasting change:
              </p>
            </div>
 
@@ -430,7 +425,7 @@ export default function CollaboratePage() {
                What You Gain from Collaboration
              </h2>
              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-               Your clinical expertise is invaluable. Here's how collaboration benefits you and the global healthcare community.
+               Your clinical expertise is invaluable. Here&apos;s how collaboration benefits you and the global healthcare community.
              </p>
            </div>
 
@@ -659,7 +654,7 @@ export default function CollaboratePage() {
                           ))}
                         </div>
                         <blockquote className="text-gray-700 dark:text-gray-300 mb-4 italic">
-                          "{t.quote}"
+                          &quot;{t.quote}&quot;
                         </blockquote>
                         <div className="border-t pt-4">
                           <div className="font-medium text-gray-900 dark:text-white">

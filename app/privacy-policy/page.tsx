@@ -264,7 +264,7 @@ export default function PrivacyPolicyPage() {
               Contact Us
             </CardTitle>
             <CardDescription className="text-indigo-700 dark:text-indigo-300">
-              Questions about our privacy policy? We're here to help.
+                              Questions about our privacy policy? We&apos;re here to help.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">

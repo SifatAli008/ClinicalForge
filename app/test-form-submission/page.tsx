@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+
 import { submitForm } from '@/lib/form-submission-service';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -123,9 +122,9 @@ export default function TestFormSubmission() {
             </h3>
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
               <li>• <strong>submissionId</strong> - Auto-generated UUID</li>
-              <li>• <strong>collaboratorId</strong> - Current user's UID</li>
+                              <li>• <strong>collaboratorId</strong> - Current user&apos;s UID</li>
               <li>• <strong>submittedAt</strong> - Current timestamp</li>
-              <li>• <strong>version</strong> - "1.0"</li>
+              <li>• <strong>version</strong> - &quot;1.0&quot;</li>
               <li>• <strong>validation scores</strong> - Auto-calculated (0-100)</li>
               <li>• <strong>advanced analytics</strong> - Decision models, critical points</li>
               <li>• <strong>metadata</strong> - Creation info, access control</li>

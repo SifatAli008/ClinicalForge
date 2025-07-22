@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { Language, coreTranslations, loadFullTranslations } from './translations-optimized';
