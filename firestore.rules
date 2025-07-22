@@ -90,6 +90,19 @@ service cloud.firestore {
         && request.auth.uid == userId;
     }
     
+    // Articles collection - for research findings
+    match /articles/{document} {
+      // Allow read access to all users (including anonymous for development)
+      allow read: if true;
+      
+      // Allow write access for creating new articles (admin only in production)
+      allow create, update: if true; // For development - change to auth check in production
+      
+      // Allow delete only for admin
+      allow delete: if request.auth != null 
+        && request.auth.token.admin == true;
+    }
+    
     // Dashboard aggregation queries - allow for all users (development)
     match /{document=**} {
       // Allow aggregation queries for dashboard functionality

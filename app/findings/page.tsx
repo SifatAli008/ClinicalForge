@@ -5,211 +5,291 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  FileText,
   Calendar,
   BookOpen,
   CheckCircle,
   User,
-  Eye,
-  Clock,
-  ExternalLink
+  Sparkles,
+  Database,
+  Plus
 } from 'lucide-react';
 import Link from 'next/link';
-
-interface ResearchFinding {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  tags: string[];
-  publishDate: string;
-  readTime: string;
-  author: string;
-  institution: string;
-  impact: string;
-  methodology: string;
-  keyFindings: string[];
-  datasetSize: string;
-  contributors: number;
-  citations: number;
-  status: 'published' | 'in-progress' | 'preview';
-}
-
-const researchFindings: ResearchFinding[] = [
-  {
-    id: 'bangladesh-clinical-dataset-analysis',
-    title: 'Clinical Dataset Analysis: Physician Participation in Synthetic Data Creation for Bangladesh Healthcare',
-    description: 'Comprehensive analysis of disease prevalence, clinical diversity, and the necessity of physician participation in creating contextually appropriate health datasets for Bangladesh.',
-    category: 'Public Health Research',
-    tags: ['Clinical Data', 'Physician Participation', 'Bangladesh Healthcare', 'Disease Prevalence', 'Synthetic Data'],
-    publishDate: '2024-01-20',
-    readTime: '25 min read',
-    author: 'ClinicalForge Research Team',
-    institution: 'ClinicalForge Platform',
-    impact: 'Established framework for physician-driven clinical data collection in Bangladesh',
-    methodology: 'Comprehensive literature review and analysis of national health statistics from 2021-2024',
-    keyFindings: [
-      'Diabetes prevalence: 14.2% with 61.5% unawareness rate',
-      'CKD prevalence: 22-22.5% (twice global average)',
-      'Only 32% follow-up rate due to economic barriers',
-      'Regional variations in disease patterns require local expertise'
-    ],
-    datasetSize: 'Literature Review',
-    contributors: 1,
-    citations: 8,
-    status: 'published'
-  }
-];
-
-
+import { submitArticle, getArticles, ResearchFinding } from '@/lib/article-service';
+import { populateArticles } from '@/lib/populate-articles';
+import { useAuth } from '@/lib/auth-context';
+import AdminOnly from '@/components/admin/AdminOnly';
+import ArticleSubmissionForm from '@/components/ui/article-submission-form';
 
 export default function FindingsPage() {
+  const { isAdmin } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [findings, setFindings] = useState<ResearchFinding[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showAddArticleModal, setShowAddArticleModal] = useState(false);
 
   useEffect(() => {
     setIsLoaded(true);
+    loadArticles();
   }, []);
 
-  const filteredFindings = researchFindings;
+  const loadArticles = async () => {
+    try {
+      setIsLoading(true);
+      const articles = await getArticles();
+      setFindings(articles);
+    } catch (error) {
+      console.error('Error loading articles:', error);
+      setFindings([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePopulateArticles = async () => {
+    try {
+      setIsLoading(true);
+      await populateArticles();
+      await loadArticles(); // Reload articles after populating
+    } catch (error) {
+      console.error('Error populating articles:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddArticleSuccess = () => {
+    setShowAddArticleModal(false);
+    loadArticles(); // Reload articles after adding new one
+  };
+
+  const handleAddArticleCancel = () => {
+    setShowAddArticleModal(false);
+  };
+
+  const filteredFindings = findings;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Hero Section */}
-      <div 
-        className={`text-center mb-12 transition-all duration-1000 ${
-          isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-      >
-        <Badge variant="secondary" className="mb-4">
-          <BookOpen className="h-4 w-4 mr-2" />
-          Research Findings
-        </Badge>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          Our Research Findings
-        </h1>
-        <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-          Discover insights from our collaborative research platform. Explore datasets, methodologies, and findings 
-          that are advancing healthcare knowledge and improving patient outcomes worldwide.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Hero Section */}
+        <div 
+          className={`text-center mb-12 transition-all duration-1000 ${
+            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <BookOpen className="h-6 w-6 text-primary" />
+              </div>
+              <Badge variant="secondary" className="text-sm">
+                Research Findings
+              </Badge>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
+              Discover Research
+              <span className="text-primary block">Insights</span>
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Explore cutting-edge research findings, methodologies, and insights that are advancing 
+              healthcare knowledge and improving patient outcomes worldwide.
+            </p>
+          </div>
+        </div>
 
-      {/* Research Findings Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredFindings.map((finding) => (
-          <Card key={finding.id} className="border-2 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group">
-            <CardHeader>
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {finding.category}
-                    </Badge>
-                    {finding.status === 'published' && (
-                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                        Published
-                      </Badge>
-                    )}
+        {/* Admin Add Article Button */}
+        <AdminOnly>
+          <div className="mb-8 flex justify-center">
+            <Button 
+              size="lg" 
+              className="bg-primary hover:bg-primary/90 text-white shadow-lg"
+              onClick={() => setShowAddArticleModal(true)}
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Add New Article
+            </Button>
+          </div>
+        </AdminOnly>
+
+        {/* Research Findings Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="border-0 shadow-lg animate-pulse bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+                <CardHeader className="pb-4">
+                  <div className="space-y-3">
+                    <div className="flex space-x-2">
+                      <div className="h-4 bg-muted rounded w-16"></div>
+                      <div className="h-4 bg-muted rounded w-20"></div>
+                    </div>
+                    <div className="h-6 bg-muted rounded"></div>
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
                   </div>
-                  <CardTitle className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors duration-200">
-                    {finding.title}
-                  </CardTitle>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                  <Calendar className="h-4 w-4" />
-                  <span>{new Date(finding.publishDate).toLocaleDateString()}</span>
-                </div>
-              </div>
-              <CardDescription className="text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-                {finding.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {finding.tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-
-              {/* Key Metrics */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">{finding.datasetSize}</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">Dataset Size</div>
-                </div>
-                <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">{finding.contributors}</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">Contributors</div>
-                </div>
-              </div>
-
-              {/* Key Findings Preview */}
-              <div className="mb-4">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Key Findings:</h4>
-                <ul className="space-y-1">
-                  {finding.keyFindings.slice(0, 2).map((finding, index) => (
-                    <li key={index} className="flex items-start space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                      <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span>{finding}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Author and Impact */}
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white text-sm">
-                        {finding.author}
-                      </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        {finding.institution}
-                      </div>
-                    </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    {[...Array(3)].map((_, j) => (
+                      <div key={j} className="h-6 bg-muted rounded w-16"></div>
+                    ))}
                   </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                    <div className="flex items-center space-x-1">
-                      <Eye className="h-4 w-4" />
-                      <span>{finding.citations}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{finding.readTime}</span>
-                    </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="h-16 bg-muted rounded"></div>
+                    <div className="h-16 bg-muted rounded"></div>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filteredFindings.length === 0 ? (
+          <Card className="border-0 shadow-lg bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+            <CardContent className="p-12 text-center">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="p-4 bg-muted rounded-full">
+                  <BookOpen className="h-8 w-8 text-muted-foreground" />
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <Link href={`/findings/${finding.id}`}>
-                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                    <BookOpen className="h-4 w-4" />
-                    <span>Read Full Paper</span>
-                  </Button>
-                </Link>
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                    <FileText className="h-4 w-4" />
-                    <span>References</span>
-                  </Button>
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                    <ExternalLink className="h-4 w-4" />
-                    <span>Cite</span>
-                  </Button>
-                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  No articles found
+                </h3>
+                                        <p className="text-gray-600 dark:text-gray-400 max-w-md mb-4">
+                          No research articles are currently available.
+                        </p>
+                        <Button 
+                          onClick={handlePopulateArticles} 
+                          disabled={isLoading}
+                          className="bg-primary hover:bg-primary/90"
+                        >
+                          {isLoading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Populating...
+                            </>
+                          ) : (
+                            <>
+                              <Database className="h-4 w-4 mr-2" />
+                              Add Sample Article
+                            </>
+                          )}
+                        </Button>
               </div>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredFindings.map((finding) => (
+              <Card key={finding.id} className="group border-0 shadow-lg hover:shadow-xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm transition-all duration-300 hover:scale-105 cursor-pointer overflow-hidden">
+                {/* Status Badge */}
+                <div className="absolute top-4 right-4 z-10">
+                  {finding.status === 'published' && (
+                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-0">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Published
+                    </Badge>
+                  )}
+                  {finding.status === 'in-progress' && (
+                    <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 border-0">
+                      In Progress
+                    </Badge>
+                  )}
+                  {finding.status === 'preview' && (
+                    <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0">
+                      Preview
+                    </Badge>
+                  )}
+                </div>
+
+                <CardHeader className="pb-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="text-xs">
+                        {finding.category}
+                      </Badge>
+                      <div className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400">
+                        <Calendar className="h-3 w-3" />
+                        <span>{new Date(finding.publishDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <CardTitle className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors duration-200 line-clamp-2">
+                      {finding.title}
+                    </CardTitle>
+                    <CardDescription className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3">
+                      {finding.description}
+                    </CardDescription>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-2">
+                    {finding.tags.slice(0, 3).map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                    {finding.tags.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{finding.tags.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+
+
+
+                  {/* Key Findings Preview */}
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm flex items-center">
+                      <Sparkles className="h-4 w-4 mr-2 text-primary" />
+                      Key Findings
+                    </h4>
+                    <ul className="space-y-1">
+                      {finding.keyFindings.slice(0, 2).map((finding, index) => (
+                        <li key={index} className="flex items-start space-x-2 text-xs text-gray-600 dark:text-gray-300">
+                          <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span className="line-clamp-2">{finding}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Author */}
+                  <div className="border-t pt-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white text-sm">
+                          {finding.author}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          {finding.institution}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-center pt-4 border-t">
+                                                  <Link href={`/findings/bangladesh-clinical-dataset-analysis`}>
+                      <Button variant="outline" size="sm" className="flex items-center space-x-2 group-hover:bg-primary group-hover:text-white transition-colors duration-200">
+                        <BookOpen className="h-4 w-4" />
+                        <span>Read Full Paper</span>
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Add Article Modal */}
+      {showAddArticleModal && (
+        <ArticleSubmissionForm
+          onSuccess={handleAddArticleSuccess}
+          onCancel={handleAddArticleCancel}
+        />
+      )}
     </div>
   );
 } 
