@@ -3,8 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Clinical Logic Collection
     match /clinicalLogic/{document} {
-      // Allow read access to all authenticated users
-      allow read: if request.auth != null;
+      // Allow read access to all users (including anonymous for development)
+      allow read: if true;
       
       // Allow write access for creating new submissions
       allow create: if request.auth != null 
@@ -30,8 +30,8 @@ service cloud.firestore {
     
     // Comprehensive Parameter Validation
     match /comprehensiveParameterValidation/{document} {
-      // Allow read access to all authenticated users
-      allow read: if request.auth != null;
+      // Allow read access to all users (including anonymous for development)
+      allow read: if true;
       
       // Allow write access for creating new submissions
       allow create: if request.auth != null;
@@ -48,8 +48,8 @@ service cloud.firestore {
     
     // Advanced Clinical Analytics
     match /advancedClinicalAnalytics/{document} {
-      // Allow read access to all authenticated users
-      allow read: if request.auth != null;
+      // Allow read access to all users (including anonymous for development)
+      allow read: if true;
       
       // Allow write access for creating new submissions
       allow create: if request.auth != null;
@@ -66,8 +66,8 @@ service cloud.firestore {
     
     // Contributors
     match /contributors/{document} {
-      // Allow read access to all authenticated users
-      allow read: if request.auth != null;
+      // Allow read access to all users (including anonymous for development)
+      allow read: if true;
       
       // Allow create/update for contributor management
       allow create, update: if request.auth != null;
@@ -77,9 +77,9 @@ service cloud.firestore {
         && request.auth.token.admin == true;
     }
     
-    // Analytics (read-only for all authenticated users)
+    // Analytics (read-only for all users)
     match /analytics/{document} {
-      allow read: if request.auth != null;
+      allow read: if true;
       allow write: if request.auth != null 
         && request.auth.token.admin == true;
     }
@@ -88,6 +88,12 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if request.auth != null 
         && request.auth.uid == userId;
+    }
+    
+    // Dashboard aggregation queries - allow for all users (development)
+    match /{document=**} {
+      // Allow aggregation queries for dashboard functionality
+      allow read: if true;
     }
   }
 } 
