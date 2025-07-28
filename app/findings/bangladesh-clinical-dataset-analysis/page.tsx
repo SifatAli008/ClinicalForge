@@ -531,7 +531,7 @@ export default function BangladeshClinicalDatasetAnalysisPage() {
                           </div>
                           <div className="border-l-4 border-purple-500 pl-4">
                             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Why is your participation needed?</h3>
-                            <p className="text-gray-700 dark:text-gray-300">Only clinical input can accurately reflect Bangladesh's real disease patterns, comorbidities, and social realities.</p>
+                            <p className="text-gray-700 dark:text-gray-300">Only clinical input can accurately reflect Bangladesh&apos;s real disease patterns, comorbidities, and social realities.</p>
                           </div>
                           <div className="border-l-4 border-orange-500 pl-4">
                             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">What are the benefits?</h3>
@@ -597,7 +597,7 @@ export default function BangladeshClinicalDatasetAnalysisPage() {
                             Without physician participation, creating an effective, scientifically credible, and contextually appropriate 
                             health dataset for Bangladesh is nearly impossible. This initiative lays the foundation for research, policy, 
                             AI-driven healthcare, and national disease registries. 
-                            <strong className="text-blue-600 dark:text-blue-400">Your clinical judgment and insight will help build Bangladesh's health future—let's start this transformative journey today.</strong>
+                            <strong className="text-blue-600 dark:text-blue-400">Your clinical judgment and insight will help build Bangladesh&apos;s health future—let&apos;s start this transformative journey today.</strong>
                           </p>
                         </div>
                       </section>

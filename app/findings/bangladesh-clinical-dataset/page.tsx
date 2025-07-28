@@ -194,7 +194,7 @@ export default function BangladeshClinicalDatasetPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Why is your participation needed?</h3>
-                  <p className="text-gray-700 dark:text-gray-300">Only clinical input can accurately reflect Bangladesh's real disease patterns, comorbidities, and social realities.</p>
+                  <p className="text-gray-700 dark:text-gray-300">Only clinical input can accurately reflect Bangladesh&apos;s real disease patterns, comorbidities, and social realities.</p>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">What are the benefits?</h3>
@@ -257,7 +257,7 @@ export default function BangladeshClinicalDatasetPage() {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">7. References (2021–2024)</h2>
               <ul className="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300 text-lg">
                 <li><strong>International Diabetes Federation, Bangladesh Factsheet 2021</strong> – IDF Diabetes Atlas 10th/11th Edition Factsheets, World & Regional Data (incl. Bangladesh)</li>
-                <li><strong>TheGlobalEconomy.com, Bangladesh—Diabetes prevalence</strong> – "Bangladesh: Diabetes prevalence … Latest value from 2021 is 14.2 percent"</li>
+                <li><strong>TheGlobalEconomy.com, Bangladesh—Diabetes prevalence</strong> – &quot;Bangladesh: Diabetes prevalence … Latest value from 2021 is 14.2 percent&quot;</li>
                 <li><strong>BDHS 2017–18 (PubMed)</strong> – Awareness, Treatment, and Control of Diabetes in Bangladesh, PubMed (BDHS 2017–18)</li>
                 <li><strong>Kidney International Reports, 2021</strong> – Prevalence of CKD in Bangladesh (~22–22.5%), stage III–V distribution</li>
                 <li><strong>PMC, Awareness about CKD (Bangladesh)</strong> – Global Dialysis Perspective & CKD awareness studies</li>
@@ -274,7 +274,7 @@ export default function BangladeshClinicalDatasetPage() {
                 Without physician participation, creating an effective, scientifically credible, and contextually appropriate 
                 health dataset for Bangladesh is nearly impossible. This initiative lays the foundation for research, policy, 
                 AI-driven healthcare, and national disease registries. 
-                <strong>Your clinical judgment and insight will help build Bangladesh's health future—let's start this transformative journey today.</strong>
+                <strong>Your clinical judgment and insight will help build Bangladesh&apos;s health future—let&apos;s start this transformative journey today.</strong>
               </p>
             </div>
           </div>

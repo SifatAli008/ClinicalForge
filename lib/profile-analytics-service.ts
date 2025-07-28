@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase-config';
 import { ClinicalLogic, UserProfile } from './types';
+import { EnhancedClinicalDatabaseService } from './enhanced-clinical-database-service';
 
 export interface UserStatistics {
   formsCompleted: number;
@@ -40,7 +41,54 @@ export interface ProfileAnalytics {
   isRealData: boolean;
 }
 
-// Get user's form submissions
+// Get user's enhanced clinical database submissions
+export async function getUserEnhancedSubmissions(userId: string): Promise<any[]> {
+  try {
+    console.log('🔍 Fetching enhanced clinical database submissions for user:', userId);
+    
+    const enhancedService = new EnhancedClinicalDatabaseService();
+    let submissions = await enhancedService.getUserSubmissions(userId);
+    
+    console.log('✅ Enhanced submissions query successful, found:', submissions.length, 'documents');
+    console.log('📊 Processed enhanced submissions:', submissions.length);
+    
+    // Debug: Log the first submission if any
+    if (submissions.length > 0) {
+      console.log('📋 First submission sample:', {
+        submissionId: submissions[0].submissionId,
+        formType: submissions[0].formType,
+        collaboratorId: submissions[0].collaboratorId,
+        submittedAt: submissions[0].submittedAt,
+        status: submissions[0].status
+      });
+    } else {
+      // If no submissions found for this user, try to get all recent submissions
+      console.log('⚠️ No submissions found for user, trying to get recent submissions...');
+      try {
+        const allSubmissions = await enhancedService.getApprovedSubmissions(10);
+        console.log('📊 Found', allSubmissions.length, 'recent submissions');
+        if (allSubmissions.length > 0) {
+          console.log('📋 Sample recent submission:', {
+            submissionId: allSubmissions[0].submissionId,
+            formType: allSubmissions[0].formType,
+            collaboratorId: allSubmissions[0].collaboratorId,
+            submittedAt: allSubmissions[0].submittedAt,
+            status: allSubmissions[0].status
+          });
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback query also failed:', fallbackError);
+      }
+    }
+    
+    return submissions;
+  } catch (error) {
+    console.error('❌ Error fetching enhanced user submissions:', error);
+    return [];
+  }
+}
+
+// Get user's form submissions (legacy)
 export async function getUserFormSubmissions(userId: string): Promise<ClinicalLogic[]> {
   try {
     console.log('🔍 Fetching clinical logic submissions for user:', userId);
@@ -184,22 +232,56 @@ export async function getUserAnalyticsSubmissions(userId: string): Promise<any[]
   }
 }
 
-// Calculate user statistics
+// Calculate user statistics with enhanced submissions
 export function calculateUserStatistics(
   clinicalSubmissions: ClinicalLogic[],
   parameterSubmissions: any[],
-  analyticsSubmissions: any[]
+  analyticsSubmissions: any[],
+  enhancedSubmissions: any[] = []
 ): UserStatistics {
   console.log('📈 Calculating statistics from:', {
     clinical: clinicalSubmissions.length,
     parameter: parameterSubmissions.length,
-    analytics: analyticsSubmissions.length
+    analytics: analyticsSubmissions.length,
+    enhanced: enhancedSubmissions.length
+  });
+
+  // Process enhanced submissions
+  const enhancedSubmissionsProcessed = enhancedSubmissions.map(submission => {
+    let formType = 'Unknown Form';
+    let diseaseName = 'Unknown Disease';
+    
+    if (submission.formType === 'comprehensive-parameter-validation') {
+      formType = 'Comprehensive Parameter Validation';
+      diseaseName = submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || 'Unknown Disease';
+    } else if (submission.formType === 'advanced-clinical-analytics') {
+      formType = 'Advanced Clinical Analytics';
+      diseaseName = submission.diseaseName || 'Clinical Analytics Data';
+    } else if (submission.formType === 'unified-clinical-database') {
+      formType = 'Unified Clinical Database';
+      diseaseName = submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || submission.diseaseName || 'Unified Data';
+    }
+    
+    console.log('🔍 Processing enhanced submission:', {
+      submissionId: submission.submissionId,
+      formType: submission.formType,
+      processedFormType: formType,
+      diseaseName: diseaseName
+    });
+    
+    return {
+      ...submission,
+      formType,
+      diseaseName,
+      submissionDate: submission.submittedAt?.toDate() || new Date()
+    };
   });
 
   const allSubmissions = [
     ...clinicalSubmissions.map(s => ({ ...s, formType: 'Clinical Logic Collection' })),
     ...parameterSubmissions.map(s => ({ ...s, formType: 'Parameter Validation' })),
-    ...analyticsSubmissions.map(s => ({ ...s, formType: 'Advanced Analytics' }))
+    ...analyticsSubmissions.map(s => ({ ...s, formType: 'Advanced Analytics' })),
+    ...enhancedSubmissionsProcessed
   ];
 
   const formsCompleted = allSubmissions.length;
@@ -211,11 +293,11 @@ export function calculateUserStatistics(
   const recentActivity = allSubmissions
     .slice(0, 5)
     .map(submission => ({
-      id: submission.id || '',
+      id: submission.submissionId || submission.id || '',
       formType: submission.formType,
       diseaseName: submission.diseaseName || 'Unknown Disease',
-      status: 'completed' as const,
-      submittedAt: submission.submissionDate || new Date(),
+      status: submission.status || 'completed' as const,
+      submittedAt: submission.submissionDate || submission.submittedAt?.toDate() || new Date(),
       description: `${submission.formType} - ${submission.diseaseName || 'Clinical Data'}`
     }));
 
@@ -234,7 +316,7 @@ export function calculateUserStatistics(
   // Get monthly contributions
   const monthlyCounts = new Map<string, number>();
   allSubmissions.forEach(submission => {
-    const date = submission.submissionDate || new Date();
+    const date = submission.submissionDate || submission.submittedAt?.toDate() || new Date();
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     monthlyCounts.set(monthKey, (monthlyCounts.get(monthKey) || 0) + 1);
   });
@@ -255,6 +337,7 @@ export function calculateUserStatistics(
   };
 
   console.log('📊 Calculated statistics:', statistics);
+  console.log('📋 Recent activity details:', recentActivity);
   return statistics;
 }
 
@@ -263,18 +346,26 @@ export async function getProfileAnalytics(userId: string): Promise<ProfileAnalyt
   try {
     console.log('🚀 Starting profile analytics for user:', userId);
     
-    // Fetch all user submissions
-    const [clinicalSubmissions, parameterSubmissions, analyticsSubmissions] = await Promise.all([
+    // Fetch all user submissions including enhanced submissions
+    const [clinicalSubmissions, parameterSubmissions, analyticsSubmissions, enhancedSubmissions] = await Promise.all([
       getUserFormSubmissions(userId),
       getUserParameterSubmissions(userId),
-      getUserAnalyticsSubmissions(userId)
+      getUserAnalyticsSubmissions(userId),
+      getUserEnhancedSubmissions(userId)
     ]);
 
-    // Calculate statistics
+    console.log('📊 Fetched submissions summary:');
+    console.log('- Clinical submissions:', clinicalSubmissions.length);
+    console.log('- Parameter submissions:', parameterSubmissions.length);
+    console.log('- Analytics submissions:', analyticsSubmissions.length);
+    console.log('- Enhanced submissions:', enhancedSubmissions.length);
+
+    // Calculate statistics including enhanced submissions
     const statistics = calculateUserStatistics(
       clinicalSubmissions,
       parameterSubmissions,
-      analyticsSubmissions
+      analyticsSubmissions,
+      enhancedSubmissions
     );
 
     // Get user profile (this would come from auth context)

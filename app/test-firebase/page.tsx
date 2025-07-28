@@ -221,9 +221,9 @@ export default function TestFirebasePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p>1. First, click "Test Connection" to verify Firebase connection.</p>
-              <p>2. If connection is successful, click "Populate Articles" to add sample data.</p>
-              <p>3. Click "Load Articles" to fetch and display articles from Firebase.</p>
+              <p>1. First, click &quot;Test Connection&quot; to verify Firebase connection.</p>
+              <p>2. If connection is successful, click &quot;Populate Articles&quot; to add sample data.</p>
+              <p>3. Click &quot;Load Articles&quot; to fetch and display articles from Firebase.</p>
               <p>4. Visit the <a href="/findings" className="text-primary hover:underline">Findings page</a> to see the articles loaded from Firebase.</p>
             </div>
           </CardContent>

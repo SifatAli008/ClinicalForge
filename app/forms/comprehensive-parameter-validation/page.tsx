@@ -12,7 +12,7 @@ import { CheckCircle, AlertCircle, Info, Save, Send, Database, Users, Activity, 
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { comprehensiveParameterValidationService } from '@/lib/comprehensive-parameter-validation-service';
+import { enhancedClinicalDatabaseService } from '@/lib/enhanced-clinical-database-service';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/auth-context';
 import { Label } from '@/components/ui/label';
@@ -372,9 +372,9 @@ export default function ComprehensiveParameterValidationForm() {
         },
       };
 
-      // Submit to comprehensive database
-      const submissionId = await comprehensiveParameterValidationService.submitComprehensiveValidation(
-        databaseData,
+      // Submit to enhanced clinical database
+      const submissionId = await enhancedClinicalDatabaseService.submitComprehensiveParameterValidation(
+        { comprehensiveData: databaseData },
         user.uid
       );
 
@@ -446,8 +446,8 @@ export default function ComprehensiveParameterValidationForm() {
       };
 
       // Save as draft
-      const submissionId = await comprehensiveParameterValidationService.submitComprehensiveValidation(
-        databaseData,
+      const submissionId = await enhancedClinicalDatabaseService.submitComprehensiveParameterValidation(
+        { comprehensiveData: databaseData },
         user.uid
       );
 

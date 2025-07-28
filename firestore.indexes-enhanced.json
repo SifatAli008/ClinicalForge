@@ -27,6 +27,20 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "submittedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "enhancedClinicalDatabase",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "collaboratorId",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "status",
           "order": "ASCENDING"
         },

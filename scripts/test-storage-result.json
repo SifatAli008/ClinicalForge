@@ -1,0 +1,119 @@
+{
+  "comprehensiveData": {
+    "diseaseOverview": {
+      "diseaseName": {
+        "clinical": "Test Disease Clinical Name",
+        "common": "Test Disease Common Name",
+        "icd10Code": "A00.0",
+        "icd11Code": "1A00.0"
+      },
+      "diseaseType": {
+        "primary": "acute",
+        "secondary": [
+          "chronic"
+        ],
+        "severity": "moderate"
+      }
+    },
+    "diseaseSubtypes": [
+      {
+        "subtypeName": "Test Subtype 1",
+        "clinicalCharacteristics": "Mild symptoms",
+        "diagnosticCriteria": "Blood test positive",
+        "treatmentApproach": "Conservative management"
+      }
+    ],
+    "clinicalPresentation": {
+      "commonSymptoms": [
+        "fever",
+        "fatigue"
+      ],
+      "atypicalPresentations": [
+        "asymptomatic"
+      ],
+      "severityIndicators": [
+        "high fever"
+      ],
+      "differentialDiagnosis": [
+        "influenza",
+        "common cold"
+      ]
+    }
+  },
+  "analyticsData": {
+    "decisionModels": [
+      {
+        "model": "Test Decision Model 1",
+        "sections": [
+          "Diagnosis",
+          "Treatment"
+        ],
+        "dependencies": "Patient age and comorbidities",
+        "clinicalImpact": "High - guides treatment decisions",
+        "isSufficient": true,
+        "suggestions": "Consider additional validation studies"
+      }
+    ],
+    "criticalPoints": [
+      {
+        "point": "Test Critical Point 1",
+        "clinicalSignificance": "High - affects treatment outcome",
+        "decisionImpact": "Major - changes treatment approach",
+        "validationStatus": "validated",
+        "recommendations": "Monitor closely"
+      }
+    ],
+    "conflictZones": [
+      {
+        "zone": "Test Conflict Zone 1",
+        "conflictingData": "Conflicting lab results",
+        "resolutionStrategy": "Repeat testing",
+        "clinicalImplications": "Delayed treatment",
+        "recommendations": "Establish clear protocols"
+      }
+    ],
+    "feedbackLoops": [
+      {
+        "loop": "Test Feedback Loop 1",
+        "triggerConditions": "Treatment response",
+        "clinicalActions": "Adjust treatment",
+        "monitoringParameters": [
+          "Response time",
+          "Side effects"
+        ],
+        "optimizationStrategies": "Regular review"
+      }
+    ],
+    "sections": [
+      {
+        "sectionName": "Test Section 1",
+        "clinicalImpact": "high",
+        "dataQuality": "excellent",
+        "validationStatus": "validated",
+        "implementationReadiness": "ready",
+        "recommendations": "Proceed with implementation"
+      }
+    ],
+    "overallAssessment": {
+      "additionalSections": "Additional test sections for comprehensive analysis",
+      "overallFeedback": "Overall positive feedback with room for improvement",
+      "clinicalRelevance": "high",
+      "implementationReadiness": "ready"
+    }
+  },
+  "crossFormValidation": {
+    "overallConsistencyScore": 88,
+    "dataCompletenessScore": 92,
+    "clinicalRelevanceScore": 90,
+    "implementationReadinessScore": 85
+  },
+  "enhancedAnalytics": {
+    "clinicalDecisionSupport": "High confidence in treatment recommendations",
+    "riskAssessment": "Moderate risk profile identified",
+    "qualityMetrics": {
+      "dataQualityScore": 94,
+      "validationScore": 89,
+      "consistencyScore": 91
+    }
+  }
+}

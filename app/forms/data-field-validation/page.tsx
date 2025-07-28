@@ -13,7 +13,7 @@ import { CheckCircle, AlertCircle, Info, Save, Send, Brain, Target, Zap, Shield,
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { advancedClinicalAnalyticsService } from '@/lib/advanced-clinical-analytics-service';
+import { enhancedClinicalDatabaseService } from '@/lib/enhanced-clinical-database-service';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
@@ -193,8 +193,12 @@ export default function DataFieldValidationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState('decision-models');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editSubmissionId, setEditSubmissionId] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+
+
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ValidationFormData>({
     resolver: zodResolver(validationSchema),
@@ -238,6 +242,105 @@ export default function DataFieldValidationForm() {
   const watchedFeedbackLoops = watch('feedbackLoops');
   const watchedSections = watch('sections');
 
+  // Load edit data from localStorage if available
+  React.useEffect(() => {
+    const editData = localStorage.getItem('editSubmissionData');
+    const submissionId = localStorage.getItem('editSubmissionId');
+    
+    if (editData && submissionId) {
+      try {
+        const submission = JSON.parse(editData);
+        setIsEditMode(true);
+        setEditSubmissionId(submissionId);
+        
+        // Pre-populate form with existing data
+        if (submission.advancedAnalyticsData) {
+          const data = submission.advancedAnalyticsData;
+          
+          // Set decision models
+          if (data.decisionModels) {
+            data.decisionModels.forEach((model: any, index: number) => {
+              setValue(`decisionModels.${index}`, model);
+            });
+          }
+          
+          // Set critical points
+          if (data.criticalPoints) {
+            data.criticalPoints.forEach((point: any, index: number) => {
+              setValue(`criticalPoints.${index}`, point);
+            });
+          }
+          
+          // Set conflict zones
+          if (data.conflictZones) {
+            data.conflictZones.forEach((zone: any, index: number) => {
+              setValue(`conflictZones.${index}`, zone);
+            });
+          }
+          
+          // Set feedback loops
+          if (data.feedbackLoops) {
+            data.feedbackLoops.forEach((loop: any, index: number) => {
+              setValue(`feedbackLoops.${index}`, loop);
+            });
+          }
+          
+          // Set sections
+          if (data.sections) {
+            data.sections.forEach((section: any, index: number) => {
+              setValue(`sections.${index}`, section);
+            });
+          }
+          
+          // Set overall assessment
+          if (data.overallAssessment) {
+            setValue('additionalSections', data.overallAssessment.additionalSections || '');
+            setValue('overallFeedback', data.overallAssessment.overallFeedback || '');
+            setValue('clinicalRelevance', data.overallAssessment.clinicalRelevance || 'good');
+            setValue('implementationReadiness', data.overallAssessment.implementationReadiness || 'ready');
+          }
+          
+          toast({
+            title: "Edit Mode Enabled",
+            description: `Loading submission data for editing.`,
+            variant: "default",
+          });
+        } else {
+          // Handle mock data structure from profile page
+          toast({
+            title: "Edit Mode Enabled",
+            description: `Starting fresh edit session.`,
+            variant: "default",
+          });
+        }
+        
+        // Log the loaded data for debugging
+        console.log('Loaded submission data for editing:', submission);
+        console.log('Submission ID:', submission.submissionId);
+        console.log('Form Type:', submission.formType);
+        console.log('Has Advanced Analytics Data:', !!submission.advancedAnalyticsData);
+        if (submission.advancedAnalyticsData) {
+          console.log('Decision Models:', submission.advancedAnalyticsData.decisionModels?.length || 0);
+          console.log('Critical Points:', submission.advancedAnalyticsData.criticalPoints?.length || 0);
+          console.log('Conflict Zones:', submission.advancedAnalyticsData.conflictZones?.length || 0);
+          console.log('Feedback Loops:', submission.advancedAnalyticsData.feedbackLoops?.length || 0);
+          console.log('Sections:', submission.advancedAnalyticsData.sections?.length || 0);
+        }
+        
+        // Clear localStorage after loading
+        localStorage.removeItem('editSubmissionData');
+        localStorage.removeItem('editSubmissionId');
+      } catch (error) {
+        console.error('Error loading edit data:', error);
+        toast({
+          title: "Error Loading Data",
+          description: "Could not load submission data for editing.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [setValue, toast]);
+
   const onSubmit = async (data: ValidationFormData) => {
     if (!user) {
       toast({
@@ -250,8 +353,23 @@ export default function DataFieldValidationForm() {
 
     setIsSubmitting(true);
     try {
-      const submissionId = await advancedClinicalAnalyticsService.submitAdvancedAnalyticsValidation(
-        data,
+      // Transform form data to match enhanced database schema
+      const transformedData = {
+        decisionModels: data.decisionModels || [],
+        criticalPoints: data.criticalPoints || [],
+        conflictZones: data.conflictZones || [],
+        feedbackLoops: data.feedbackLoops || [],
+        sections: data.sections || [],
+        overallAssessment: {
+          additionalSections: data.additionalSections || '',
+          overallFeedback: data.overallFeedback || '',
+          clinicalRelevance: data.clinicalRelevance || 'good',
+          implementationReadiness: data.implementationReadiness || 'ready',
+        },
+      };
+
+      const submissionId = await enhancedClinicalDatabaseService.submitAdvancedClinicalAnalytics(
+        { advancedAnalyticsData: transformedData },
         user.uid
       );
       
@@ -287,8 +405,23 @@ export default function DataFieldValidationForm() {
 
     const formData = watch();
     try {
-      const submissionId = await advancedClinicalAnalyticsService.submitAdvancedAnalyticsValidation(
-        formData,
+      // Transform form data to match enhanced database schema
+      const transformedData = {
+        decisionModels: formData.decisionModels || [],
+        criticalPoints: formData.criticalPoints || [],
+        conflictZones: formData.conflictZones || [],
+        feedbackLoops: formData.feedbackLoops || [],
+        sections: formData.sections || [],
+        overallAssessment: {
+          additionalSections: formData.additionalSections || '',
+          overallFeedback: formData.overallFeedback || '',
+          clinicalRelevance: formData.clinicalRelevance || 'good',
+          implementationReadiness: formData.implementationReadiness || 'ready',
+        },
+      };
+
+      const submissionId = await enhancedClinicalDatabaseService.submitAdvancedClinicalAnalytics(
+        { advancedAnalyticsData: transformedData },
         user.uid
       );
       

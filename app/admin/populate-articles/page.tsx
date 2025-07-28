@@ -152,8 +152,8 @@ export default function PopulateArticlesPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p>1. First, click "Check Articles" to see if articles already exist in the database.</p>
-              <p>2. If no articles are found, click "Populate Articles" to add the sample article.</p>
+              <p>1. First, click &quot;Check Articles&quot; to see if articles already exist in the database.</p>
+              <p>2. If no articles are found, click &quot;Populate Articles&quot; to add the sample article.</p>
               <p>3. After populating, visit the <a href="/findings" className="text-primary hover:underline">Findings page</a> to see the articles loaded from Firebase.</p>
               <p>4. The articles will be automatically loaded from Firebase when the findings page loads.</p>
             </div>

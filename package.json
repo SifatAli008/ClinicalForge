@@ -6,7 +6,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup:firebase": "node scripts/setup-enhanced-firebase.js",
+    "setup:firebase:quick": "node scripts/setup-firebase-dev.js",
+    "firebase:deploy": "firebase deploy",
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules",
+    "firebase:deploy:indexes": "firebase deploy --only firestore:indexes",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:emulators:ui": "firebase emulators:start --ui",
+    "test:forms": "npm run dev & sleep 5 && npm run test:forms:cypress",
+    "test:forms:quick": "node scripts/run-form-tests.js",
+    "dev:firebase": "concurrently \"npm run dev\" \"firebase emulators:start\"",
+    "dev:firebase:ui": "concurrently \"npm run dev\" \"firebase emulators:start --ui\"",
+    "firebase:emulators:export": "firebase emulators:export ./emulator-data",
+    "firebase:emulators:import": "firebase emulators:start --import=./emulator-data",
+    "test:forms:cypress": "cypress run --spec \"cypress/e2e/forms.cy.js\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
