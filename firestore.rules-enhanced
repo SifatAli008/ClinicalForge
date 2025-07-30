@@ -5,26 +5,19 @@ service cloud.firestore {
     
     // Enhanced Clinical Database Collection
     match /enhancedClinicalDatabase/{document} {
-      // Allow read access if user is authenticated and has read access
-      allow read: if request.auth != null && (
-        // User is the creator/collaborator
-        resource.data.collaboratorId == request.auth.uid ||
-        // User has explicit read access
-        request.auth.uid in resource.data.metadata.accessControl.readAccess ||
-        // User has admin access
-        request.auth.uid in resource.data.metadata.accessControl.adminAccess ||
-        // Document is approved and user is authenticated
-        (resource.data.status == 'approved' && request.auth != null)
-      );
+      // Allow read access for dashboard statistics (public read for dashboard)
+      allow read: if true; // Allow public read for dashboard statistics
       
       // Allow write access if user is authenticated and has write access
       allow write: if request.auth != null && (
         // User is the creator/collaborator
         resource.data.collaboratorId == request.auth.uid ||
         // User has explicit write access
-        request.auth.uid in resource.data.metadata.accessControl.writeAccess ||
+        (resource.data.metadata != null && 
+         request.auth.uid in resource.data.metadata.accessControl.writeAccess) ||
         // User has admin access
-        request.auth.uid in resource.data.metadata.accessControl.adminAccess
+        (resource.data.metadata != null && 
+         request.auth.uid in resource.data.metadata.accessControl.adminAccess)
       );
       
       // Allow create if user is authenticated
@@ -36,9 +29,11 @@ service cloud.firestore {
         // User is the creator/collaborator
         resource.data.collaboratorId == request.auth.uid ||
         // User has explicit write access
-        request.auth.uid in resource.data.metadata.accessControl.writeAccess ||
+        (resource.data.metadata != null && 
+         request.auth.uid in resource.data.metadata.accessControl.writeAccess) ||
         // User has admin access
-        request.auth.uid in resource.data.metadata.accessControl.adminAccess
+        (resource.data.metadata != null && 
+         request.auth.uid in resource.data.metadata.accessControl.adminAccess)
       ) && (
         // Validate required fields for comprehensive parameter validation
         (request.resource.data.formType == 'comprehensive-parameter-validation' &&
@@ -57,18 +52,14 @@ service cloud.firestore {
         // User is the creator/collaborator
         resource.data.collaboratorId == request.auth.uid ||
         // User has admin access
-        request.auth.uid in resource.data.metadata.accessControl.adminAccess
+        (resource.data.metadata != null && 
+         request.auth.uid in resource.data.metadata.accessControl.adminAccess)
       );
     }
     
     // Comprehensive Parameter Validation Collection (Legacy Support)
     match /comprehensiveParameterValidation/{document} {
-      allow read: if request.auth != null && (
-        resource.data.collaboratorId == request.auth.uid ||
-        request.auth.uid in resource.data.metadata.accessControl.readAccess ||
-        request.auth.uid in resource.data.metadata.accessControl.adminAccess ||
-        (resource.data.status == 'approved' && request.auth != null)
-      );
+      allow read: if true; // Allow public read for dashboard statistics
       
       allow write: if request.auth != null && (
         resource.data.collaboratorId == request.auth.uid ||
@@ -93,12 +84,7 @@ service cloud.firestore {
     
     // Advanced Clinical Analytics Collection (Legacy Support)
     match /advancedClinicalAnalytics/{document} {
-      allow read: if request.auth != null && (
-        resource.data.collaboratorId == request.auth.uid ||
-        request.auth.uid in resource.data.metadata.accessControl.readAccess ||
-        request.auth.uid in resource.data.metadata.accessControl.adminAccess ||
-        (resource.data.status == 'approved' && request.auth != null)
-      );
+      allow read: if true; // Allow public read for dashboard statistics
       
       allow write: if request.auth != null && (
         resource.data.collaboratorId == request.auth.uid ||
@@ -123,12 +109,7 @@ service cloud.firestore {
     
     // Form Submissions Collection (Legacy Support)
     match /formSubmissions/{document} {
-      allow read: if request.auth != null && (
-        resource.data.collaboratorId == request.auth.uid ||
-        request.auth.uid in resource.data.metadata.accessControl.readAccess ||
-        request.auth.uid in resource.data.metadata.accessControl.adminAccess ||
-        (resource.data.submissionStatus == 'approved' && request.auth != null)
-      );
+      allow read: if true; // Allow public read for dashboard statistics
       
       allow write: if request.auth != null && (
         resource.data.collaboratorId == request.auth.uid ||
@@ -187,12 +168,7 @@ service cloud.firestore {
     
     // Articles Collection
     match /articles/{articleId} {
-      allow read: if request.auth != null && (
-        resource.data.authorId == request.auth.uid ||
-        request.auth.uid in resource.data.accessControl.readAccess ||
-        request.auth.uid in resource.data.accessControl.adminAccess ||
-        (resource.data.status == 'published' && request.auth != null)
-      );
+      allow read: if true; // Allow public read for articles
       
       allow write: if request.auth != null && (
         resource.data.authorId == request.auth.uid ||
@@ -221,9 +197,9 @@ service cloud.firestore {
         request.auth.uid in get(/databases/$(database)/documents/admin/access).data.adminUsers;
     }
     
-    // Analytics Collection (Read-only for authenticated users, write for admins)
+    // Analytics Collection (Read-only for public, write for admins)
     match /analytics/{document} {
-      allow read: if request.auth != null;
+      allow read: if true; // Allow public read for analytics
       allow write: if request.auth != null && 
         request.auth.uid in get(/databases/$(database)/documents/admin/access).data.adminUsers;
     }

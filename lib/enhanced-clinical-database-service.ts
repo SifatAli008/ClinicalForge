@@ -699,6 +699,22 @@ export class EnhancedClinicalDatabaseService {
     }
   }
 
+  // Get all submissions
+  async getAllSubmissions(): Promise<EnhancedClinicalDatabase[]> {
+    try {
+      const q = query(
+        collection(db, this.collectionName),
+        orderBy('submittedAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => doc.data() as EnhancedClinicalDatabase);
+    } catch (error) {
+      console.error('Error getting all submissions:', error);
+      throw error;
+    }
+  }
+
   // Get approved submissions
   async getApprovedSubmissions(limitCount: number = 50): Promise<EnhancedClinicalDatabase[]> {
     try {
