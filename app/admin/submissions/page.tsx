@@ -55,14 +55,6 @@ export default function AdminSubmissionsPage() {
 
   const enhancedService = useMemo(() => new EnhancedClinicalDatabaseService(), []);
 
-  useEffect(() => {
-    loadSubmissions();
-  }, [loadSubmissions]);
-
-  useEffect(() => {
-    filterAndSortSubmissions();
-  }, [submissions, searchTerm, statusFilter, formTypeFilter, sortBy, sortOrder, filterAndSortSubmissions]);
-
   const loadSubmissions = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -98,6 +90,14 @@ export default function AdminSubmissionsPage() {
       setIsLoading(false);
     }
   }, [enhancedService]);
+
+  useEffect(() => {
+    loadSubmissions();
+  }, [loadSubmissions]);
+
+  useEffect(() => {
+    filterAndSortSubmissions();
+  }, [submissions, searchTerm, statusFilter, formTypeFilter, sortBy, sortOrder, filterAndSortSubmissions]);
 
   const filterAndSortSubmissions = useCallback(() => {
     let filtered = [...submissions];
