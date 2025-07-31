@@ -84,7 +84,7 @@ export default function ProfilePage() {
       
       // If the photo URL is empty or invalid, don't set a default - let the UI handle it
       if (!photoUrl || photoUrl === 'null' || photoUrl === 'undefined' || photoUrl === '') {
-        photoUrl = null;
+        photoUrl = null as string | null;
       }
       
       // Log for debugging
