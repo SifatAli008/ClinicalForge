@@ -4,6 +4,26 @@ Transform healthcare through clinical expertise and secure data collection.
 
 ## 🚀 Latest Updates
 
+### 📋 Admin Submission Management System
+* **Comprehensive Submission Tracking**: Full CRUD operations for managing user submissions
+* **Individual Submission Views**: Detailed view of each submission with edit capabilities
+* **Bulk Management**: Efficient handling of multiple submissions
+* **Status Tracking**: Monitor submission status and processing workflow
+* **Data Export**: Export submission data for analysis and reporting
+
+### 🧪 Testing Infrastructure
+* **Jest Configuration**: Complete testing setup with proper configuration
+* **Unit Testing**: `__tests__/utils.test.ts` for utility function testing
+* **E2E Testing**: Cypress tests for dashboard and forms functionality
+* **Test Coverage**: Comprehensive testing for critical user flows
+* **CI/CD Ready**: Testing infrastructure ready for continuous integration
+
+### 🎨 Enhanced Admin Navigation
+* **AdminNavigation Component**: Dedicated navigation for admin users
+* **Role-based UI**: Clean separation between admin and regular user interfaces
+* **Improved UX**: Better navigation flow for administrative tasks
+* **Professional Design**: Consistent styling with the rest of the platform
+
 ### 📝 Enhanced Article Submission System
 * **Admin-Only Article Creation**: Secure article submission for administrators only
 * **Markdown Template**: Comprehensive template with href links, tables, and bullet points
@@ -46,6 +66,21 @@ Transform healthcare through clinical expertise and secure data collection.
 * **Performance Optimizations**: Reduced bundle size and improved loading times
 
 ## 🚀 New Features
+
+### Admin Submission Management
+* **Submission Dashboard**: Comprehensive view of all user submissions
+* **Individual Submission Details**: Detailed view with edit and update capabilities
+* **Status Management**: Track submission processing and approval workflow
+* **Data Export**: Export submission data for research and analysis
+* **Bulk Operations**: Efficient management of multiple submissions
+* **Audit Trail**: Complete history of submission changes and updates
+
+### Testing Infrastructure
+* **Jest Setup**: Complete unit testing framework with proper configuration
+* **Cypress E2E Tests**: End-to-end testing for critical user flows
+* **Test Utilities**: Helper functions for consistent testing
+* **Coverage Reporting**: Track test coverage and quality metrics
+* **CI/CD Integration**: Ready for automated testing in deployment pipeline
 
 ### Role-Based Access Control System
 
@@ -142,6 +177,8 @@ Transform healthcare through clinical expertise and secure data collection.
 * **Forms Management**: Modular form system with validation and suggestions
 * **User Profiles**: Dynamic profile management with activity tracking
 * **Admin Dashboard**: Comprehensive analytics and user management
+* **Admin Submission Management**: Full CRUD operations for submission handling
+* **Testing Infrastructure**: Comprehensive testing framework for quality assurance
 * **Data Export**: Secure data export for research and analysis
 * **Navigation System**: Dynamic navigation based on user roles
 * **Footer System**: Professional footer with contact, privacy, and terms pages
@@ -173,6 +210,7 @@ Transform healthcare through clinical expertise and secure data collection.
 * **State Management**: SWR for data fetching
 * **Authentication**: Firebase Authentication, Google OAuth
 * **Database**: Firebase (Firestore, Authentication)
+* **Testing**: Jest, Cypress for unit and E2E testing
 * **Deployment**: Vercel
 
 ## 📊 Key Features
@@ -210,6 +248,10 @@ Transform healthcare through clinical expertise and secure data collection.
 * ✅ Use markdown template for professional formatting
 * ✅ Store articles in Firebase with real-time updates
 * ✅ Professional article display with Wikipedia-style layout
+* ✅ Comprehensive submission management system
+* ✅ Individual submission tracking and editing
+* ✅ Bulk submission operations
+* ✅ Complete audit trail for all changes
 
 ### For the Healthcare Ecosystem
 
@@ -245,7 +287,16 @@ cp .env.example .env.local
 npm run dev
 ```
 
-5. **Access the application**  
+5. **Run tests**  
+```bash
+# Unit tests
+npm test
+
+# E2E tests
+npm run cypress:open
+```
+
+6. **Access the application**  
    * Open [http://localhost:3000](http://localhost:3000)  
    * Navigate to `/login` to access the authentication system
    * Visit `/forms` to explore clinical forms (contributor access required)
@@ -258,6 +309,9 @@ npm run dev
 ```
 ClinicalForge/
 ├── app/                    # Next.js app directory
+│   ├── admin/             # Admin management pages
+│   │   ├── submissions/   # Submission management
+│   │   └── populate-articles/ # Article creation
 │   ├── forms/             # Clinical forms management
 │   │   ├── data-field-validation/  # Advanced data field validation form
 │   │   └── parameter-validation/    # Enhanced parameter validation form
@@ -271,11 +325,14 @@ ClinicalForge/
 ├── components/            # Reusable UI components
 │   ├── ui/               # Base UI components
 │   ├── auth/             # Authentication components
+│   ├── admin/            # Admin-specific components
 │   ├── Navigation.tsx    # Role-based navigation
 │   └── Footer.tsx        # Professional footer component
 ├── lib/                  # Utility functions and services
 │   ├── auth-context.tsx  # Authentication context
 │   └── scroll-animations.ts # Animation hooks
+├── __tests__/            # Unit tests
+├── cypress/              # E2E tests
 └── public/               # Static assets
 ```
 
@@ -319,6 +376,8 @@ ADMIN_PASSWORD=Data Debo Na
 - User management and analytics
 - Complete data management capabilities
 - Access to all system features
+- Submission management and editing
+- Article creation and management
 
 ### Navigation by Role
 
@@ -365,6 +424,21 @@ To ensure the project builds without errors, run:
 
 ```bash
 npx next build
+```
+
+### Testing
+
+Run the complete test suite:
+
+```bash
+# Unit tests
+npm test
+
+# E2E tests
+npm run cypress:run
+
+# All tests
+npm run test:all
 ```
 
 ## 🤝 Contributing
