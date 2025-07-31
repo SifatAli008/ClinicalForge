@@ -2,7 +2,20 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { getAnalytics, isSupported } from 'firebase/analytics';
+// Disable analytics import to prevent measurement ID errors
+// import { getAnalytics, isSupported } from 'firebase/analytics';
+
+// Helper function to clean URLs and remove newline characters
+const cleanUrl = (url: string | undefined): string => {
+  if (!url) return '';
+  return url
+    .trim()
+    .replace(/\s+/g, '') // Remove all whitespace including newlines
+    .replace(/\n/g, '') // Explicitly remove newlines
+    .replace(/\r/g, '') // Remove carriage returns
+    .replace(/%0A/g, '') // Remove URL-encoded newlines
+    .replace(/%0D/g, ''); // Remove URL-encoded carriage returns
+};
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBK1pvOaDPNJcwtEZfZSXsimnMmcHSlNGw",
@@ -15,10 +28,31 @@ const firebaseConfig = {
   // Removed measurementId to prevent conflicts
 };
 
+// Clean up any whitespace or newline characters in config values
+const cleanConfig = {
+  ...firebaseConfig,
+  authDomain: cleanUrl(firebaseConfig.authDomain),
+  projectId: cleanUrl(firebaseConfig.projectId),
+  apiKey: cleanUrl(firebaseConfig.apiKey),
+  appId: cleanUrl(firebaseConfig.appId),
+  messagingSenderId: cleanUrl(firebaseConfig.messagingSenderId),
+  storageBucket: cleanUrl(firebaseConfig.storageBucket),
+  databaseURL: cleanUrl(firebaseConfig.databaseURL)
+};
+
+// Log the cleaned config for debugging (only in development)
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔥 Firebase Config (cleaned):', {
+    authDomain: cleanConfig.authDomain,
+    projectId: cleanConfig.projectId,
+    apiKey: cleanConfig.apiKey ? '***' : 'undefined'
+  });
+}
+
 // Initialize Firebase
 let app;
 if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
+  app = initializeApp(cleanConfig);
 } else {
   app = getApps()[0];
 }
@@ -28,31 +62,15 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Initialize Analytics conditionally with better error handling
-export const analytics = isSupported().then((yes: boolean) => {
-  if (yes) {
-    try {
-      // Only initialize analytics if we're on an authorized domain
-      const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
-      const isLocalhost = currentDomain === 'localhost' || currentDomain === '127.0.0.1';
-      const isVercelDomain = currentDomain.includes('vercel.app');
-      
-      if (isLocalhost || isVercelDomain) {
-        console.log('🔥 Firebase Analytics: Domain may not be authorized, skipping analytics');
-        return null;
-      }
-      
-      return getAnalytics(app);
-    } catch (error) {
-      console.warn('Firebase Analytics initialization failed:', error);
-      return null;
-    }
-  }
-  return null;
-}).catch((error) => {
-  console.warn('Firebase Analytics not supported:', error);
-  return null;
-});
+// Check if we're on a Vercel domain
+const isVercelDomain = () => {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname.includes('vercel.app') || hostname.includes('localhost');
+};
+
+// Completely disable analytics to prevent measurement ID errors
+export const analytics = Promise.resolve(null);
 
 // Connect to emulator in development
 if (process.env.NODE_ENV === 'development') {

@@ -1,0 +1,63 @@
+{
+  "env": {
+    "NEXT_PUBLIC_FIREBASE_API_KEY": "AIzaSyBK1pvOaDPNJcwtEZfZSXsimnMmcHSlNGw",
+    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "hdms-a8e42.firebaseapp.com",
+    "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "hdms-a8e42",
+    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "hdms-a8e42.firebasestorage.app",
+    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "1041849143687",
+    "NEXT_PUBLIC_FIREBASE_APP_ID": "1:1041849143687:web:34d48f1209e10443a30322",
+    "NEXT_PUBLIC_FIREBASE_DATABASE_URL": "https://hdms-a8e42-default-rtdb.asia-southeast1.firebasedatabase.app"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_FIREBASE_API_KEY": "AIzaSyBK1pvOaDPNJcwtEZfZSXsimnMmcHSlNGw",
+      "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "hdms-a8e42.firebaseapp.com",
+      "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "hdms-a8e42",
+      "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "hdms-a8e42.firebasestorage.app",
+      "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "1041849143687",
+      "NEXT_PUBLIC_FIREBASE_APP_ID": "1:1041849143687:web:34d48f1209e10443a30322",
+      "NEXT_PUBLIC_FIREBASE_DATABASE_URL": "https://hdms-a8e42-default-rtdb.asia-southeast1.firebasedatabase.app"
+    }
+  },
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/firebase",
+      "destination": "/",
+      "permanent": false
+    }
+  ]
+} 

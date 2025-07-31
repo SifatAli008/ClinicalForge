@@ -138,3 +138,47 @@ export function evaluatePerformance(results: any) {
   
   console.log(`📈 Cache Efficiency: ${results.cacheSize} items cached`);
 } 
+
+// Firebase Configuration Test
+// This file helps verify that Firebase configuration is clean
+
+import { auth, db } from './firebase-config';
+
+export function testFirebaseConfig() {
+  console.log('🧪 Testing Firebase Configuration...');
+  
+  // Test auth domain - access through app config
+  const app = auth.app;
+  const config = app.options;
+  
+  console.log('Auth Domain:', config.authDomain);
+  console.log('Contains newlines:', config.authDomain?.includes('\n') || config.authDomain?.includes('%0A'));
+  
+  // Test project ID
+  console.log('Project ID:', config.projectId);
+  console.log('Contains newlines:', config.projectId?.includes('\n') || config.projectId?.includes('%0A'));
+  
+  // Test API key
+  console.log('API Key:', config.apiKey ? '***' : 'undefined');
+  console.log('Contains newlines:', config.apiKey?.includes('\n') || config.apiKey?.includes('%0A'));
+  
+  // Test if auth is properly initialized
+  console.log('Auth initialized:', !!auth);
+  console.log('Firestore initialized:', !!db);
+  
+  return {
+    authDomain: config.authDomain,
+    projectId: config.projectId,
+    apiKey: config.apiKey ? '***' : undefined,
+    authInitialized: !!auth,
+    firestoreInitialized: !!db
+  };
+}
+
+// Run test if this file is imported
+if (typeof window !== 'undefined') {
+  // Only run in browser
+  setTimeout(() => {
+    testFirebaseConfig();
+  }, 1000);
+} 

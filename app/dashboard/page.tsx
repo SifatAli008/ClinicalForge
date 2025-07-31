@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/lib/auth-context';
+import FirebaseStatus from '@/components/ui/firebase-status';
 
 import { 
   Activity, 
@@ -1035,12 +1036,7 @@ export default function DashboardPage() {
                   <CardDescription>Platform health and performance</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
-                    <span className="text-sm">Connection</span>
-                    <Badge variant={dashboardStats?.systemHealth.isConnected ? 'default' : 'destructive'} data-testid="connection-status">
-                      {dashboardStats?.systemHealth.isConnected ? 'Online' : 'Offline'}
-                    </Badge>
-                  </div>
+                  <FirebaseStatus showDetails={true} />
                   <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
                     <span className="text-sm">Cache Size</span>
                     <span className="font-semibold text-green-600">{dashboardStats?.systemHealth.cacheSize || 0} MB</span>
