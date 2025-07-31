@@ -91,14 +91,6 @@ export default function AdminSubmissionsPage() {
     }
   }, [enhancedService]);
 
-  useEffect(() => {
-    loadSubmissions();
-  }, [loadSubmissions]);
-
-  useEffect(() => {
-    filterAndSortSubmissions();
-  }, [submissions, searchTerm, statusFilter, formTypeFilter, sortBy, sortOrder, filterAndSortSubmissions]);
-
   const filterAndSortSubmissions = useCallback(() => {
     let filtered = [...submissions];
 
@@ -158,6 +150,14 @@ export default function AdminSubmissionsPage() {
 
     setFilteredSubmissions(filtered);
   }, [submissions, searchTerm, statusFilter, formTypeFilter, sortBy, sortOrder]);
+
+  useEffect(() => {
+    loadSubmissions();
+  }, [loadSubmissions]);
+
+  useEffect(() => {
+    filterAndSortSubmissions();
+  }, [submissions, searchTerm, statusFilter, formTypeFilter, sortBy, sortOrder, filterAndSortSubmissions]);
 
   const handleViewSubmission = (submission: Submission) => {
     if (expandedSubmission === submission.submissionId) {
