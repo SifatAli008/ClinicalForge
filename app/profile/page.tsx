@@ -80,11 +80,11 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user && userProfile) {
       // Ensure we have a valid photo URL with fallback
-      let photoUrl = user.photoURL || userProfile.avatarUrl;
+      let photoUrl: string | null = user.photoURL || userProfile.avatarUrl;
       
       // If the photo URL is empty or invalid, don't set a default - let the UI handle it
       if (!photoUrl || photoUrl === 'null' || photoUrl === 'undefined' || photoUrl === '') {
-        photoUrl = null as string | null;
+        photoUrl = null;
       }
       
       // Log for debugging
