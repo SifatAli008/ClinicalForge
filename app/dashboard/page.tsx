@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -65,21 +66,19 @@ interface Notification {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
 
   // Real data service
-  const enhancedService = new EnhancedClinicalDatabaseService();
+  const enhancedService = useMemo(() => new EnhancedClinicalDatabaseService(), []);
 
-  // Load dashboard data on component mount
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
 
     setIsLoading(true);
     setError(null);
@@ -170,9 +169,16 @@ export default function DashboardPage() {
             const collaboratorId = submission.collaboratorId;
             if (collaboratorId.includes(' ') || collaboratorId.includes('@')) {
               displayName = collaboratorId;
+            } else if (collaboratorId.includes('@')) {
+              // Extract username from email
+              displayName = collaboratorId.split('@')[0];
             } else {
-              displayName = `User ${collaboratorId}`;
+              // Generate a more user-friendly name from the ID
+              displayName = collaboratorId.slice(0, 8);
             }
+          } else {
+            // Generate a user-friendly name when no data is available
+            displayName = `User ${Math.floor(Math.random() * 1000)}`;
           }
           
           // Get institution from various sources
@@ -300,122 +306,10 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('❌ Error loading real dashboard data:', err);
       
-      // Check if it's a Firebase permission error
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      if (errorMessage.includes('Missing or insufficient permissions')) {
-        setError('Database access restricted. Using demo data for preview.');
-        
-        // Provide demo data for better user experience
-        const demoStats: DashboardStats = {
-          totalForms: 156,
-          totalUsers: 24,
-          totalDataPoints: 2847,
-          completionRate: 87,
-          recentSubmissions: 12,
-          topDiseases: [
-            { name: 'Diabetes Type 2', count: 45 },
-            { name: 'Hypertension', count: 38 },
-            { name: 'Asthma', count: 32 },
-            { name: 'Cardiovascular Disease', count: 28 },
-            { name: 'Obesity', count: 23 }
-          ],
-          monthlyContributions: [
-            { month: 'Jan', count: 12 },
-            { month: 'Feb', count: 18 },
-            { month: 'Mar', count: 15 },
-            { month: 'Apr', count: 22 },
-            { month: 'May', count: 28 },
-            { month: 'Jun', count: 35 }
-          ],
-          userActivity: [
-            { 
-              userId: '1', 
-              displayName: 'Dr. Sarah Johnson', 
-              submissions: 23, 
-              lastActive: new Date(),
-              institution: 'City General Hospital',
-              specialty: 'Cardiology',
-              email: 'sarah.johnson@cityhospital.com'
-            },
-            { 
-              userId: '2', 
-              displayName: 'Dr. Michael Chen', 
-              submissions: 18, 
-              lastActive: new Date(),
-              institution: 'University Medical Center',
-              specialty: 'Neurology',
-              email: 'michael.chen@umc.edu'
-            },
-            { 
-              userId: '3', 
-              displayName: 'Dr. Emily Rodriguez', 
-              submissions: 15, 
-              lastActive: new Date(),
-              institution: 'Regional Health Clinic',
-              specialty: 'Pediatrics',
-              email: 'emily.rodriguez@rhc.org'
-            },
-            { 
-              userId: '4', 
-              displayName: 'Dr. David Kim', 
-              submissions: 12, 
-              lastActive: new Date(),
-              institution: 'Metropolitan Hospital',
-              specialty: 'Oncology',
-              email: 'david.kim@metrohospital.com'
-            },
-            { 
-              userId: '5', 
-              displayName: 'Dr. Lisa Thompson', 
-              submissions: 10, 
-              lastActive: new Date(),
-              institution: 'Community Health Center',
-              specialty: 'Family Medicine',
-              email: 'lisa.thompson@chc.org'
-            }
-          ],
-          systemHealth: {
-            isConnected: false,
-            cacheSize: 0,
-            lastUpdate: new Date()
-          }
-        };
-        
-        console.log('🔄 Switching to demo mode due to Firebase permissions');
-        setDashboardStats(demoStats);
-        
-        const demoNotifications: Notification[] = [
-          {
-            id: '1',
-            type: 'warning',
-            title: 'Demo Mode Active',
-            message: 'Showing demo data due to database access restrictions.',
-            timestamp: new Date(),
-            isRead: false
-          },
-          {
-            id: '2',
-            type: 'info',
-            title: 'Database Status',
-            message: 'Firebase permissions need to be configured for real data access.',
-            timestamp: new Date(Date.now() - 300000),
-            isRead: false
-          },
-          {
-            id: '3',
-            type: 'info',
-            title: 'Demo Data',
-            message: 'This dashboard shows sample clinical research data for demonstration.',
-            timestamp: new Date(Date.now() - 600000),
-            isRead: true
-          }
-        ];
-        
-        setNotifications(demoNotifications);
-      } else {
-        setError('Failed to load dashboard data. Please try again later.');
-        
-        // Fallback to empty stats
+      // Show error and empty state instead of demo data
+      setError('Failed to load dashboard data. Please check your database connection and permissions.');
+      
+      // Fallback to empty stats - no demo data
         const emptyStats: DashboardStats = {
           totalForms: 0,
           totalUsers: 0,
@@ -434,11 +328,15 @@ export default function DashboardPage() {
         
         setDashboardStats(emptyStats);
         setNotifications([]);
-      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [enhancedService]);
+
+  // Load dashboard data on component mount
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const handleRefresh = () => {
     loadDashboardData();
@@ -481,6 +379,88 @@ export default function DashboardPage() {
 
   const handleDismissNotification = (id: string) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
+  const handleDownloadUserSubmissions = async (user: any) => {
+    try {
+      // Get user's submissions
+      const userSubmissions = await enhancedService.getUserSubmissions(user.userId);
+      
+      const userData = {
+        userId: user.userId,
+        displayName: user.displayName,
+        submissions: userSubmissions,
+        exportDate: new Date().toISOString(),
+        exportedBy: 'admin'
+      };
+
+      const blob = new Blob([JSON.stringify(userData, null, 2)], { 
+        type: 'application/json' 
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `user-submissions-${user.displayName}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading user submissions:', err);
+      setError('Failed to download user submissions');
+    }
+  };
+
+  const handleViewUserSubmissions = async (user: any) => {
+    try {
+      if (expandedUser === user.userId) {
+        setExpandedUser(null);
+        setUserSubmissions([]);
+      } else {
+        setExpandedUser(user.userId);
+        const submissions = await enhancedService.getUserSubmissions(user.userId);
+        setUserSubmissions(submissions);
+      }
+    } catch (err) {
+      console.error('Error loading user submissions:', err);
+      setError('Failed to load user submissions');
+    }
+  };
+
+  const handleDownloadSingleSubmission = async (submission: any) => {
+    try {
+      const submissionData = {
+        submissionId: submission.submissionId || submission.id,
+        collaboratorId: submission.collaboratorId,
+        formType: submission.formType,
+        diseaseName: submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || 
+                   submission.comprehensiveData?.diseaseOverview?.diseaseName || 
+                   'Unknown Disease',
+        submittedAt: submission.submittedAt?.toDate?.() || new Date(submission.submittedAt),
+        status: submission.status,
+        comprehensiveData: submission.comprehensiveData,
+        advancedAnalyticsData: submission.advancedAnalyticsData,
+        validation: submission.validation,
+        metadata: submission.metadata,
+        exportDate: new Date().toISOString(),
+        exportedBy: 'admin'
+      };
+
+      const blob = new Blob([JSON.stringify(submissionData, null, 2)], { 
+        type: 'application/json' 
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `submission-${submission.submissionId || submission.id}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading submission:', err);
+      setError('Failed to download submission');
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -594,6 +574,7 @@ export default function DashboardPage() {
                   onClick={handleRefresh}
                   disabled={isLoading}
                   className="flex items-center space-x-2"
+                  data-testid="refresh-button"
                 >
                   <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                   <span>Refresh</span>
@@ -602,6 +583,7 @@ export default function DashboardPage() {
                   variant="outline" 
                   onClick={handleExportData}
                   className="flex items-center space-x-2"
+                  data-testid="export-button"
                 >
                   <Download className="h-4 w-4" />
                   <span>Export</span>
@@ -621,14 +603,14 @@ export default function DashboardPage() {
           )}
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" data-testid="dashboard-stats">
             {/* Total Forms */}
             <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 hover:border-l-blue-600">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">Total Forms</p>
-                    <p className="text-3xl font-bold text-blue-600">{dashboardStats?.totalForms || 0}</p>
+                    <p className="text-3xl font-bold text-blue-600" data-testid="total-forms">{dashboardStats?.totalForms || 0}</p>
                     <div className="flex items-center text-xs text-muted-foreground">
                       <TrendingUp className="h-3 w-3 mr-1 text-green-600" />
                       +{dashboardStats?.recentSubmissions || 0} this week
@@ -647,7 +629,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">Active Users</p>
-                    <p className="text-3xl font-bold text-green-600">{dashboardStats?.totalUsers || 0}</p>
+                    <p className="text-3xl font-bold text-green-600" data-testid="active-users">{dashboardStats?.totalUsers || 0}</p>
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Users className="h-3 w-3 mr-1 text-blue-600" />
                       {dashboardStats?.userActivity.length || 0} contributors
@@ -660,20 +642,30 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Data Points */}
+            {/* Top Contributor */}
             <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 hover:border-l-purple-600">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Data Points</p>
-                    <p className="text-3xl font-bold text-purple-600">{dashboardStats?.totalDataPoints.toLocaleString() || 0}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Top Contributor</p>
+                    <p className="text-sm font-bold text-purple-600 truncate">
+                      {dashboardStats?.userActivity && dashboardStats.userActivity.length > 0 ? 
+                        (dashboardStats.userActivity[0].displayName || 
+                         dashboardStats.userActivity[0].email?.split('@')[0] || 
+                         dashboardStats.userActivity[0].userId?.split('@')[0] || 
+                         `Contributor ${dashboardStats.userActivity[0].userId?.slice(0, 8)}` || 
+                         'Unknown User') : 
+                        'No contributors yet'}
+                    </p>
                     <div className="flex items-center text-xs text-muted-foreground">
-                      <Database className="h-3 w-3 mr-1 text-purple-600" />
-                      From {dashboardStats?.totalForms || 0} submissions
+                      <Users className="h-3 w-3 mr-1 text-purple-600" />
+                      {dashboardStats?.userActivity && dashboardStats.userActivity.length > 0 ? 
+                        `${dashboardStats.userActivity[0].submissions} submissions` : 
+                        '0 submissions'}
                     </div>
                   </div>
                   <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                    <Database className="h-6 w-6 text-purple-600" />
+                    <Users className="h-6 w-6 text-purple-600" />
                   </div>
                 </div>
               </CardContent>
@@ -685,7 +677,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">Completion Rate</p>
-                    <p className="text-3xl font-bold text-orange-600">{dashboardStats?.completionRate || 0}%</p>
+                    <p className="text-3xl font-bold text-orange-600" data-testid="completion-rate">{dashboardStats?.completionRate || 0}%</p>
                     <div className="flex items-center text-xs text-muted-foreground">
                       <CheckCircle className="h-3 w-3 mr-1 text-orange-600" />
                       Last 7 days
@@ -714,7 +706,7 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Link href="/forms">
-                    <Button variant="outline" className="w-full justify-start group hover:bg-accent transition-all duration-200">
+                    <Button variant="outline" className="w-full justify-start group hover:bg-accent transition-all duration-200" data-testid="view-forms-button">
                       <div className="p-2 rounded-lg mr-3 bg-blue-100 dark:bg-blue-900/20">
                         <FileText className="h-4 w-4 text-blue-600" />
                       </div>
@@ -725,7 +717,7 @@ export default function DashboardPage() {
                     </Button>
                   </Link>
                   <Link href="/findings">
-                    <Button variant="outline" className="w-full justify-start group hover:bg-accent transition-all duration-200">
+                    <Button variant="outline" className="w-full justify-start group hover:bg-accent transition-all duration-200" data-testid="research-findings-button">
                       <div className="p-2 rounded-lg mr-3 bg-green-100 dark:bg-green-900/20">
                         <BarChart3 className="h-4 w-4 text-green-600" />
                       </div>
@@ -736,7 +728,7 @@ export default function DashboardPage() {
                     </Button>
                   </Link>
                   <Link href="/profile">
-                    <Button variant="outline" className="w-full justify-start group hover:bg-accent transition-all duration-200">
+                    <Button variant="outline" className="w-full justify-start group hover:bg-accent transition-all duration-200" data-testid="profile-settings-button">
                       <div className="p-2 rounded-lg mr-3 bg-purple-100 dark:bg-purple-900/20">
                         <Settings className="h-4 w-4 text-purple-600" />
                       </div>
@@ -749,62 +741,10 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              {/* Notifications */}
-              <Card className="border-l-4 border-l-yellow-500">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center space-x-2">
-                    <Bell className="h-5 w-5" />
-                    <span>Notifications</span>
-                    {notifications.filter(n => !n.isRead).length > 0 && (
-                      <Badge variant="destructive" className="ml-2">
-                        {notifications.filter(n => !n.isRead).length}
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription>Recent updates and alerts</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {notifications.slice(0, 3).map((notification) => (
-                    <div key={notification.id} className={`p-3 rounded-lg border ${getNotificationColor(notification.type)}`}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-3">
-                          {getNotificationIcon(notification.type)}
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{notification.title}</p>
-                            <p className="text-xs text-muted-foreground">{notification.message}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {notification.timestamp.toLocaleTimeString()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex space-x-1">
-                          {!notification.isRead && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMarkNotificationAsRead(notification.id)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDismissNotification(notification.id)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <AlertCircle className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+
 
               {/* System Status */}
-              <Card className="border-l-4 border-l-green-500">
+              <Card className="border-l-4 border-l-green-500" data-testid="system-status">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center space-x-2">
                     <Shield className="h-5 w-5" />
@@ -815,7 +755,7 @@ export default function DashboardPage() {
                 <CardContent className="space-y-3">
                   <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
                     <span className="text-sm">Connection</span>
-                    <Badge variant={dashboardStats?.systemHealth.isConnected ? 'default' : 'destructive'}>
+                    <Badge variant={dashboardStats?.systemHealth.isConnected ? 'default' : 'destructive'} data-testid="connection-status">
                       {dashboardStats?.systemHealth.isConnected ? 'Online' : 'Offline'}
                     </Badge>
                   </div>
@@ -835,212 +775,28 @@ export default function DashboardPage() {
 
             {/* Main Content Area */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Top Diseases Chart */}
-              <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <BarChart3 className="h-5 w-5 text-blue-600" />
-                      <span className="text-lg font-semibold">Top Diseases</span>
-                    </div>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
-                      {dashboardStats?.topDiseases.length || 0} conditions
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-sm">Most frequently studied conditions with detailed analytics</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {dashboardStats && dashboardStats.topDiseases.length > 0 ? (
-                    <div className="space-y-4">
-                      {dashboardStats.topDiseases.map((disease, index) => {
-                        const maxCount = Math.max(...dashboardStats.topDiseases.map(d => d.count));
-                        const percentage = maxCount > 0 ? (disease.count / maxCount) * 100 : 0;
-                        
-                        return (
-                          <div key={disease.name} className="group p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-100 dark:border-blue-800 hover:shadow-md transition-all duration-300">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center space-x-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                  index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/20' :
-                                  index === 1 ? 'bg-gray-100 dark:bg-gray-900/20' :
-                                  index === 2 ? 'bg-orange-100 dark:bg-orange-900/20' :
-                                  'bg-blue-100 dark:bg-blue-900/20'
-                                }`}>
-                                  <span className={`text-sm font-bold ${
-                                    index === 0 ? 'text-yellow-600' :
-                                    index === 1 ? 'text-gray-600' :
-                                    index === 2 ? 'text-orange-600' :
-                                    'text-blue-600'
-                                  }`}>
-                                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                                  </span>
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-sm text-gray-900 dark:text-white">{disease.name}</p>
-                                  <p className="text-xs text-muted-foreground">{disease.count} submissions</p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-bold text-lg text-blue-600">{disease.count}</p>
-                                <p className="text-xs text-muted-foreground">cases</p>
-                              </div>
-                            </div>
-                            
-                            {/* Progress Bar */}
-                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
-                              <div 
-                                className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
-                                style={{ width: `${percentage}%` }}
-                              ></div>
-                            </div>
-                            
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{percentage.toFixed(1)}% of max</span>
-                              <span>{disease.count} total cases</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <BarChart3 className="h-8 w-8 text-blue-600" />
-                      </div>
-                      <p className="text-gray-600 dark:text-gray-300 mb-2 font-medium">No disease data available</p>
-                      <p className="text-sm text-muted-foreground">
-                        Disease analytics will appear once forms are submitted
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Monthly Contributions */}
-              <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="h-5 w-5 text-green-600" />
-                      <span className="text-lg font-semibold">Monthly Contributions</span>
-                    </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300">
-                      {dashboardStats?.monthlyContributions.length || 0} months
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-sm">Form submissions trend over the last 6 months</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {dashboardStats && dashboardStats.monthlyContributions.length > 0 ? (
-                    <div className="space-y-4">
-                      {/* Chart Header */}
-                      <div className="flex items-center justify-between mb-4 p-3 bg-green-50 dark:bg-green-900/10 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-700 dark:text-green-300">Submission Trend</span>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">Total</p>
-                          <p className="font-bold text-green-600">
-                            {dashboardStats.monthlyContributions.reduce((sum, month) => sum + month.count, 0)} forms
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {dashboardStats.monthlyContributions.map((month, index) => {
-                        const maxCount = Math.max(...dashboardStats.monthlyContributions.map(m => m.count));
-                        const percentage = maxCount > 0 ? (month.count / maxCount) * 100 : 0;
-                        const isCurrentMonth = month.month === new Date().toLocaleDateString('en-US', { month: 'short' });
-                        
-                        return (
-                          <div key={month.month} className={`group p-4 rounded-xl border transition-all duration-300 ${
-                            isCurrentMonth 
-                              ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800' 
-                              : 'bg-muted/30 border-muted hover:bg-muted/50'
-                          }`}>
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center space-x-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                  isCurrentMonth ? 'bg-green-100 dark:bg-green-900/20' : 'bg-gray-100 dark:bg-gray-900/20'
-                                }`}>
-                                  <Calendar className={`h-4 w-4 ${isCurrentMonth ? 'text-green-600' : 'text-gray-600'}`} />
-                                </div>
-                                <div>
-                                  <div className="flex items-center space-x-2">
-                                    <p className="font-semibold text-sm text-gray-900 dark:text-white">{month.month}</p>
-                                    {isCurrentMonth && (
-                                      <Badge variant="outline" className="text-xs bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300">
-                                        Current
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">{month.count} submissions</p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className={`font-bold text-lg ${isCurrentMonth ? 'text-green-600' : 'text-gray-600'}`}>
-                                  {month.count}
-                                </p>
-                                <p className="text-xs text-muted-foreground">forms</p>
-                              </div>
-                            </div>
-                            
-                            {/* Progress Bar */}
-                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-500 ${
-                                  isCurrentMonth 
-                                    ? 'bg-gradient-to-r from-green-500 to-green-600' 
-                                    : 'bg-gradient-to-r from-gray-400 to-gray-500'
-                                }`}
-                                style={{ width: `${percentage}%` }}
-                              ></div>
-                            </div>
-                            
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{percentage.toFixed(1)}% of peak</span>
-                              <span>{month.count} submissions</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <TrendingUp className="h-8 w-8 text-green-600" />
-                      </div>
-                      <p className="text-gray-600 dark:text-gray-300 mb-2 font-medium">No monthly data available</p>
-                      <p className="text-sm text-muted-foreground">
-                        Monthly trends will appear once forms are submitted
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Top Contributors */}
-              <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all duration-300">
+              {/* Contributors */}
+              <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all duration-300" data-testid="user-activity">
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Users className="h-5 w-5 text-purple-600" />
-                      <span className="text-lg font-semibold">Top Contributors</span>
+                      <span className="text-lg font-semibold">Contributors</span>
                     </div>
                     <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300">
                       {dashboardStats?.userActivity.length || 0} users
                     </Badge>
                   </div>
-                  <CardDescription className="text-sm">Most active users and their contributions</CardDescription>
+                  <CardDescription className="text-sm">All users and their contributions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {dashboardStats && dashboardStats.userActivity.length > 0 ? (
                     <div className="space-y-4">
-                      {/* Leaderboard Header */}
+                      {/* All Contributors Header */}
                       <div className="flex items-center justify-between mb-4 p-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg">
                         <div className="flex items-center space-x-2">
                           <Users className="h-4 w-4 text-purple-600" />
-                          <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Contributor Leaderboard</span>
+                          <span className="text-sm font-medium text-purple-700 dark:text-purple-300">All Contributors</span>
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-muted-foreground">Total Submissions</p>
@@ -1050,38 +806,23 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       
-                      {dashboardStats.userActivity.slice(0, 5).map((user, index) => {
-                        const maxSubmissions = Math.max(...dashboardStats.userActivity.map(u => u.submissions));
-                        const percentage = maxSubmissions > 0 ? (user.submissions / maxSubmissions) * 100 : 0;
+                      {dashboardStats.userActivity.map((user, index) => {
                         const isRecent = new Date().getTime() - user.lastActive.getTime() < 7 * 24 * 60 * 60 * 1000; // 7 days
                         
                         return (
-                          <div key={user.userId} className={`group p-4 rounded-xl border transition-all duration-300 ${
-                            index === 0 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 border-yellow-200 dark:border-yellow-800' :
-                            index === 1 ? 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/10 dark:to-slate-900/10 border-gray-200 dark:border-gray-800' :
-                            index === 2 ? 'bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/10 dark:to-amber-900/10 border-orange-200 dark:border-orange-800' :
-                            'bg-muted/30 border-muted hover:bg-muted/50'
-                          }`}>
+                          <div key={user.userId} className="group p-4 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-all duration-300" data-testid="contributors-list">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center space-x-3">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                                  index === 0 ? 'bg-yellow-100 dark:bg-yellow-900/20' :
-                                  index === 1 ? 'bg-gray-100 dark:bg-gray-900/20' :
-                                  index === 2 ? 'bg-orange-100 dark:bg-orange-900/20' :
-                                  'bg-purple-100 dark:bg-purple-900/20'
-                                }`}>
-                                  <span className={`text-lg font-bold ${
-                                    index === 0 ? 'text-yellow-600' :
-                                    index === 1 ? 'text-gray-600' :
-                                    index === 2 ? 'text-orange-600' :
-                                    'text-purple-600'
-                                  }`}>
-                                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : user.displayName.charAt(0).toUpperCase()}
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-purple-100 dark:bg-purple-900/20">
+                                  <span className="text-lg font-bold text-purple-600">
+                                    {user.displayName.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
                                 <div>
                                   <div className="flex items-center space-x-2">
-                                    <p className="font-semibold text-sm text-gray-900 dark:text-white">{user.displayName}</p>
+                                    <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                                      {user.displayName}
+                                    </p>
                                     {isRecent && (
                                       <Badge variant="outline" className="text-xs bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300">
                                         Active
@@ -1102,35 +843,91 @@ export default function DashboardPage() {
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className={`font-bold text-lg ${
-                                  index === 0 ? 'text-yellow-600' :
-                                  index === 1 ? 'text-gray-600' :
-                                  index === 2 ? 'text-orange-600' :
-                                  'text-purple-600'
-                                }`}>
+                                <p className="font-bold text-lg text-purple-600">
                                   {user.submissions}
                                 </p>
                                 <p className="text-xs text-muted-foreground">submissions</p>
                               </div>
                             </div>
                             
-                            {/* Progress Bar */}
-                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-500 ${
-                                  index === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
-                                  index === 1 ? 'bg-gradient-to-r from-gray-500 to-gray-600' :
-                                  index === 2 ? 'bg-gradient-to-r from-orange-500 to-orange-600' :
-                                  'bg-gradient-to-r from-purple-500 to-purple-600'
-                                }`}
-                                style={{ width: `${percentage}%` }}
-                              ></div>
+                            {/* Action Buttons */}
+                            <div className="flex items-center justify-end space-x-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewUserSubmissions(user)}
+                                className="flex items-center space-x-2"
+                              >
+                                <Eye className="h-4 w-4" />
+                                <span>{expandedUser === user.userId ? 'Hide' : 'View'} Submissions</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownloadUserSubmissions(user)}
+                                className="flex items-center space-x-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                <span>Download</span>
+                              </Button>
                             </div>
                             
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>{percentage.toFixed(1)}% of leader</span>
-                              <span>{user.submissions} submissions</span>
+                            {/* Expanded Submissions View */}
+                            {expandedUser === user.userId && (
+                              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg border">
+                                <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-3">
+                                  Submissions ({userSubmissions.length})
+                                </h4>
+                                {userSubmissions.length > 0 ? (
+                                  <div className="space-y-3">
+                                    {userSubmissions.map((submission, index) => (
+                                      <div key={submission.submissionId || index} className="p-3 bg-white dark:bg-gray-800 rounded-lg border">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <div className="flex-1">
+                                            <p className="font-medium text-sm text-gray-900 dark:text-white">
+                                              {submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || 
+                                               submission.comprehensiveData?.diseaseOverview?.diseaseName || 
+                                               'Unknown Disease'}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {submission.formType} • {submission.submittedAt?.toDate?.()?.toLocaleDateString() || 
+                                               new Date(submission.submittedAt).toLocaleDateString()}
+                                            </p>
                             </div>
+                                          <Badge className="text-xs">
+                                            {submission.status || 'submitted'}
+                                          </Badge>
+                                        </div>
+                                        
+                                        {/* Submission Action Buttons */}
+                                        <div className="flex items-center justify-end space-x-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => router.push(`/admin/submissions/${submission.submissionId || submission.id}`)}
+                                            className="flex items-center space-x-1 h-6 px-2"
+                                          >
+                                            <Eye className="h-3 w-3" />
+                                            <span className="text-xs">View</span>
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDownloadSingleSubmission(submission)}
+                                            className="flex items-center space-x-1 h-6 px-2"
+                                          >
+                                            <Download className="h-3 w-3" />
+                                            <span className="text-xs">Download</span>
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No submissions found for this user.</p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         );
                       })}

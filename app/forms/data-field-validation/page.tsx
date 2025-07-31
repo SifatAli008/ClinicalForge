@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, AlertCircle, Info, Save, Send, Brain, Target, Zap, Shield, Users, Activity, FileText, Heart, Clock, MapPin, Settings, TrendingUp, AlertTriangle, CheckSquare, XCircle, Star, ArrowLeft } from 'lucide-react';
+import { CheckCircle, AlertCircle, Info, Save, Send, Brain, Target, Zap, Shield, Users, Activity, FileText, Heart, Clock, MapPin, Settings, TrendingUp, AlertTriangle, CheckSquare, XCircle, Star, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -71,6 +71,17 @@ const validationSchema = z.object({
   overallFeedback: z.string().optional(),
   clinicalRelevance: z.enum(['excellent', 'good', 'fair', 'poor']),
   implementationReadiness: z.enum(['ready', 'needs-improvement', 'not-ready']),
+  physicianConsent: z.object({
+    physicianName: z.string().min(1, "Physician name is required"),
+    credentials: z.string().min(1, "Credentials are required"),
+    institution: z.string().min(1, "Institution is required"),
+    specialty: z.string().min(1, "Specialty is required"),
+    email: z.string().email("Valid email is required"),
+    phone: z.string().optional(),
+    consentGiven: z.boolean(),
+    consentDate: z.string().optional(),
+    additionalNotes: z.string().optional(),
+  }),
 });
 
 type ValidationFormData = z.infer<typeof validationSchema>;
@@ -80,113 +91,113 @@ const decisionModels = [
     model: 'Disease Classification',
     sections: ['Disease Overview', 'Disease Subtypes', 'Family History & Genetics', 'Clinical Staging'],
     dependencies: 'Patient demographics, genetics, and staging',
-    clinicalImpact: 'Personalized diagnosis accuracy',
+    clinicalImpact: 'Enhanced diagnostic precision through comprehensive disease profiling and genetic risk assessment',
   },
   {
     model: 'Risk Stratification',
     sections: ['Clinical Staging', 'Progression', 'Lab Ranges', 'Monitoring'],
     dependencies: 'Genetic markers, progression patterns',
-    clinicalImpact: 'Early intervention triggers',
+    clinicalImpact: 'Proactive patient management through early risk identification and intervention protocols',
   },
   {
     model: 'Treatment Optimization',
     sections: ['Medication Protocol', 'Contraindications', 'Comorbidities', 'Pediatric vs. Adult'],
     dependencies: 'Drug interactions, age factors, and comorbidities',
-    clinicalImpact: 'Medication safety & efficacy',
+    clinicalImpact: 'Evidence-based therapeutic decision-making with comprehensive safety monitoring',
   },
   {
     model: 'Emergency Detection',
     sections: ['Symptoms by Stage', 'Red Flags & Emergencies', 'Lab Ranges', 'Misdiagnoses'],
     dependencies: 'Symptom patterns, lab anomalies',
-    clinicalImpact: 'Critical care automation',
+    clinicalImpact: 'Real-time critical care decision support and emergency response optimization',
   },
   {
     model: 'Adherence Prediction',
     sections: ['Lifestyle', 'Monitoring', 'Regional Practices', 'Notes'],
     dependencies: 'Lifestyle factors, regional/cultural differences',
-    clinicalImpact: 'Treatment success optimization',
+    clinicalImpact: 'Patient-centered care optimization through predictive adherence modeling',
   },
   {
     model: 'Differential Diagnosis',
     sections: ['Misdiagnoses', 'Symptoms by Stage', 'Lab Ranges', 'Red Flags & Emergencies'],
     dependencies: 'Symptom overlap, distinguishing tests',
-    clinicalImpact: 'Diagnostic accuracy improvement',
+    clinicalImpact: 'Systematic diagnostic accuracy enhancement through comprehensive differential analysis',
   },
 ];
 
 const criticalPoints = [
   {
     section: 'Clinical Staging',
-    reason: 'Central hub for diagnostic & treatment decisions',
-    useCase: 'Stage classification accuracy drives downstream decisions',
-    dependencies: '← Disease Overview, Subtypes, Family History → Symptoms, Medication, Progression, Labs',
+    reason: 'Foundation for evidence-based diagnostic and therapeutic decision-making',
+    useCase: 'Accurate stage classification enables precision medicine and outcome prediction',
+    dependencies: 'DEPENDS ON: Disease Overview, Subtypes, Family History. RESULTS IN: Symptoms, Medication, Progression, Labs',
   },
   {
     section: 'Red Flags & Emergencies',
-    reason: 'Life-saving early detection system',
-    useCase: 'Emergency prediction models, triage automation',
-    dependencies: '← Symptoms, Lab Ranges, Misdiagnoses → Emergency protocols',
+    reason: 'Critical patient safety and early intervention system',
+    useCase: 'Automated emergency detection and rapid response protocols',
+    dependencies: 'DEPENDS ON: Symptoms, Lab Ranges, Misdiagnoses. RESULTS IN: Emergency protocols',
   },
   {
     section: 'Pediatric vs. Adult',
-    reason: 'Personalized medicine by age group',
-    useCase: 'Age-specific treatment algorithms',
-    dependencies: '← Clinical Staging, Medication, Lab Ranges → Age-based care planning',
+    reason: 'Age-appropriate personalized medicine implementation',
+    useCase: 'Developmental stage-specific treatment algorithms and safety protocols',
+    dependencies: 'DEPENDS ON: Clinical Staging, Medication, Lab Ranges. RESULTS IN: Age-based care planning',
   },
 ];
 
 const conflictZones = [
   {
-    sections: 'Medication Protocol ⊗ Contraindications',
-    conflict: 'Drug efficacy vs. risk of nephrotoxicity or adverse effects',
-    resolution: 'Requires careful risk-benefit analysis and monitoring protocols',
+    sections: 'Medication Protocol CONFLICTS WITH Contraindications',
+    conflict: 'Therapeutic efficacy optimization versus risk of nephrotoxicity and adverse drug reactions',
+    resolution: 'Comprehensive risk-benefit analysis with enhanced monitoring and dose titration protocols',
   },
   {
-    sections: 'Comorbidities ⊗ Medication Protocol',
-    conflict: 'Drug interactions due to diabetes, hypertension, anemia',
-    resolution: 'Multi-drug interaction screening and dose adjustments',
+    sections: 'Comorbidities CONFLICTS WITH Medication Protocol',
+    conflict: 'Complex drug-drug interactions in patients with multiple chronic conditions',
+    resolution: 'Advanced pharmacogenomic screening and evidence-based dose optimization strategies',
   },
   {
-    sections: 'Regional Practices ⊗ Medication Protocol',
-    conflict: 'Limited drug access or affordability in rural areas',
-    resolution: 'Alternative treatment protocols and resource optimization',
+    sections: 'Regional Practices CONFLICTS WITH Medication Protocol',
+    conflict: 'Healthcare resource limitations and medication accessibility in underserved regions',
+    resolution: 'Adaptive treatment protocols with cost-effective therapeutic alternatives and resource optimization',
   },
 ];
 
 const feedbackLoops = [
   {
-    loop: 'Monitoring → Progression → Clinical Staging',
-    purpose: 'Treatment effectiveness validation',
+    loop: 'Monitoring leads to Progression, which leads to Clinical Staging',
+    purpose: 'Continuous treatment effectiveness assessment and outcome optimization',
   },
   {
-    loop: 'Misdiagnoses → Red Flags & Emergencies → Symptoms by Stage',
-    purpose: 'Diagnostic accuracy improvement',
+    loop: 'Misdiagnoses leads to Red Flags & Emergencies, which leads to Symptoms by Stage',
+    purpose: 'Iterative diagnostic accuracy enhancement and clinical decision support',
   },
   {
-    loop: 'Cultural/Regional Practices → Adherence Patterns → Treatment Outcomes',
-    purpose: 'Health equity optimization',
+    loop: 'Cultural/Regional Practices leads to Adherence Patterns, which leads to Treatment Outcomes',
+    purpose: 'Health equity advancement through culturally responsive care delivery',
   },
 ];
 
 const clinicalSections = [
-  { id: 'disease-overview', name: 'Disease Overview', description: 'Basic disease information and demographics' },
-  { id: 'subtypes', name: 'Disease Subtypes/Classifications', description: 'Different classifications and subtypes' },
-  { id: 'family-history', name: 'Family History & Genetic Risk', description: 'Genetic factors and inheritance patterns' },
-  { id: 'clinical-staging', name: 'Clinical Staging', description: 'Disease progression stages and criteria' },
-  { id: 'symptoms', name: 'Symptoms by Stage', description: 'Symptom presentation across different stages' },
-  { id: 'comorbidities', name: 'Common Comorbidities', description: 'Frequently associated conditions' },
-  { id: 'medication', name: 'Medication Protocol', description: 'Treatment protocols and drug information' },
-  { id: 'red-flags', name: 'Red Flags & Emergency Conditions', description: 'Critical symptoms requiring immediate attention' },
-  { id: 'progression', name: 'Disease Progression Timeline', description: 'Expected progression rates and triggers' },
-  { id: 'lifestyle', name: 'Lifestyle Management Guidance', description: 'Diet, exercise, and lifestyle recommendations' },
-  { id: 'pediatric-adult', name: 'Pediatric vs. Adult Presentation', description: 'Age-specific differences' },
-  { id: 'lab-values', name: 'Lab Value Ranges by Stage', description: 'Laboratory parameters and critical values' },
-  { id: 'contraindications', name: 'Contraindications & Treatment Conflicts', description: 'Drug interactions and safety concerns' },
-  { id: 'monitoring', name: 'Monitoring & Follow-up Requirements', description: 'Ongoing care and surveillance needs' },
-  { id: 'misdiagnoses', name: 'Common Misdiagnoses/Differential Diagnoses', description: 'Conditions that mimic the disease' },
-  { id: 'regional-practices', name: 'Regional Practices & Variations', description: 'Geographic and cultural variations' },
-  { id: 'additional-notes', name: 'Additional Notes', description: 'Cultural aspects and socioeconomic barriers' },
-  { id: 'physician-consent', name: 'Physician Consent & Attribution', description: 'Physician information and consent' },
+  { id: 'disease-overview', name: 'Disease Overview', description: 'Comprehensive disease epidemiology and clinical characteristics' },
+  { id: 'subtypes', name: 'Disease Subtypes/Classifications', description: 'Evidence-based disease classification and phenotypic variations' },
+  { id: 'family-history', name: 'Family History & Genetic Risk', description: 'Hereditary factors and genetic predisposition assessment' },
+  { id: 'clinical-staging', name: 'Clinical Staging', description: 'Evidence-based disease progression staging and prognostic indicators' },
+  { id: 'symptoms', name: 'Symptoms by Stage', description: 'Stage-specific symptom presentation and clinical manifestations' },
+  { id: 'comorbidities', name: 'Common Comorbidities', description: 'Frequently associated conditions and their clinical implications' },
+  { id: 'medication', name: 'Medication Protocol', description: 'Evidence-based therapeutic protocols and pharmacotherapeutic strategies' },
+  { id: 'red-flags', name: 'Red Flags & Emergency Conditions', description: 'Critical clinical indicators requiring immediate medical intervention' },
+  { id: 'progression', name: 'Disease Progression Timeline', description: 'Evidence-based progression rates and clinical trigger identification' },
+  { id: 'lifestyle', name: 'Lifestyle Management Guidance', description: 'Evidence-based lifestyle modification and behavioral interventions' },
+  { id: 'pediatric-adult', name: 'Pediatric vs. Adult Presentation', description: 'Age-specific clinical presentations and therapeutic considerations' },
+  { id: 'lab-values', name: 'Lab Value Ranges by Stage', description: 'Stage-specific laboratory parameters and critical value thresholds' },
+  { id: 'contraindications', name: 'Contraindications & Treatment Conflicts', description: 'Drug interaction profiles and therapeutic safety considerations' },
+  { id: 'monitoring', name: 'Monitoring & Follow-up Requirements', description: 'Comprehensive surveillance protocols and outcome monitoring' },
+  { id: 'misdiagnoses', name: 'Common Misdiagnoses/Differential Diagnoses', description: 'Systematic differential diagnosis and diagnostic accuracy enhancement' },
+  { id: 'regional-practices', name: 'Regional Practices & Variations', description: 'Geographic and cultural variations in clinical practice patterns' },
+  { id: 'additional-notes', name: 'Additional Notes', description: 'Socioeconomic factors and healthcare access considerations' },
+  { id: 'physician-consent', name: 'Physician Consent & Attribution', description: 'Professional validation and attribution documentation' },
 ];
 
 export default function DataFieldValidationForm() {
@@ -197,8 +208,6 @@ export default function DataFieldValidationForm() {
   const [editSubmissionId, setEditSubmissionId] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-
-
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ValidationFormData>({
     resolver: zodResolver(validationSchema),
@@ -233,6 +242,17 @@ export default function DataFieldValidationForm() {
       })),
       clinicalRelevance: 'good',
       implementationReadiness: 'needs-improvement',
+      physicianConsent: {
+        physicianName: '',
+        credentials: '',
+        institution: '',
+        specialty: '',
+        email: '',
+        phone: '',
+        consentGiven: false,
+        consentDate: '',
+        additionalNotes: '',
+      },
     },
   });
 
@@ -241,6 +261,37 @@ export default function DataFieldValidationForm() {
   const watchedConflictZones = watch('conflictZones');
   const watchedFeedbackLoops = watch('feedbackLoops');
   const watchedSections = watch('sections');
+  const watchedClinicalRelevance = watch('clinicalRelevance');
+  const watchedImplementationReadiness = watch('implementationReadiness');
+  const watchedPhysicianConsent = watch('physicianConsent');
+
+  // Calculate completion status for each tab
+  const calculateTabCompletion = () => {
+    const tabCompletion = {
+      'decision-models': watchedDecisionModels.every(model => model.isSufficient),
+      'critical-points': watchedCriticalPoints.every(point => point.isSufficient),
+      'conflict-zones': watchedConflictZones.every(conflict => conflict.isResolved),
+      'feedback-loops': watchedFeedbackLoops.every(loop => loop.isImplemented),
+      'sections': watchedSections.every(section => section.isSufficient),
+      'overall': watchedClinicalRelevance && watchedImplementationReadiness && 
+                 watchedPhysicianConsent.physicianName && watchedPhysicianConsent.credentials && 
+                 watchedPhysicianConsent.institution && watchedPhysicianConsent.specialty && 
+                 watchedPhysicianConsent.email && watchedPhysicianConsent.consentGiven
+    };
+
+    const completedTabs = Object.values(tabCompletion).filter(Boolean).length;
+    const totalTabs = Object.keys(tabCompletion).length;
+    const completionPercentage = Math.round((completedTabs / totalTabs) * 100);
+
+    return {
+      tabCompletion,
+      completedTabs,
+      totalTabs,
+      completionPercentage
+    };
+  };
+
+  const { tabCompletion, completedTabs, totalTabs, completionPercentage } = calculateTabCompletion();
 
   // Load edit data from localStorage if available
   React.useEffect(() => {
@@ -298,6 +349,19 @@ export default function DataFieldValidationForm() {
             setValue('overallFeedback', data.overallAssessment.overallFeedback || '');
             setValue('clinicalRelevance', data.overallAssessment.clinicalRelevance || 'good');
             setValue('implementationReadiness', data.overallAssessment.implementationReadiness || 'ready');
+            
+            // Set physician consent
+            if (data.overallAssessment.physicianConsent) {
+              setValue('physicianConsent.physicianName', data.overallAssessment.physicianConsent.physicianName || '');
+              setValue('physicianConsent.credentials', data.overallAssessment.physicianConsent.credentials || '');
+              setValue('physicianConsent.institution', data.overallAssessment.physicianConsent.institution || '');
+              setValue('physicianConsent.specialty', data.overallAssessment.physicianConsent.specialty || '');
+              setValue('physicianConsent.email', data.overallAssessment.physicianConsent.email || '');
+              setValue('physicianConsent.phone', data.overallAssessment.physicianConsent.phone || '');
+              setValue('physicianConsent.consentGiven', data.overallAssessment.physicianConsent.consentGiven || false);
+              setValue('physicianConsent.consentDate', data.overallAssessment.physicianConsent.consentDate || '');
+              setValue('physicianConsent.additionalNotes', data.overallAssessment.physicianConsent.additionalNotes || '');
+            }
           }
           
           toast({
@@ -365,6 +429,17 @@ export default function DataFieldValidationForm() {
           overallFeedback: data.overallFeedback || '',
           clinicalRelevance: data.clinicalRelevance || 'good',
           implementationReadiness: data.implementationReadiness || 'ready',
+          physicianConsent: data.physicianConsent || {
+            physicianName: '',
+            credentials: '',
+            institution: '',
+            specialty: '',
+            email: '',
+            phone: '',
+            consentGiven: false,
+            consentDate: new Date().toISOString(),
+            additionalNotes: '',
+          },
         },
       };
 
@@ -417,6 +492,17 @@ export default function DataFieldValidationForm() {
           overallFeedback: formData.overallFeedback || '',
           clinicalRelevance: formData.clinicalRelevance || 'good',
           implementationReadiness: formData.implementationReadiness || 'ready',
+          physicianConsent: formData.physicianConsent || {
+            physicianName: '',
+            credentials: '',
+            institution: '',
+            specialty: '',
+            email: '',
+            phone: '',
+            consentGiven: false,
+            consentDate: new Date().toISOString(),
+            additionalNotes: '',
+          },
         },
       };
 
@@ -452,6 +538,42 @@ export default function DataFieldValidationForm() {
     { id: 'overall', name: 'Overall Assessment', icon: Star, color: 'bg-indigo-500' },
   ];
 
+  // Get current tab index
+  const currentTabIndex = tabs.findIndex(tab => tab.id === activeTab);
+  const isLastTab = currentTabIndex === tabs.length - 1;
+  const isFirstTab = currentTabIndex === 0;
+
+  // Navigation functions
+  const goToNextTab = () => {
+    if (!isLastTab) {
+      const nextTab = tabs[currentTabIndex + 1];
+      setActiveTab(nextTab.id);
+    }
+  };
+
+  const goToPreviousTab = () => {
+    if (!isFirstTab) {
+      const previousTab = tabs[currentTabIndex - 1];
+      setActiveTab(previousTab.id);
+    }
+  };
+
+  // Check if current tab is completed
+  const isCurrentTabCompleted = tabCompletion[activeTab as keyof typeof tabCompletion];
+
+  // Check if all previous tabs are completed
+  const arePreviousTabsCompleted = () => {
+    for (let i = 0; i < currentTabIndex; i++) {
+      if (!tabCompletion[tabs[i].id as keyof typeof tabCompletion]) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Check if user can proceed to next tab
+  const canProceedToNext = isCurrentTabCompleted && arePreviousTabsCompleted();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -469,9 +591,38 @@ export default function DataFieldValidationForm() {
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             Advanced Clinical Analytics Validation
         </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-6">
             Comprehensive validation of clinical data fields based on Advanced Clinical Analytics Matrix and decision models.
         </p>
+          
+          {/* Completion Progress */}
+          <div className="max-w-md mx-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Form Completion
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-green-600">
+                    {completedTabs}/{totalTabs}
+                  </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">tabs</span>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
+                <div 
+                  className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${completionPercentage}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                {completionPercentage}% Complete • {completedTabs === totalTabs ? 'All tabs completed!' : `${totalTabs - completedTabs} tabs remaining`}
+              </p>
+            </div>
+          </div>
       </div>
 
         <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
@@ -484,22 +635,52 @@ export default function DataFieldValidationForm() {
 
         {/* Tab Navigation */}
         <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            {tabs.map((tab) => {
+          <div className="flex flex-wrap gap-2 mb-4">
+            {tabs.map((tab, index) => {
               const Icon = tab.icon;
+              const isCompleted = tabCompletion[tab.id as keyof typeof tabCompletion];
+              const isActive = activeTab === tab.id;
+              const isAccessible = index <= currentTabIndex || isCompleted;
+              
               return (
                 <Button
                   key={tab.id}
-                  variant={activeTab === tab.id ? "default" : "outline"}
+                  variant={isActive ? "default" : "outline"}
                   size="sm"
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex items-center space-x-2"
+                  disabled={!isAccessible}
+                  className={`flex items-center space-x-2 relative ${
+                    isCompleted ? 'border-green-500 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-400' : ''
+                  } ${!isAccessible ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{tab.name}</span>
+                  {isCompleted && (
+                    <CheckCircle className="h-3 w-3 text-green-600 ml-1" />
+                  )}
+                  {!isAccessible && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-gray-400 rounded-full"></div>
+                  )}
                 </Button>
               );
             })}
+          </div>
+          
+          {/* Progress Indicator */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Step {currentTabIndex + 1} of {tabs.length}
+              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {tabs[currentTabIndex]?.name}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {completedTabs}/{totalTabs} completed
+              </span>
+            </div>
           </div>
         </div>
 
@@ -513,7 +694,8 @@ export default function DataFieldValidationForm() {
                   <span>Clinical Decision Models</span>
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Evaluate the sufficiency of data fields for each clinical decision model and their clinical impact.
+                  <strong>Question:</strong> Do these clinical decision models provide sufficient information for healthcare professionals to make accurate diagnostic and treatment decisions?<br/>
+                  <strong>Context:</strong> Each model represents a key clinical decision point that guides patient care. Evaluate whether the included sections, dependencies, and clinical impact descriptions provide comprehensive guidance for clinical practice.
                 </p>
               </div>
 
@@ -526,7 +708,7 @@ export default function DataFieldValidationForm() {
                           {model.model}
                         </CardTitle>
                         <CardDescription className="text-blue-700 dark:text-blue-300 mt-2">
-                          <strong>Sections:</strong> {model.sections.join(' → ')}
+                          <strong>Sections:</strong> {model.sections.join(' leads to ')}
                         </CardDescription>
                         <div className="mt-2 space-y-1">
                           <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -547,7 +729,7 @@ export default function DataFieldValidationForm() {
                           }}
                         />
                         <label className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                          Sufficient
+                          ✓ Sufficient for Clinical Use
                         </label>
                       </div>
                     </div>
@@ -559,7 +741,7 @@ export default function DataFieldValidationForm() {
                           Suggestions for improvement:
                         </label>
                         <Textarea
-                          placeholder="Describe additional fields, parameters, or sections that would improve this decision model..."
+                          placeholder="What additional clinical fields, parameters, or sections would make this decision model more comprehensive and useful for healthcare professionals? Consider: missing data points, unclear guidance, or insufficient clinical context..."
                           className="min-h-[100px] focus:border-blue-500"
                           {...register(`decisionModels.${index}.suggestions`)}
                         />
@@ -580,7 +762,8 @@ export default function DataFieldValidationForm() {
                   <span>Critical Clinical Decision Points</span>
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Evaluate the critical decision points that drive diagnostic and treatment decisions.
+                  <strong>Question:</strong> Are these critical clinical decision points adequately defined to support safe and effective patient care?<br/>
+                  <strong>Context:</strong> Critical points are the most important decision-making moments in patient care. Evaluate whether each point provides clear guidance for healthcare professionals to make informed clinical decisions.
                 </p>
               </div>
 
@@ -614,7 +797,7 @@ export default function DataFieldValidationForm() {
                           }}
                         />
                         <label className="text-sm font-medium text-red-900 dark:text-red-100">
-                          Sufficient
+                          ✓ Adequately Defined
                         </label>
                       </div>
                     </div>
@@ -626,7 +809,7 @@ export default function DataFieldValidationForm() {
                           Suggestions for improvement:
                         </label>
                         <Textarea
-                          placeholder="Describe additional fields or parameters needed for this critical decision point..."
+                          placeholder="What additional information or guidance would make this critical decision point clearer and safer for healthcare professionals? Consider: missing clinical criteria, unclear decision thresholds, or insufficient safety protocols..."
                           className="min-h-[100px] focus:border-red-500"
                           {...register(`criticalPoints.${index}.suggestions`)}
                         />
@@ -647,7 +830,8 @@ export default function DataFieldValidationForm() {
                   <span>Critical Conflict Zones</span>
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Identify and resolve conflicts between different clinical sections and decision points.
+                  <strong>Question:</strong> Are the conflicts between different clinical sections properly identified and resolved to ensure patient safety?<br/>
+                  <strong>Context:</strong> Clinical conflicts can arise when different treatment approaches or data requirements contradict each other. Evaluate whether these conflicts are clearly identified and whether the proposed resolutions are practical and safe for patient care.
                 </p>
               </div>
 
@@ -678,7 +862,7 @@ export default function DataFieldValidationForm() {
                           }}
                         />
                         <label className="text-sm font-medium text-orange-900 dark:text-orange-100">
-                          Resolved
+                          ✓ Conflict Resolved
                         </label>
                       </div>
                     </div>
@@ -690,7 +874,7 @@ export default function DataFieldValidationForm() {
                           Resolution suggestions:
                         </label>
                         <Textarea
-                          placeholder="Describe how to resolve this conflict or additional fields needed..."
+                          placeholder="How can this clinical conflict be resolved to ensure patient safety? What additional protocols, monitoring, or decision criteria would help healthcare professionals manage this conflict effectively? Consider: safety protocols, monitoring requirements, or alternative approaches..."
                           className="min-h-[100px] focus:border-orange-500"
                           {...register(`conflictZones.${index}.suggestions`)}
                         />
@@ -711,7 +895,8 @@ export default function DataFieldValidationForm() {
                   <span>Feedback Loops for Continuous Learning</span>
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Evaluate feedback loops that enable continuous learning and improvement in clinical decision-making.
+                  <strong>Question:</strong> Do these feedback loops provide effective mechanisms for continuous learning and improvement in clinical practice?<br/>
+                  <strong>Context:</strong> Feedback loops enable healthcare systems to learn from outcomes and improve future care. Evaluate whether these loops are practical, measurable, and will lead to meaningful improvements in patient care.
                 </p>
               </div>
 
@@ -737,7 +922,7 @@ export default function DataFieldValidationForm() {
                           }}
                         />
                         <label className="text-sm font-medium text-green-900 dark:text-green-100">
-                          Implemented
+                          ✓ Loop Implemented
                         </label>
                       </div>
                     </div>
@@ -749,7 +934,7 @@ export default function DataFieldValidationForm() {
                           Implementation suggestions:
                         </label>
                         <Textarea
-                          placeholder="Describe how to implement this feedback loop or additional fields needed..."
+                          placeholder="How can this feedback loop be implemented to improve clinical outcomes? What specific mechanisms, data collection methods, or evaluation criteria would make this loop effective for continuous learning? Consider: outcome measures, data collection protocols, or improvement mechanisms..."
                           className="min-h-[100px] focus:border-green-500"
                           {...register(`feedbackLoops.${index}.suggestions`)}
                         />
@@ -770,7 +955,8 @@ export default function DataFieldValidationForm() {
                   <span>Section-by-Section Validation</span>
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Evaluate each section for data sufficiency, clinical impact, and data quality.
+                  <strong>Question:</strong> Does each clinical section provide sufficient, high-quality data to support evidence-based patient care?<br/>
+                  <strong>Context:</strong> Each section represents a specific aspect of patient care. Evaluate whether the data fields, clinical impact, and data quality are appropriate for healthcare professionals to make informed clinical decisions.
                 </p>
               </div>
 
@@ -796,7 +982,7 @@ export default function DataFieldValidationForm() {
                     }}
                   />
                         <label className="text-sm font-medium text-purple-900 dark:text-purple-100">
-                    Sufficient
+                    ✓ Section Complete
                   </label>
                 </div>
               </div>
@@ -805,7 +991,7 @@ export default function DataFieldValidationForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Clinical Impact
+                          Clinical Impact on Patient Care
                         </label>
                         <select
                           {...register(`sections.${index}.clinicalImpact`)}
@@ -818,7 +1004,7 @@ export default function DataFieldValidationForm() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Data Quality
+                          Data Quality & Reliability
                         </label>
                         <select
                           {...register(`sections.${index}.dataQuality`)}
@@ -837,7 +1023,7 @@ export default function DataFieldValidationForm() {
                     Suggestions for improvement:
                   </label>
                   <Textarea
-                          placeholder="Describe additional fields or parameters that would improve this section..."
+                          placeholder="What additional clinical data fields, parameters, or guidance would improve this section for healthcare professionals? Consider: missing clinical information, unclear data requirements, or insufficient clinical context for decision-making..."
                           className="min-h-[100px] focus:border-purple-500"
                     {...register(`sections.${index}.suggestions`)}
                   />
@@ -858,7 +1044,8 @@ export default function DataFieldValidationForm() {
                   <span>Overall Assessment</span>
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Provide overall feedback on clinical relevance and implementation readiness.
+                  <strong>Question:</strong> Is this clinical validation system ready for implementation in real healthcare settings?<br/>
+                  <strong>Context:</strong> This final assessment evaluates whether the entire system is clinically relevant and ready for use by healthcare professionals. Consider the overall quality, safety, and practical implementation of the validation system.
                 </p>
               </div>
 
@@ -866,10 +1053,10 @@ export default function DataFieldValidationForm() {
                 <Card className="border-2 border-indigo-200 dark:border-indigo-800 shadow-xl">
                   <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20">
                     <CardTitle className="text-xl text-indigo-900 dark:text-indigo-100">
-                      Clinical Relevance
+                      Clinical Relevance & Impact
                     </CardTitle>
                     <CardDescription className="text-indigo-700 dark:text-indigo-300">
-                      Overall assessment of clinical relevance
+                      How relevant and impactful is this validation system for clinical practice?
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -888,10 +1075,10 @@ export default function DataFieldValidationForm() {
                 <Card className="border-2 border-indigo-200 dark:border-indigo-800 shadow-xl">
                   <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20">
                     <CardTitle className="text-xl text-indigo-900 dark:text-indigo-100">
-                      Implementation Readiness
+                      Implementation Readiness & Safety
                     </CardTitle>
                     <CardDescription className="text-indigo-700 dark:text-indigo-300">
-                      Assessment of implementation readiness
+                      Is this system ready and safe for implementation in healthcare settings?
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -910,10 +1097,10 @@ export default function DataFieldValidationForm() {
               <Card className="border-2 border-blue-200 dark:border-blue-800 shadow-xl">
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
                   <CardTitle className="text-xl text-blue-900 dark:text-blue-100">
-                    Additional Sections
+                    Additional Clinical Sections
             </CardTitle>
                   <CardDescription className="text-blue-700 dark:text-blue-300">
-              Suggest completely new sections that should be added to the template
+              Suggest completely new clinical sections that would enhance patient care and clinical decision-making
             </CardDescription>
           </CardHeader>
                 <CardContent className="p-6">
@@ -925,65 +1112,242 @@ export default function DataFieldValidationForm() {
           </CardContent>
         </Card>
 
-              <Card className="border-2 border-green-200 dark:border-green-800 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20">
-                  <CardTitle className="text-xl text-green-900 dark:text-green-100">
-                    Overall Feedback
+                             <Card className="border-2 border-green-200 dark:border-green-800 shadow-xl">
+                 <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20">
+                                     <CardTitle className="text-xl text-green-900 dark:text-green-100">
+                    Overall Clinical Feedback
             </CardTitle>
                   <CardDescription className="text-green-700 dark:text-green-300">
-              General comments about the template structure, usability, or clinical relevance
+              Comprehensive feedback on clinical relevance, safety, usability, and areas for improvement
             </CardDescription>
-          </CardHeader>
-                <CardContent className="p-6">
-            <Textarea
-                    placeholder="Share your overall thoughts about the Clinical Logic Collection Template and Advanced Clinical Analytics Matrix..."
-                    className="min-h-[120px] focus:border-green-500"
-              {...register('overallFeedback')}
-            />
-          </CardContent>
-        </Card>
+           </CardHeader>
+                 <CardContent className="p-6">
+             <Textarea
+                     placeholder="Provide comprehensive feedback on the clinical validation system. Consider: clinical relevance, patient safety, ease of use for healthcare professionals, areas for improvement, and overall readiness for clinical implementation..."
+                     className="min-h-[120px] focus:border-green-500"
+               {...register('overallFeedback')}
+             />
+           </CardContent>
+         </Card>
+
+               {/* Physician Consent Section */}
+               <Card className="border-2 border-indigo-200 dark:border-indigo-800 shadow-xl">
+                 <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
+                   <CardTitle className="text-xl text-indigo-900 dark:text-indigo-100 flex items-center space-x-2">
+                     <Users className="h-5 w-5" />
+                     <span>Physician Consent & Attribution</span>
+                   </CardTitle>
+                   <CardDescription className="text-indigo-700 dark:text-indigo-300">
+                     Provide your professional information and consent for this validation submission
+                   </CardDescription>
+                 </CardHeader>
+                 <CardContent className="p-6 space-y-4">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div>
+                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                         Physician Name *
+                       </label>
+                       <input
+                         type="text"
+                         {...register('physicianConsent.physicianName')}
+                         placeholder="Enter your full name"
+                         className="w-full h-10 text-base border rounded-lg px-3 focus:border-indigo-500"
+                       />
+                       {errors.physicianConsent?.physicianName && (
+                         <p className="text-red-500 text-xs mt-1">{errors.physicianConsent.physicianName.message}</p>
+                       )}
+                     </div>
+                     <div>
+                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                         Credentials *
+                       </label>
+                       <input
+                         type="text"
+                         {...register('physicianConsent.credentials')}
+                         placeholder="MD, PhD, etc."
+                         className="w-full h-10 text-base border rounded-lg px-3 focus:border-indigo-500"
+                       />
+                       {errors.physicianConsent?.credentials && (
+                         <p className="text-red-500 text-xs mt-1">{errors.physicianConsent.credentials.message}</p>
+                       )}
+                     </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div>
+                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                         Institution *
+                       </label>
+                       <input
+                         type="text"
+                         {...register('physicianConsent.institution')}
+                         placeholder="Hospital, University, Clinic"
+                         className="w-full h-10 text-base border rounded-lg px-3 focus:border-indigo-500"
+                       />
+                       {errors.physicianConsent?.institution && (
+                         <p className="text-red-500 text-xs mt-1">{errors.physicianConsent.institution.message}</p>
+                       )}
+                     </div>
+                     <div>
+                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                         Specialty *
+                       </label>
+                       <input
+                         type="text"
+                         {...register('physicianConsent.specialty')}
+                         placeholder="Cardiology, Neurology, etc."
+                         className="w-full h-10 text-base border rounded-lg px-3 focus:border-indigo-500"
+                       />
+                       {errors.physicianConsent?.specialty && (
+                         <p className="text-red-500 text-xs mt-1">{errors.physicianConsent.specialty.message}</p>
+                       )}
+                     </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div>
+                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                         Email Address *
+                       </label>
+                       <input
+                         type="email"
+                         {...register('physicianConsent.email')}
+                         placeholder="your.email@institution.com"
+                         className="w-full h-10 text-base border rounded-lg px-3 focus:border-indigo-500"
+                       />
+                       {errors.physicianConsent?.email && (
+                         <p className="text-red-500 text-xs mt-1">{errors.physicianConsent.email.message}</p>
+                       )}
+                     </div>
+                     <div>
+                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                         Phone Number
+                       </label>
+                       <input
+                         type="tel"
+                         {...register('physicianConsent.phone')}
+                         placeholder="+1 (555) 123-4567"
+                         className="w-full h-10 text-base border rounded-lg px-3 focus:border-indigo-500"
+                       />
+                     </div>
+                   </div>
+
+                   <div className="flex items-center space-x-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                     <Checkbox
+                       checked={watchedPhysicianConsent.consentGiven}
+                       onCheckedChange={(checked: boolean | 'indeterminate') => {
+                         setValue('physicianConsent.consentGiven', checked === true);
+                       }}
+                     />
+                     <div className="flex-1">
+                       <label className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+                         I consent to this validation submission *
+                       </label>
+                       <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1">
+                         By checking this box, I confirm that I have reviewed and validated the clinical data fields 
+                         and consent to the submission of this Advanced Clinical Analytics Validation.
+                       </p>
+                     </div>
+                   </div>
+
+                   <div>
+                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                       Additional Notes
+                     </label>
+                     <Textarea
+                       {...register('physicianConsent.additionalNotes')}
+                       placeholder="Any additional comments or notes about your validation..."
+                       className="min-h-[80px] focus:border-indigo-500"
+                     />
+                   </div>
+                 </CardContent>
+               </Card>
             </div>
           )}
 
           {/* Navigation and Submit */}
           <div className="flex items-center justify-between pt-8">
-          <div className="flex items-center space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onSave}
-              disabled={isSubmitting}
+            <div className="flex items-center space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onSave}
+                disabled={isSubmitting}
                 className="flex items-center space-x-2 bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
-            >
-              <Save className="h-4 w-4" />
-              <span>Save Draft</span>
-            </Button>
-            {isSaved && (
-              <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
-                <CheckCircle className="h-4 w-4" />
+              >
+                <Save className="h-4 w-4" />
+                <span>Save Draft</span>
+              </Button>
+              {isSaved && (
+                <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
+                  <CheckCircle className="h-4 w-4" />
                   <span className="text-sm font-medium">Saved!</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {/* Navigation Buttons */}
+              <div className="flex items-center space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={goToPreviousTab}
+                  disabled={isFirstTab}
+                  className="flex items-center space-x-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Previous</span>
+                </Button>
+                
+                {!isLastTab ? (
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={goToNextTab}
+                    disabled={!canProceedToNext}
+                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <span>Next</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || completedTabs !== totalTabs}
+                    className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" />
+                        <span>Submit Validation</span>
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
-            )}
+              
+              {/* Completion Status */}
+              <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                <div className="flex items-center space-x-1">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {completedTabs}/{totalTabs} tabs completed
+                  </span>
+                </div>
+                {completedTabs === totalTabs && (
+                  <Badge variant="default" className="bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300">
+                    Ready to Submit
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
-          
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-              className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Submitting...</span>
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                <span>Submit Validation</span>
-              </>
-            )}
-          </Button>
-        </div>
       </form>
 
       {errors.root && (

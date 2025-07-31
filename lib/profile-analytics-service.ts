@@ -78,12 +78,14 @@ export async function getUserEnhancedSubmissions(userId: string): Promise<any[]>
         }
       } catch (fallbackError) {
         console.error('❌ Fallback query also failed:', fallbackError);
+        // Don't throw error, just log it and continue
       }
     }
     
     return submissions;
   } catch (error) {
     console.error('❌ Error fetching enhanced user submissions:', error);
+    // Return empty array instead of throwing error to prevent app crashes
     return [];
   }
 }

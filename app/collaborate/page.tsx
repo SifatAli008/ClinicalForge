@@ -243,7 +243,7 @@ export default function CollaboratePage() {
     }, 4000); // Change every 4 seconds
 
     return () => clearInterval(interval);
-  }, [testimonials.length]);
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">

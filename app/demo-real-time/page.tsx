@@ -238,7 +238,11 @@ export default function DemoRealTimePage() {
             </p>
           </div>
           <div className="flex justify-end">
-            <RealTimeNotifications />
+            <RealTimeNotifications 
+              notifications={[]}
+              onMarkAsRead={() => {}}
+              onDismiss={() => {}}
+            />
           </div>
         </div>
 

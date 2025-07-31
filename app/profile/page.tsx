@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Edit,
   Save,
-  Download, 
   FileText,
   Clock, 
   CheckCircle,
@@ -33,7 +32,8 @@ import {
   Shield,
   Users,
   BookOpen,
-  Loader2
+  Loader2,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
@@ -66,13 +66,14 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   
   // Simplified analytics state
   const [analyticsData, setAnalyticsData] = useState<ProfileAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
 
   // Initialize profile from real user data
   useEffect(() => {
@@ -100,41 +101,37 @@ export default function ProfilePage() {
     }
   }, [user, userProfile]);
 
-  // Load analytics data once when user is available
-  useEffect(() => {
+  const loadAnalytics = useCallback(async () => {
     if (!user?.uid) {
       console.log('⚠️ No user UID available for analytics loading');
       return;
     }
     
-    console.log('👤 User authenticated:', {
-      uid: user.uid,
-      displayName: user.displayName,
-      email: user.email
-    });
+    console.log('🔄 Loading analytics for user:', user.uid);
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
     
-    const loadAnalytics = async () => {
-      console.log('🔄 Loading analytics for user:', user.uid);
-      setAnalyticsLoading(true);
-      setAnalyticsError(null);
-      
-      try {
-        const data = await getProfileAnalytics(user.uid);
-        console.log('✅ Analytics loaded:', data);
-        console.log('📊 Statistics:', data.statistics);
-        console.log('📋 Recent activity count:', data.statistics.recentActivity.length);
-        console.log('📋 Recent activity:', data.statistics.recentActivity);
-        setAnalyticsData(data);
-      } catch (error: unknown) {
-        console.error('❌ Analytics error:', error);
-        setAnalyticsError((error as Error)?.message || 'Failed to load analytics');
-      } finally {
-        setAnalyticsLoading(false);
-      }
-    };
-
-    loadAnalytics();
+    try {
+      const data = await getProfileAnalytics(user.uid);
+      console.log('✅ Analytics loaded:', data);
+      console.log('📊 Statistics:', data.statistics);
+      console.log('📋 Recent activity count:', data.statistics.recentActivity.length);
+      console.log('📋 Recent activity:', data.statistics.recentActivity);
+      setAnalyticsData(data);
+    } catch (error: unknown) {
+      console.error('❌ Analytics error:', error);
+      setAnalyticsError((error as Error)?.message || 'Failed to load analytics');
+    } finally {
+      setAnalyticsLoading(false);
+    }
   }, [user?.uid]);
+
+  // Load analytics data once when user is available
+  useEffect(() => {
+    if (user?.uid) {
+      loadAnalytics();
+    }
+  }, [user?.uid, loadAnalytics]);
 
   // Get real statistics
   const stats = analyticsData?.statistics || {
@@ -232,99 +229,12 @@ export default function ProfilePage() {
       }
     }
     
-    // Create a detailed view using the full submission data if available
-    let submissionDetails = `📋 SUBMISSION DETAILS\n\n`;
-    submissionDetails += `Form Type: ${activity.formType}\n`;
-    submissionDetails += `Submission ID: ${activity.id}\n`;
-    submissionDetails += `Status: ${activity.status}\n`;
-    submissionDetails += `Submitted: ${activity.submittedAt.toLocaleDateString()}\n\n`;
-    
-    if (fullSubmission) {
-      // Show actual submitted data
-      if (fullSubmission.comprehensiveData) {
-        submissionDetails += `🏥 COMPREHENSIVE PARAMETER VALIDATION DATA\n\n`;
-        submissionDetails += `Disease Name: ${fullSubmission.comprehensiveData.diseaseOverview?.diseaseName?.clinical || 'N/A'}\n`;
-        submissionDetails += `Disease Type: ${fullSubmission.comprehensiveData.diseaseOverview?.diseaseType?.primary || 'N/A'}\n`;
-        submissionDetails += `Additional Notes: ${fullSubmission.comprehensiveData.additionalNotes || 'N/A'}\n\n`;
-        
-        // Add more comprehensive data fields
-        if (fullSubmission.comprehensiveData.diseaseSubtypes?.length > 0) {
-          submissionDetails += `Disease Subtypes: ${fullSubmission.comprehensiveData.diseaseSubtypes.length} subtypes defined\n`;
-        }
-        if (fullSubmission.comprehensiveData.geneticRiskFactors?.length > 0) {
-          submissionDetails += `Genetic Risk Factors: ${fullSubmission.comprehensiveData.geneticRiskFactors.length} factors identified\n`;
-        }
-        if (fullSubmission.comprehensiveData.medications?.length > 0) {
-          submissionDetails += `Medications: ${fullSubmission.comprehensiveData.medications.length} medications documented\n`;
-        }
-        submissionDetails += '\n';
-      }
-      
-      if (fullSubmission.advancedAnalyticsData) {
-        submissionDetails += `📊 ADVANCED CLINICAL ANALYTICS DATA\n\n`;
-        submissionDetails += `Decision Models: ${fullSubmission.advancedAnalyticsData.decisionModels?.length || 0} models\n`;
-        submissionDetails += `Critical Points: ${fullSubmission.advancedAnalyticsData.criticalPoints?.length || 0} points\n`;
-        submissionDetails += `Conflict Zones: ${fullSubmission.advancedAnalyticsData.conflictZones?.length || 0} zones\n`;
-        submissionDetails += `Feedback Loops: ${fullSubmission.advancedAnalyticsData.feedbackLoops?.length || 0} loops\n`;
-        submissionDetails += `Overall Feedback: ${fullSubmission.advancedAnalyticsData.overallAssessment?.overallFeedback || 'N/A'}\n\n`;
-        
-        // Add detailed analytics data
-        if (fullSubmission.advancedAnalyticsData.decisionModels?.length > 0) {
-          submissionDetails += `Decision Models Details:\n`;
-          fullSubmission.advancedAnalyticsData.decisionModels.forEach((model: any, index: number) => {
-            submissionDetails += `  ${index + 1}. ${model.model} - ${model.isSufficient ? 'Sufficient' : 'Needs Improvement'}\n`;
-          });
-          submissionDetails += '\n';
-        }
-        
-        if (fullSubmission.advancedAnalyticsData.criticalPoints?.length > 0) {
-          submissionDetails += `Critical Points Details:\n`;
-          fullSubmission.advancedAnalyticsData.criticalPoints.forEach((point: any, index: number) => {
-            submissionDetails += `  ${index + 1}. ${point.section} - ${point.isSufficient ? 'Sufficient' : 'Needs Improvement'}\n`;
-          });
-          submissionDetails += '\n';
-        }
-      }
-      
-      // Add validation scores if available
-      if (fullSubmission.validation) {
-        submissionDetails += `📈 VALIDATION SCORES\n\n`;
-        submissionDetails += `Overall Score: ${fullSubmission.validation.overallScore}%\n`;
-        submissionDetails += `Completeness: ${fullSubmission.validation.completenessScore}%\n`;
-        submissionDetails += `Data Quality: ${fullSubmission.validation.dataQualityScore}%\n`;
-        submissionDetails += `Clinical Relevance: ${fullSubmission.validation.clinicalRelevanceScore}%\n\n`;
-      }
-      
-      submissionDetails += `✅ Full submission data loaded successfully!`;
-    } else {
-      // Fallback to summary view
-      if (activity.formType.includes('Comprehensive Parameter Validation')) {
-        submissionDetails += `🏥 COMPREHENSIVE PARAMETER VALIDATION DATA\n\n`;
-        submissionDetails += `Disease Name: ${activity.diseaseName || 'N/A'}\n`;
-        submissionDetails += `Disease Type: ${activity.diseaseType || 'N/A'}\n`;
-        submissionDetails += `Additional Notes: Available in detailed view\n\n`;
-      }
-      
-      if (activity.formType.includes('Advanced Clinical Analytics')) {
-        submissionDetails += `📊 ADVANCED CLINICAL ANALYTICS DATA\n\n`;
-        submissionDetails += `Decision Models: Multiple models validated\n`;
-        submissionDetails += `Critical Points: Critical decision points identified\n`;
-        submissionDetails += `Conflict Zones: Conflict zones analyzed\n`;
-        submissionDetails += `Feedback Loops: Feedback loops implemented\n`;
-        submissionDetails += `Overall Feedback: Comprehensive analytics completed\n\n`;
-      }
-      
-      // Add estimated validation scores
-      submissionDetails += `📈 VALIDATION SCORES (Estimated)\n\n`;
-      submissionDetails += `Overall Score: 85-95%\n`;
-      submissionDetails += `Completeness: 90-95%\n`;
-      submissionDetails += `Data Quality: 88-92%\n`;
-      submissionDetails += `Clinical Relevance: 90-95%\n\n`;
-      
-      submissionDetails += `💡 Note: This is a summary view. For detailed data, use the Update button to edit the submission.`;
-    }
-    
-    alert(submissionDetails);
+    // Set the submission data for the modal
+    setSelectedSubmission({
+      activity,
+      fullSubmission
+    });
+    setShowSubmissionModal(true);
   };
 
   const handleUpdateSubmission = async (activity: any) => {
@@ -425,37 +335,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleDownloadData = async () => {
-    if (!profile) return;
-    
-    setIsDownloading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const userData = {
-        profile,
-        user: user,
-        userProfile: userProfile,
-        analytics: analyticsData,
-        timestamp: new Date().toISOString(),
-      };
 
-      const dataStr = JSON.stringify(userData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `clinical-data-${profile.id}-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download error:', error);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   // Show loading state
   if (loading || !profile) {
@@ -512,12 +392,7 @@ export default function ProfilePage() {
                   <span>Back to Home</span>
                 </Link>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" onClick={handleDownloadData} disabled={isDownloading}>
-                  <Download className="h-4 w-4 mr-2" />
-                  {isDownloading ? 'Downloading...' : 'Download Data'}
-                </Button>
-              </div>
+              
             </div>
           </div>
 
@@ -572,48 +447,48 @@ export default function ProfilePage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-yellow-900/60 to-yellow-800/40 shadow-sm">
+                                             <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-orange-900/60 to-orange-800/40 shadow-sm">
                         <div className="flex items-center space-x-2">
-                          <AlertCircle className="h-4 w-4 text-yellow-300" />
-                          <span className="text-xs font-medium text-yellow-100">Forms Incomplete</span>
+                           <AlertCircle className="h-4 w-4 text-orange-300" />
+                           <span className="text-xs font-medium text-orange-100">Forms Incomplete</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           {analyticsLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-yellow-200" />
+                             <Loader2 className="h-4 w-4 animate-spin text-orange-200" />
                           ) : analyticsError ? (
                             <Badge variant="secondary">--</Badge>
                           ) : (
-                            <span className="rounded-lg px-2 py-1 bg-yellow-700/60 text-yellow-100 font-bold text-sm">{stats.formsIncomplete}</span>
+                             <span className="rounded-lg px-2 py-1 bg-orange-700/60 text-orange-100 font-bold text-sm">{stats.formsIncomplete}</span>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-cyan-900/60 to-blue-900/40 shadow-sm">
+                                             <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-indigo-900/60 to-indigo-800/40 shadow-sm">
                         <div className="flex items-center space-x-2">
-                          <PieChart className="h-4 w-4 text-cyan-300" />
-                          <span className="text-xs font-medium text-cyan-100">Completion Rate</span>
+                           <PieChart className="h-4 w-4 text-indigo-300" />
+                           <span className="text-xs font-medium text-indigo-100">Completion Rate</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           {analyticsLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-cyan-200" />
+                             <Loader2 className="h-4 w-4 animate-spin text-indigo-200" />
                           ) : analyticsError ? (
                             <Badge variant="secondary">--</Badge>
                           ) : (
-                            <span className="rounded-lg px-2 py-1 bg-cyan-700/60 text-cyan-100 font-bold text-sm">{stats.completionRate}%</span>
+                             <span className="rounded-lg px-2 py-1 bg-indigo-700/60 text-indigo-100 font-bold text-sm">{stats.completionRate}%</span>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-green-900/60 to-green-800/40 shadow-sm">
+                                             <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-900/60 to-emerald-800/40 shadow-sm">
                         <div className="flex items-center space-x-2">
-                          <TrendingUp className="h-4 w-4 text-green-300" />
-                          <span className="text-xs font-medium text-green-100">Contributions</span>
+                           <TrendingUp className="h-4 w-4 text-emerald-300" />
+                           <span className="text-xs font-medium text-emerald-100">Contributions</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           {analyticsLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-green-200" />
+                             <Loader2 className="h-4 w-4 animate-spin text-emerald-200" />
                           ) : analyticsError ? (
                             <Badge variant="secondary">--</Badge>
                           ) : (
-                            <span className="rounded-lg px-2 py-1 bg-green-700/60 text-green-100 font-bold text-sm">{stats.totalContributions}</span>
+                             <span className="rounded-lg px-2 py-1 bg-emerald-700/60 text-emerald-100 font-bold text-sm">{stats.totalContributions}</span>
                           )}
                         </div>
                       </div>
@@ -646,9 +521,9 @@ export default function ProfilePage() {
                   <Separator className="bg-zinc-700" />
                   <div>
                     <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Data Security</h4>
-                    <div className="flex items-center space-x-2 p-2 rounded-lg bg-gradient-to-r from-green-900/60 to-green-800/40">
-                      <Shield className="h-4 w-4 text-green-300" />
-                      <span className="text-xs text-green-100 font-semibold">Data Encrypted</span>
+                    <div className="flex items-center space-x-2 p-2 rounded-lg bg-gradient-to-r from-blue-900/60 to-indigo-800/40">
+                      <Shield className="h-4 w-4 text-blue-300" />
+                      <span className="text-xs text-blue-100 font-semibold">Data Encrypted</span>
                     </div>
                   </div>
                 </CardContent>
@@ -935,6 +810,255 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+       {/* Submission Details Modal */}
+       {showSubmissionModal && selectedSubmission && (
+         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+             {/* Modal Header */}
+             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+               <div className="flex items-center space-x-3">
+                 <FileText className="h-6 w-6 text-blue-500" />
+                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">Submission Details</h2>
+               </div>
+               <Button
+                 variant="ghost"
+                 size="sm"
+                 onClick={() => setShowSubmissionModal(false)}
+                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+               >
+                 <X className="h-5 w-5" />
+               </Button>
+             </div>
+
+             {/* Modal Content */}
+             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+               <div className="space-y-6">
+                 {/* Basic Submission Info */}
+                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                   <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center space-x-2">
+                     <FileText className="h-5 w-5" />
+                     <span>Submission Information</span>
+                   </h3>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div>
+                       <label className="text-sm font-medium text-blue-700 dark:text-blue-300">Form Type</label>
+                       <p className="text-blue-900 dark:text-blue-100 font-semibold">{selectedSubmission.activity.formType}</p>
+                     </div>
+                     <div>
+                       <label className="text-sm font-medium text-blue-700 dark:text-blue-300">Status</label>
+                       <Badge className={`ml-2 ${selectedSubmission.activity.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                         {selectedSubmission.activity.status}
+                       </Badge>
+                     </div>
+                     <div>
+                       <label className="text-sm font-medium text-blue-700 dark:text-blue-300">Submission ID</label>
+                       <p className="text-blue-900 dark:text-blue-100 font-mono text-sm">{selectedSubmission.activity.id}</p>
+                     </div>
+                     <div>
+                       <label className="text-sm font-medium text-blue-700 dark:text-blue-300">Submitted</label>
+                       <p className="text-blue-900 dark:text-blue-100">{selectedSubmission.activity.submittedAt.toLocaleDateString()}</p>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Comprehensive Data */}
+                 {selectedSubmission.fullSubmission?.comprehensiveData && (
+                   <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                     <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-3 flex items-center space-x-2">
+                       <Database className="h-5 w-5" />
+                       <span>Comprehensive Parameter Validation Data</span>
+                     </h3>
+                     <div className="space-y-3">
+                       <div>
+                         <label className="text-sm font-medium text-green-700 dark:text-green-300">Disease Name</label>
+                         <p className="text-green-900 dark:text-green-100 font-semibold">
+                           {selectedSubmission.fullSubmission.comprehensiveData.diseaseOverview?.diseaseName?.clinical || 'N/A'}
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-medium text-green-700 dark:text-green-300">Disease Type</label>
+                         <p className="text-green-900 dark:text-green-100">
+                           {selectedSubmission.fullSubmission.comprehensiveData.diseaseOverview?.diseaseType?.primary || 'N/A'}
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-medium text-green-700 dark:text-green-300">Additional Notes</label>
+                         <p className="text-green-900 dark:text-green-100">
+                           {selectedSubmission.fullSubmission.comprehensiveData.additionalNotes || 'N/A'}
+                         </p>
+                       </div>
+                       {selectedSubmission.fullSubmission.comprehensiveData.diseaseSubtypes?.length > 0 && (
+                         <div>
+                           <label className="text-sm font-medium text-green-700 dark:text-green-300">Disease Subtypes</label>
+                           <p className="text-green-900 dark:text-green-100">
+                             {selectedSubmission.fullSubmission.comprehensiveData.diseaseSubtypes.length} subtypes defined
+                           </p>
+                         </div>
+                       )}
+                       {selectedSubmission.fullSubmission.comprehensiveData.geneticRiskFactors?.length > 0 && (
+                         <div>
+                           <label className="text-sm font-medium text-green-700 dark:text-green-300">Genetic Risk Factors</label>
+                           <p className="text-green-900 dark:text-green-100">
+                             {selectedSubmission.fullSubmission.comprehensiveData.geneticRiskFactors.length} factors identified
+                           </p>
+                         </div>
+                       )}
+                       {selectedSubmission.fullSubmission.comprehensiveData.medications?.length > 0 && (
+                         <div>
+                           <label className="text-sm font-medium text-green-700 dark:text-green-300">Medications</label>
+                           <p className="text-green-900 dark:text-green-100">
+                             {selectedSubmission.fullSubmission.comprehensiveData.medications.length} medications documented
+                           </p>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Advanced Analytics Data */}
+                 {selectedSubmission.fullSubmission?.advancedAnalyticsData && (
+                   <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                     <h3 className="text-lg font-semibold text-purple-900 dark:text-purple-100 mb-3 flex items-center space-x-2">
+                       <BarChart3 className="h-5 w-5" />
+                       <span>Advanced Clinical Analytics Data</span>
+                     </h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div>
+                         <label className="text-sm font-medium text-purple-700 dark:text-purple-300">Decision Models</label>
+                         <p className="text-purple-900 dark:text-purple-100 font-semibold">
+                           {selectedSubmission.fullSubmission.advancedAnalyticsData.decisionModels?.length || 0} models
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-medium text-purple-700 dark:text-purple-300">Critical Points</label>
+                         <p className="text-purple-900 dark:text-purple-100 font-semibold">
+                           {selectedSubmission.fullSubmission.advancedAnalyticsData.criticalPoints?.length || 0} points
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-medium text-purple-700 dark:text-purple-300">Conflict Zones</label>
+                         <p className="text-purple-900 dark:text-purple-100 font-semibold">
+                           {selectedSubmission.fullSubmission.advancedAnalyticsData.conflictZones?.length || 0} zones
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-medium text-purple-700 dark:text-purple-300">Feedback Loops</label>
+                         <p className="text-purple-900 dark:text-purple-100 font-semibold">
+                           {selectedSubmission.fullSubmission.advancedAnalyticsData.feedbackLoops?.length || 0} loops
+                         </p>
+                       </div>
+                     </div>
+                     {selectedSubmission.fullSubmission.advancedAnalyticsData.overallAssessment?.overallFeedback && (
+                       <div className="mt-4">
+                         <label className="text-sm font-medium text-purple-700 dark:text-purple-300">Overall Feedback</label>
+                         <p className="text-purple-900 dark:text-purple-100 mt-1">
+                           {selectedSubmission.fullSubmission.advancedAnalyticsData.overallAssessment.overallFeedback}
+                         </p>
+                       </div>
+                     )}
+                   </div>
+                 )}
+
+                 {/* Validation Scores */}
+                 {selectedSubmission.fullSubmission?.validation && (
+                   <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+                     <h3 className="text-lg font-semibold text-indigo-900 dark:text-indigo-100 mb-3 flex items-center space-x-2">
+                       <TrendingUp className="h-5 w-5" />
+                       <span>Validation Scores</span>
+                     </h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div>
+                         <label className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Overall Score</label>
+                         <p className="text-indigo-900 dark:text-indigo-100 font-semibold">
+                           {selectedSubmission.fullSubmission.validation.overallScore}%
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Completeness</label>
+                         <p className="text-indigo-900 dark:text-indigo-100 font-semibold">
+                           {selectedSubmission.fullSubmission.validation.completenessScore}%
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Data Quality</label>
+                         <p className="text-indigo-900 dark:text-indigo-100 font-semibold">
+                           {selectedSubmission.fullSubmission.validation.dataQualityScore}%
+                         </p>
+                       </div>
+                       <div>
+                         <label className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Clinical Relevance</label>
+                         <p className="text-indigo-900 dark:text-indigo-100 font-semibold">
+                           {selectedSubmission.fullSubmission.validation.clinicalRelevanceScore}%
+                         </p>
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Fallback Summary */}
+                 {!selectedSubmission.fullSubmission && (
+                   <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+                     <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-3 flex items-center space-x-2">
+                       <AlertCircle className="h-5 w-5" />
+                       <span>Summary View</span>
+                     </h3>
+                     <p className="text-yellow-900 dark:text-yellow-100 mb-3">
+                       This is a summary view. For detailed data, use the Update button to edit the submission.
+                     </p>
+                     {selectedSubmission.activity.formType.includes('Comprehensive Parameter Validation') && (
+                       <div className="space-y-2">
+                         <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                           <strong>Disease Name:</strong> {selectedSubmission.activity.diseaseName || 'N/A'}
+                         </p>
+                         <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                           <strong>Disease Type:</strong> {selectedSubmission.activity.diseaseType || 'N/A'}
+                         </p>
+                       </div>
+                     )}
+                     {selectedSubmission.activity.formType.includes('Advanced Clinical Analytics') && (
+                       <div className="space-y-2">
+                         <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                           <strong>Decision Models:</strong> Multiple models validated
+                         </p>
+                         <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                           <strong>Critical Points:</strong> Critical decision points identified
+                         </p>
+                         <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                           <strong>Conflict Zones:</strong> Conflict zones analyzed
+                         </p>
+                         <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                           <strong>Feedback Loops:</strong> Feedback loops implemented
+                         </p>
+                       </div>
+                     )}
+                   </div>
+                 )}
+               </div>
+             </div>
+
+             {/* Modal Footer */}
+             <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+               <Button
+                 variant="outline"
+                 onClick={() => setShowSubmissionModal(false)}
+               >
+                 Close
+               </Button>
+               {(selectedSubmission.activity.status === 'in_progress' || selectedSubmission.activity.status === 'draft') && (
+                 <Button
+                   onClick={() => {
+                     setShowSubmissionModal(false);
+                     handleUpdateSubmission(selectedSubmission.activity);
+                   }}
+                 >
+                   Update Submission
+                 </Button>
+               )}
+             </div>
+           </div>
+         </div>
+       )}
     </AuthGuard>
   );
 } 

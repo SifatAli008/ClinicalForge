@@ -677,7 +677,8 @@ export class EnhancedClinicalDatabaseService {
         return userSubmissions;
       } catch (fallbackError) {
         console.error('❌ Fallback query also failed:', fallbackError);
-        throw fallbackError;
+        // Return empty array instead of throwing error to prevent app crashes
+        return [];
       }
     }
   }
@@ -711,7 +712,8 @@ export class EnhancedClinicalDatabaseService {
       return querySnapshot.docs.map(doc => doc.data() as EnhancedClinicalDatabase);
     } catch (error) {
       console.error('Error getting all submissions:', error);
-      throw error;
+      // Return empty array instead of throwing error to prevent app crashes
+      return [];
     }
   }
 
@@ -729,7 +731,8 @@ export class EnhancedClinicalDatabaseService {
       return querySnapshot.docs.map(doc => doc.data() as EnhancedClinicalDatabase);
     } catch (error) {
       console.error('Error getting approved submissions:', error);
-      throw error;
+      // Return empty array instead of throwing error to prevent app crashes
+      return [];
     }
   }
 

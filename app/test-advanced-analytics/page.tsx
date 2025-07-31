@@ -55,14 +55,14 @@ export default function TestAdvancedAnalytics() {
     ],
     conflictZones: [
       {
-        sections: 'Medication Protocol ⊗ Contraindications',
+        sections: 'Medication Protocol CONFLICTS WITH Contraindications',
         conflict: 'Drug efficacy vs. risk of adverse effects',
         resolution: 'Requires careful risk-benefit analysis',
         isResolved: true,
         suggestions: 'Implement automated drug interaction checking'
       },
       {
-        sections: 'Comorbidities ⊗ Medication Protocol',
+        sections: 'Comorbidities CONFLICTS WITH Medication Protocol',
         conflict: 'Drug interactions due to multiple conditions',
         resolution: 'Multi-drug interaction screening',
         isResolved: true,
@@ -71,13 +71,13 @@ export default function TestAdvancedAnalytics() {
     ],
     feedbackLoops: [
       {
-        loop: 'Monitoring → Progression → Clinical Staging',
+        loop: 'Monitoring leads to Progression, which leads to Clinical Staging',
         purpose: 'Treatment effectiveness validation',
         isImplemented: true,
         suggestions: 'Automate response tracking'
       },
       {
-        loop: 'Misdiagnoses → Red Flags → Symptoms',
+        loop: 'Misdiagnoses leads to Red Flags, which leads to Symptoms',
         purpose: 'Diagnostic accuracy improvement',
         isImplemented: true,
         suggestions: 'Implement machine learning for pattern recognition'
@@ -296,8 +296,8 @@ export default function TestAdvancedAnalytics() {
                     <div className="space-y-2">
                       <h4 className="font-semibold text-green-600">Feedback Loops</h4>
                       <ul className="text-sm space-y-1">
-                        <li>• Monitoring → Progression</li>
-                        <li>• Misdiagnoses → Red Flags</li>
+                                        <li>• Monitoring leads to Progression</li>
+                <li>• Misdiagnoses leads to Red Flags</li>
                       </ul>
                     </div>
                   </div>

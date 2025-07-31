@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, 
-  Download, 
   FileText, 
   Quote, 
   BookOpen, 
@@ -20,8 +19,7 @@ import {
   AlertCircle,
   Info,
   Award,
-  MapPin,
-  Share2
+  MapPin
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -110,8 +108,6 @@ const references: Reference[] = [
 export default function BangladeshClinicalDatasetAnalysisPage() {
   const [activeTab, setActiveTab] = useState('content');
   const [showTableOfContents, setShowTableOfContents] = useState(true);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
 
   // Calculate real date and read time
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -141,84 +137,6 @@ export default function BangladeshClinicalDatasetAnalysisPage() {
     { id: 'references', title: '7. References', level: 1 },
     { id: 'conclusion', title: '8. Conclusion', level: 1 }
   ];
-
-  // Handle PDF download
-  const handleDownloadPDF = async () => {
-    setIsDownloading(true);
-    try {
-      // Create a simple PDF content
-      const content = `
-        As a physician, why is your participation in the creation and use of clinical synthetic data in Bangladesh necessary?
-        
-        Authors: ClinicalForge
-        Institution: ClinicalForge Platform
-        Date: ${currentDate}
-        
-        ABSTRACT:
-        In Bangladesh, disease prevalence and clinical diversity are often underrepresented in global databases. 
-        Direct participation by physicians ensures accuracy rooted in local realities, strengthens scientific integrity, 
-        and provides a quality foundation for decision-making.
-        
-        KEY FINDINGS:
-        - Diabetes prevalence: 14.2% with 61.5% unawareness rate
-        - CKD prevalence: 22-22.5% (twice global average)
-        - Only 32% follow-up rate due to economic barriers
-        - Regional variations in disease patterns require local expertise
-        
-        CONCLUSION:
-        Without physician participation, creating an effective, scientifically credible, and contextually appropriate 
-        health dataset for Bangladesh is nearly impossible. This initiative lays the foundation for research, policy, 
-        AI-driven healthcare, and national disease registries.
-      `;
-      
-      // Create blob and download
-      const blob = new Blob([content], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'bangladesh-clinical-dataset-analysis.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  // Handle share functionality
-  const handleShare = async () => {
-    setIsSharing(true);
-    try {
-      const shareData = {
-        title: 'As a physician, why is your participation in the creation and use of clinical synthetic data in Bangladesh necessary?',
-        text: 'Comprehensive analysis by ClinicalForge of disease prevalence, clinical diversity, and the necessity of physician participation in creating contextually appropriate health datasets for Bangladesh.',
-        url: window.location.href
-      };
-
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback: copy URL to clipboard
-        await navigator.clipboard.writeText(window.location.href);
-        alert('Link copied to clipboard!');
-      }
-    } catch (error) {
-      console.error('Error sharing:', error);
-      // Fallback: copy URL to clipboard
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        alert('Link copied to clipboard!');
-      } catch (clipboardError) {
-        console.error('Error copying to clipboard:', clipboardError);
-        alert('Unable to share. Please copy the URL manually.');
-      }
-    } finally {
-      setIsSharing(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -269,50 +187,6 @@ export default function BangladeshClinicalDatasetAnalysisPage() {
                   <span>{calculateReadTime()}</span>
                 </div>
               </div>
-
-
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col space-y-2 ml-6">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center space-x-2"
-                onClick={handleDownloadPDF}
-                disabled={isDownloading}
-              >
-                {isDownloading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                    <span>Downloading...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4" />
-                    <span>Download PDF</span>
-                  </>
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center space-x-2"
-                onClick={handleShare}
-                disabled={isSharing}
-              >
-                {isSharing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                    <span>Sharing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="h-4 w-4" />
-                    <span>Share</span>
-                  </>
-                )}
-              </Button>
             </div>
           </div>
         </div>
@@ -648,8 +522,6 @@ export default function BangladeshClinicalDatasetAnalysisPage() {
                   </CardContent>
                 </Card>
               </TabsContent>
-
-
             </Tabs>
           </div>
         </div>

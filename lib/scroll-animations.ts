@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 export function useScrollAnimation() {
   const [isVisible, setIsVisible] = useState(false);
@@ -24,8 +24,9 @@ export function useScrollAnimation() {
     }
 
     return () => {
-      if (elementRef.current) {
-        observer.unobserve(elementRef.current);
+      const currentElement = elementRef.current;
+      if (currentElement) {
+        observer.unobserve(currentElement);
       }
     };
   }, []);
@@ -135,8 +136,9 @@ export function useInViewport(options: IntersectionObserverInit = {}) {
     }
 
     return () => {
-      if (elementRef.current) {
-        observer.unobserve(elementRef.current);
+      const currentElement = elementRef.current;
+      if (currentElement) {
+        observer.unobserve(currentElement);
       }
     };
   }, [options]);

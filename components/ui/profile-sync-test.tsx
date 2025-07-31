@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Button } from './button';
@@ -12,7 +12,7 @@ export function ProfileSyncTest() {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'checking' | 'synced' | 'error'>('idle');
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
 
-  const checkSync = () => {
+  const checkSync = useCallback(() => {
     setSyncStatus('checking');
     setLastCheck(new Date());
     
@@ -25,13 +25,13 @@ export function ProfileSyncTest() {
         setSyncStatus('error');
       }
     }, 1000);
-  };
+  }, [userProfile]);
 
   useEffect(() => {
     if (userProfile) {
       checkSync();
     }
-  }, [userProfile]);
+  }, [userProfile, checkSync]);
 
   const getStatusIcon = () => {
     switch (syncStatus) {
