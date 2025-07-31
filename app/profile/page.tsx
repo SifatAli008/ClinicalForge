@@ -45,7 +45,7 @@ interface UserProfile {
   id: string;
   name: string;
   email: string;
-  photo: string;
+  photo: string | null;
   bio: string;
   designation: string;
   specialty: string;
@@ -74,22 +74,34 @@ export default function ProfilePage() {
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   // Initialize profile from real user data
   useEffect(() => {
     if (user && userProfile) {
+      // Ensure we have a valid photo URL with fallback
+      let photoUrl = user.photoURL || userProfile.avatarUrl;
+      
+      // If the photo URL is empty or invalid, don't set a default - let the UI handle it
+      if (!photoUrl || photoUrl === 'null' || photoUrl === 'undefined' || photoUrl === '') {
+        photoUrl = null;
+      }
+      
+      // Log for debugging
+      console.log('Profile photo URL:', photoUrl);
+      
       const realProfile: UserProfile = {
         id: user.uid,
-        name: user.displayName || userProfile.displayName || 'Sifat Ali',
-        email: user.email || userProfile.email || 'alisifat061@gmail.com',
-        photo: user.photoURL || userProfile.avatarUrl || '/default-avatar.svg',
-        bio: userProfile.bio || 'Dedicated medical professional committed to advancing healthcare through collaborative research and clinical excellence.',
-        designation: userProfile.designation || 'Founder',
-        specialty: userProfile.specialty || 'BioTech',
-        institution: userProfile.institution || 'United International University',
-        location: userProfile.location || 'Jatrabari Dhaka-1204',
-        phone: userProfile.phoneNumber || '01315576968',
-        socialMedia: userProfile.socialMedia || 'https://www.linkedin.com/in/sifat-ali',
+        name: user.displayName || userProfile.displayName || 'Demo User',
+        email: user.email || userProfile.email || 'demo@example.com',
+        photo: photoUrl,
+        bio: userProfile.bio || 'Medical professional committed to advancing healthcare through collaborative research and clinical excellence.',
+        designation: userProfile.designation || 'Medical Professional',
+        specialty: userProfile.specialty || 'General Medicine',
+        institution: userProfile.institution || 'Medical Institution',
+        location: userProfile.location || 'City, Country',
+        phone: userProfile.phoneNumber || '+1 (555) 123-4567',
+        socialMedia: userProfile.socialMedia || 'https://linkedin.com/in/demo-profile',
         joinedDate: userProfile.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : 'Recently',
         formsCompleted: 0,
         formsIncomplete: 0,
@@ -98,6 +110,7 @@ export default function ProfilePage() {
       };
       setProfile(realProfile);
       setEditedProfile(realProfile);
+      setImageError(false); // Reset image error state when profile changes
     }
   }, [user, userProfile]);
 
@@ -538,15 +551,55 @@ export default function ProfilePage() {
                   <div className="flex items-start space-x-6">
                     {/* Profile Picture */}
                     <div className="relative">
-                      <Image 
-                        src={profile.photo} 
-                        alt={profile.name}
-                        width={96}
-                        height={96}
-                        className="rounded-full border-4 border-white shadow-lg object-cover"
-                      />
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-                        <CheckCircle className="h-3 w-3 text-white" />
+                      <div className="relative w-24 h-24">
+                        {profile.photo && profile.photo !== '/default-avatar.svg' && profile.photo !== '' ? (
+                          <div className="relative">
+                            {(() => {
+                              try {
+                                return (
+                                  <Image 
+                                    src={imageError ? '/default-avatar.svg' : profile.photo} 
+                                    alt={profile.name}
+                                    width={96}
+                                    height={96}
+                                    className="rounded-full border-4 border-white shadow-lg object-cover"
+                                    onError={() => {
+                                      setImageError(true);
+                                    }}
+                                    onLoad={() => {
+                                      setImageError(false);
+                                    }}
+                                    unoptimized={profile.photo.startsWith('data:') || profile.photo.startsWith('blob:')}
+                                  />
+                                );
+                              } catch (error) {
+                                console.error('Error rendering profile image:', error);
+                                return (
+                                  <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                    <div className="text-center">
+                                      <UserIcon className="h-12 w-12 text-gray-400 mx-auto mb-1" />
+                                      <div className="text-xs text-gray-500 font-medium">
+                                        {profile.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            })()}
+                          </div>
+                        ) : (
+                          <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                            <div className="text-center">
+                              <UserIcon className="h-12 w-12 text-gray-400 mx-auto mb-1" />
+                              <div className="text-xs text-gray-500 font-medium">
+                                {profile.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                          <CheckCircle className="h-3 w-3 text-white" />
+                        </div>
                       </div>
                     </div>
                     
@@ -709,6 +762,8 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </div>
+
+
 
                   {/* Edit/Save Buttons */}
                   <div className="flex justify-end mt-6 pt-4 border-t">
@@ -960,41 +1015,7 @@ export default function ProfilePage() {
                    </div>
                  )}
 
-                 {/* Validation Scores */}
-                 {selectedSubmission.fullSubmission?.validation && (
-                   <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
-                     <h3 className="text-lg font-semibold text-indigo-900 dark:text-indigo-100 mb-3 flex items-center space-x-2">
-                       <TrendingUp className="h-5 w-5" />
-                       <span>Validation Scores</span>
-                     </h3>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <div>
-                         <label className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Overall Score</label>
-                         <p className="text-indigo-900 dark:text-indigo-100 font-semibold">
-                           {selectedSubmission.fullSubmission.validation.overallScore}%
-                         </p>
-                       </div>
-                       <div>
-                         <label className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Completeness</label>
-                         <p className="text-indigo-900 dark:text-indigo-100 font-semibold">
-                           {selectedSubmission.fullSubmission.validation.completenessScore}%
-                         </p>
-                       </div>
-                       <div>
-                         <label className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Data Quality</label>
-                         <p className="text-indigo-900 dark:text-indigo-100 font-semibold">
-                           {selectedSubmission.fullSubmission.validation.dataQualityScore}%
-                         </p>
-                       </div>
-                       <div>
-                         <label className="text-sm font-medium text-indigo-700 dark:text-indigo-300">Clinical Relevance</label>
-                         <p className="text-indigo-900 dark:text-indigo-100 font-semibold">
-                           {selectedSubmission.fullSubmission.validation.clinicalRelevanceScore}%
-                         </p>
-                       </div>
-                     </div>
-                   </div>
-                 )}
+
 
                  {/* Fallback Summary */}
                  {!selectedSubmission.fullSubmission && (

@@ -1,5 +1,5 @@
 import { db } from './firebase-config';
-import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where, orderBy, limit, Timestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where, orderBy, limit, Timestamp, writeBatch, deleteDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================
@@ -776,6 +776,61 @@ export class EnhancedClinicalDatabaseService {
       }
     } catch (error) {
       console.error('Error updating submission status:', error);
+      throw error;
+    }
+  }
+
+  // Delete submission
+  async deleteSubmission(submissionId: string, userId: string): Promise<void> {
+    try {
+      console.log('Service: Starting delete for submissionId:', submissionId);
+      console.log('Service: User ID:', userId);
+      
+      // First, let's try to get all submissions to see what's available
+      const allSubmissions = await this.getAllSubmissions();
+      console.log('Service: Total submissions in database:', allSubmissions.length);
+      console.log('Service: Available submission IDs:', allSubmissions.map(s => s.submissionId));
+      
+      // Check if the submissionId exists in our data
+      const submissionExists = allSubmissions.some(s => s.submissionId === submissionId);
+      console.log('Service: Submission exists in our data:', submissionExists);
+      
+      const q = query(
+        collection(db, this.collectionName),
+        where('submissionId', '==', submissionId)
+      );
+      console.log('Service: Query created');
+      
+      const querySnapshot = await getDocs(q);
+      console.log('Service: Query executed, found docs:', querySnapshot.size);
+      
+      if (!querySnapshot.empty) {
+        const docRef = doc(db, this.collectionName, querySnapshot.docs[0].id);
+        console.log('Service: Document reference created:', docRef.path);
+        
+        // Log the document data before deletion
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          console.log('Service: Document exists, data:', docSnap.data());
+          
+          // Try to delete the document
+          try {
+            await deleteDoc(docRef);
+            console.log(`Service: Submission ${submissionId} deleted successfully by user ${userId}`);
+          } catch (deleteError) {
+            console.error('Service: Error during deleteDoc:', deleteError);
+            throw new Error(`Failed to delete document: ${deleteError instanceof Error ? deleteError.message : 'Unknown error'}`);
+          }
+        } else {
+          console.log('Service: Document does not exist');
+          throw new Error(`Document does not exist for submissionId: ${submissionId}`);
+        }
+      } else {
+        console.log('Service: No documents found for submissionId:', submissionId);
+        throw new Error(`Submission with ID ${submissionId} not found`);
+      }
+    } catch (error) {
+      console.error('Service: Error deleting submission:', error);
       throw error;
     }
   }

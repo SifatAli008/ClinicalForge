@@ -268,11 +268,11 @@ export default function DataFieldValidationForm() {
   // Calculate completion status for each tab
   const calculateTabCompletion = () => {
     const tabCompletion = {
-      'decision-models': watchedDecisionModels.every(model => model.isSufficient),
-      'critical-points': watchedCriticalPoints.every(point => point.isSufficient),
-      'conflict-zones': watchedConflictZones.every(conflict => conflict.isResolved),
-      'feedback-loops': watchedFeedbackLoops.every(loop => loop.isImplemented),
-      'sections': watchedSections.every(section => section.isSufficient),
+      'decision-models': watchedDecisionModels.some(model => model.isSufficient),
+      'critical-points': watchedCriticalPoints.some(point => point.isSufficient),
+      'conflict-zones': watchedConflictZones.some(conflict => conflict.isResolved),
+      'feedback-loops': watchedFeedbackLoops.some(loop => loop.isImplemented),
+      'sections': watchedSections.some(section => section.isSufficient),
       'overall': watchedClinicalRelevance && watchedImplementationReadiness && 
                  watchedPhysicianConsent.physicianName && watchedPhysicianConsent.credentials && 
                  watchedPhysicianConsent.institution && watchedPhysicianConsent.specialty && 

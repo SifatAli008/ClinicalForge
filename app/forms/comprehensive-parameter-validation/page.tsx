@@ -218,6 +218,8 @@ export default function ComprehensiveParameterValidationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
+  const [showPreviousData, setShowPreviousData] = useState(false);
+  const [hasPreviousData, setHasPreviousData] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -263,6 +265,95 @@ export default function ComprehensiveParameterValidationForm() {
       },
     },
   });
+
+  // Load previous submission data if available
+  React.useEffect(() => {
+    const editData = localStorage.getItem('editSubmissionData');
+    const submissionId = localStorage.getItem('editSubmissionId');
+    
+    if (editData && submissionId) {
+      try {
+        const submission = JSON.parse(editData);
+        setHasPreviousData(true);
+        
+        // Pre-populate form with existing data if comprehensiveData exists
+        if (submission.comprehensiveData) {
+          const data = submission.comprehensiveData;
+          
+          // Set disease overview
+          if (data.diseaseOverview) {
+            if (data.diseaseOverview.diseaseName) {
+              form.setValue('diseaseName', data.diseaseOverview.diseaseName);
+            }
+            if (data.diseaseOverview.diseaseType) {
+              form.setValue('diseaseType', data.diseaseOverview.diseaseType);
+            }
+            if (data.diseaseOverview.demographics) {
+              form.setValue('demographics', data.diseaseOverview.demographics);
+            }
+            if (data.diseaseOverview.ruralUrbanDifferences) {
+              form.setValue('ruralUrbanDifferences', data.diseaseOverview.ruralUrbanDifferences);
+            }
+          }
+          
+          // Set array fields
+          if (data.diseaseSubtypes) {
+            form.setValue('subtypes', data.diseaseSubtypes);
+          }
+          if (data.geneticRiskFactors) {
+            form.setValue('geneticRiskFactors', data.geneticRiskFactors);
+          }
+          if (data.clinicalStages) {
+            form.setValue('clinicalStages', data.clinicalStages);
+          }
+          if (data.symptomsByStage) {
+            form.setValue('symptomsByStage', data.symptomsByStage);
+          }
+          if (data.comorbidities) {
+            form.setValue('comorbidities', data.comorbidities);
+          }
+          if (data.medications) {
+            form.setValue('medications', data.medications);
+          }
+          if (data.redFlags) {
+            form.setValue('redFlags', data.redFlags);
+          }
+          if (data.progressionTimeline) {
+            form.setValue('progressionTimeline', data.progressionTimeline);
+          }
+          if (data.lifestyleManagement) {
+            form.setValue('lifestyleManagement', data.lifestyleManagement);
+          }
+          if (data.pediatricVsAdult) {
+            form.setValue('pediatricVsAdult', data.pediatricVsAdult);
+          }
+          if (data.labValues) {
+            form.setValue('labValues', data.labValues);
+          }
+          if (data.contraindications) {
+            form.setValue('contraindications', data.contraindications);
+          }
+          if (data.monitoringRequirements) {
+            form.setValue('monitoringRequirements', data.monitoringRequirements);
+          }
+          if (data.misdiagnoses) {
+            form.setValue('misdiagnoses', data.misdiagnoses);
+          }
+          if (data.regionalPractices) {
+            form.setValue('regionalPractices', data.regionalPractices);
+          }
+          if (data.additionalNotes) {
+            form.setValue('additionalNotes', data.additionalNotes);
+          }
+          if (data.physicianConsent) {
+            form.setValue('physicianConsent', data.physicianConsent);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading previous submission data:', error);
+      }
+    }
+  }, [form]);
 
   // Field arrays for dynamic sections
   const subtypesArray = useFieldArray({
@@ -498,6 +589,25 @@ export default function ComprehensiveParameterValidationForm() {
     form.setValue(fieldName, newValue);
   };
 
+  const clearPreviousData = () => {
+    // Clear localStorage
+    localStorage.removeItem('editSubmissionData');
+    localStorage.removeItem('editSubmissionId');
+    
+    // Reset form to default values
+    form.reset();
+    
+    // Reset states
+    setHasPreviousData(false);
+    setShowPreviousData(false);
+    
+    toast({
+      title: "Previous Data Cleared",
+      description: "Form has been reset to default values.",
+      variant: "default",
+    });
+  };
+
   const progress = (currentSection / sections.length) * 100;
 
   return (
@@ -534,6 +644,58 @@ export default function ComprehensiveParameterValidationForm() {
           </div>
           <Progress value={progress} className="h-2" />
         </div>
+
+        {/* Previous Data Toggle */}
+        {hasPreviousData && (
+          <div className="mb-6">
+            <Card className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Info className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <h3 className="font-medium text-blue-900 dark:text-blue-100">
+                        Previous Submission Data Available
+                      </h3>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Your previous submission data has been loaded and preserved.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPreviousData(!showPreviousData)}
+                      className="flex items-center space-x-2 border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/30"
+                    >
+                      {showPreviousData ? (
+                        <>
+                          <EyeOff className="h-4 w-4" />
+                          <span>Hide Previous Data</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4" />
+                          <span>Show Previous Data</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearPreviousData}
+                      className="flex items-center space-x-2 border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Clear Data</span>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Section Navigation */}
         <div className="mb-8">
@@ -580,10 +742,17 @@ export default function ComprehensiveParameterValidationForm() {
                       <Input
                         {...form.register('diseaseName.clinical')}
                         placeholder="e.g., Type 2 Diabetes Mellitus"
+                        className={hasPreviousData && form.watch('diseaseName.clinical') ? 'border-blue-300 bg-blue-50 dark:bg-blue-900/20' : ''}
                       />
                       {form.formState.errors.diseaseName?.clinical && (
                         <p className="text-red-500 text-sm mt-1">
                           {form.formState.errors.diseaseName.clinical.message}
+                        </p>
+                      )}
+                      {hasPreviousData && form.watch('diseaseName.clinical') && (
+                        <p className="text-blue-600 text-xs mt-1 flex items-center">
+                          <Info className="h-3 w-3 mr-1" />
+                          Previous data loaded
                         </p>
                       )}
                     </div>

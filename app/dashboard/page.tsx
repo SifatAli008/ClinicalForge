@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/lib/auth-context';
 
 import { 
   Activity, 
@@ -27,10 +28,14 @@ import {
   Shield,
   Eye,
   Plus,
-  Settings
+  Settings,
+  Trash2,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import Link from 'next/link';
 import { EnhancedClinicalDatabaseService } from '@/lib/enhanced-clinical-database-service';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 interface DashboardStats {
   totalForms: number;
@@ -67,6 +72,7 @@ interface Notification {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user, isAdmin, isContributor } = useAuth();
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,6 +80,10 @@ export default function DashboardPage() {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
+  
+  // New state for validation lists
+  const [selectedAdvancedValidation, setSelectedAdvancedValidation] = useState<Set<string>>(new Set());
+  const [selectedParameterValidation, setSelectedParameterValidation] = useState<Set<string>>(new Set());
 
   // Real data service
   const enhancedService = useMemo(() => new EnhancedClinicalDatabaseService(), []);
@@ -430,13 +440,13 @@ export default function DashboardPage() {
   const handleDownloadSingleSubmission = async (submission: any) => {
     try {
       const submissionData = {
-        submissionId: submission.submissionId || submission.id,
+        submissionId: submission.submissionId,
         collaboratorId: submission.collaboratorId,
         formType: submission.formType,
         diseaseName: submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || 
                    submission.comprehensiveData?.diseaseOverview?.diseaseName || 
                    'Unknown Disease',
-        submittedAt: submission.submittedAt?.toDate?.() || new Date(submission.submittedAt),
+        submittedAt: submission.submittedAt?.toDate?.() || new Date(submission.submittedAt as any),
         status: submission.status,
         comprehensiveData: submission.comprehensiveData,
         advancedAnalyticsData: submission.advancedAnalyticsData,
@@ -452,7 +462,7 @@ export default function DashboardPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `submission-${submission.submissionId || submission.id}-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `submission-${submission.submissionId}-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -460,6 +470,259 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Error downloading submission:', err);
       setError('Failed to download submission');
+    }
+  };
+
+  const handleDeleteSubmission = async (submission: any) => {
+    try {
+      console.log('Starting delete submission process...', submission);
+      
+      // Check if user is authenticated
+      if (!user) {
+        setError('You must be logged in to delete submissions');
+        return;
+      }
+      
+      const submissionId = submission.submissionId;
+      const userId = user.uid; // Use authenticated user's ID
+      
+      console.log('Submission ID:', submissionId);
+      console.log('User ID:', userId);
+      console.log('User role:', user.role);
+      
+      // Confirm deletion
+      if (!confirm(`Are you sure you want to delete this submission?\n\nDisease: ${submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || 'Unknown Disease'}\nSubmission ID: ${submissionId}\n\nThis action cannot be undone.`)) {
+        console.log('User cancelled deletion');
+        return;
+      }
+
+      console.log('Calling enhancedService.deleteSubmission...');
+      
+      // Test if the service is accessible
+      console.log('Enhanced service instance:', enhancedService);
+      console.log('Service methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(enhancedService)));
+      
+      await enhancedService.deleteSubmission(submissionId, userId);
+      console.log('Delete successful');
+      
+      // Remove from local state
+      setUserSubmissions(prev => prev.filter(s => s.submissionId !== submissionId));
+      
+      // Refresh dashboard data
+      await loadDashboardData();
+      
+      // Show success notification
+      setNotifications(prev => [
+        {
+          id: Date.now().toString(),
+          type: 'success',
+          title: 'Submission Deleted',
+          message: `Successfully deleted submission ${submissionId}`,
+          timestamp: new Date(),
+          isRead: false
+        },
+        ...prev
+      ]);
+    } catch (err) {
+      console.error('Error deleting submission:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.error('Error details:', {
+        message: errorMessage,
+        stack: err instanceof Error ? err.stack : undefined,
+        name: err instanceof Error ? err.name : 'Unknown'
+      });
+      setError(`Failed to delete submission: ${errorMessage}`);
+    }
+  };
+
+
+
+  // New functions for validation list management
+  const handleSelectForAdvancedValidation = (submissionId: string) => {
+    setSelectedAdvancedValidation(prev => {
+      const newSet = new Set(prev);
+      newSet.add(submissionId);
+      return newSet;
+    });
+    
+    setNotifications(prev => [
+      {
+        id: Date.now().toString(),
+        type: 'success',
+        title: 'Added to Advanced Validation',
+        message: `Submission added to Advanced Clinical Analytics Validation list`,
+        timestamp: new Date(),
+        isRead: false
+      },
+      ...prev
+    ]);
+  };
+
+  const handleSelectForParameterValidation = (submissionId: string) => {
+    setSelectedParameterValidation(prev => {
+      const newSet = new Set(prev);
+      newSet.add(submissionId);
+      return newSet;
+    });
+    
+    setNotifications(prev => [
+      {
+        id: Date.now().toString(),
+        type: 'success',
+        title: 'Added to Parameter Validation',
+        message: `Submission added to Comprehensive Parameter Validation Form list`,
+        timestamp: new Date(),
+        isRead: false
+      },
+      ...prev
+    ]);
+  };
+
+  const handleRemoveFromValidation = (submissionId: string) => {
+    setSelectedAdvancedValidation(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(submissionId);
+      return newSet;
+    });
+    
+    setSelectedParameterValidation(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(submissionId);
+      return newSet;
+    });
+    
+    setNotifications(prev => [
+      {
+        id: Date.now().toString(),
+        type: 'info',
+        title: 'Removed from Validation',
+        message: `Submission removed from validation lists`,
+        timestamp: new Date(),
+        isRead: false
+      },
+      ...prev
+    ]);
+  };
+
+  const handleDownloadAdvancedValidationJSON = async () => {
+    try {
+      if (selectedAdvancedValidation.size === 0) {
+        alert('No submissions selected for Advanced Clinical Analytics Validation.');
+        return;
+      }
+
+      // Get all submissions and filter by selected IDs
+      const allSubmissions = await enhancedService.getAllSubmissions();
+      const selectedSubmissions = allSubmissions.filter(submission => 
+        selectedAdvancedValidation.has(submission.submissionId)
+      );
+
+      const exportData = {
+        validationType: 'Advanced Clinical Analytics Validation',
+        exportDate: new Date().toISOString(),
+        totalSubmissions: selectedSubmissions.length,
+        submissions: selectedSubmissions.map(submission => ({
+          submissionId: submission.submissionId,
+          collaboratorId: submission.collaboratorId,
+          formType: submission.formType,
+          diseaseName: submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || 
+                     submission.comprehensiveData?.diseaseOverview?.diseaseName || 
+                     'Unknown Disease',
+          submittedAt: submission.submittedAt?.toDate?.() || new Date(submission.submittedAt as any),
+          status: submission.status,
+          advancedAnalyticsData: submission.advancedAnalyticsData,
+          validation: submission.validation,
+          metadata: submission.metadata
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+        type: 'application/json' 
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `advanced-validation-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setNotifications(prev => [
+        {
+          id: Date.now().toString(),
+          type: 'success',
+          title: 'Advanced Validation Export',
+          message: `Successfully exported ${selectedSubmissions.length} submissions`,
+          timestamp: new Date(),
+          isRead: false
+        },
+        ...prev
+      ]);
+    } catch (err) {
+      console.error('Error downloading advanced validation JSON:', err);
+      setError('Failed to download Advanced Validation JSON');
+    }
+  };
+
+  const handleDownloadParameterValidationJSON = async () => {
+    try {
+      if (selectedParameterValidation.size === 0) {
+        alert('No submissions selected for Comprehensive Parameter Validation Form.');
+        return;
+      }
+
+      // Get all submissions and filter by selected IDs
+      const allSubmissions = await enhancedService.getAllSubmissions();
+      const selectedSubmissions = allSubmissions.filter(submission => 
+        selectedParameterValidation.has(submission.submissionId)
+      );
+
+      const exportData = {
+        validationType: 'Comprehensive Parameter Validation Form',
+        exportDate: new Date().toISOString(),
+        totalSubmissions: selectedSubmissions.length,
+        submissions: selectedSubmissions.map(submission => ({
+          submissionId: submission.submissionId,
+          collaboratorId: submission.collaboratorId,
+          formType: submission.formType,
+          diseaseName: submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || 
+                     submission.comprehensiveData?.diseaseOverview?.diseaseName || 
+                     'Unknown Disease',
+          submittedAt: submission.submittedAt?.toDate?.() || new Date(submission.submittedAt as any),
+          status: submission.status,
+          comprehensiveData: submission.comprehensiveData,
+          validation: submission.validation,
+          metadata: submission.metadata
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+        type: 'application/json' 
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `parameter-validation-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setNotifications(prev => [
+        {
+          id: Date.now().toString(),
+          type: 'success',
+          title: 'Parameter Validation Export',
+          message: `Successfully exported ${selectedSubmissions.length} submissions`,
+          timestamp: new Date(),
+          isRead: false
+        },
+        ...prev
+      ]);
+    } catch (err) {
+      console.error('Error downloading parameter validation JSON:', err);
+      setError('Failed to download Parameter Validation JSON');
     }
   };
 
@@ -531,31 +794,32 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-primary/10 rounded-xl">
-                    <Activity className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
-                    <div className="flex items-center space-x-3">
-                      <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                        ClinicalForge Dashboard
-                      </h1>
-                      <Badge variant="default" className="text-xs">
-                        LIVE
-                      </Badge>
+    <AuthGuard requiredRole="any">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-primary/10 rounded-xl">
+                      <Activity className="h-8 w-8 text-primary" />
                     </div>
-                    <p className="text-lg text-gray-600 dark:text-gray-300">
-                      Real-time insights and analytics
-                    </p>
+                    <div>
+                      <div className="flex items-center space-x-3">
+                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+                          ClinicalForge Dashboard
+                        </h1>
+                        <Badge variant="default" className="text-xs">
+                          LIVE
+                        </Badge>
+                      </div>
+                      <p className="text-lg text-gray-600 dark:text-gray-300">
+                        Real-time insights and analytics
+                      </p>
+                    </div>
                   </div>
-                </div>
                                   <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                     <div className="flex items-center space-x-2">
                       <Wifi className="h-4 w-4 text-green-600" />
@@ -587,6 +851,26 @@ export default function DashboardPage() {
                 >
                   <Download className="h-4 w-4" />
                   <span>Export</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleDownloadAdvancedValidationJSON}
+                  disabled={selectedAdvancedValidation.size === 0}
+                  className="flex items-center space-x-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30"
+                  data-testid="download-advanced-validation-button"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download Advanced Validation ({selectedAdvancedValidation.size})</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleDownloadParameterValidationJSON}
+                  disabled={selectedParameterValidation.size === 0}
+                  className="flex items-center space-x-2 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30"
+                  data-testid="download-parameter-validation-button"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download Parameter Validation ({selectedParameterValidation.size})</span>
                 </Button>
               </div>
             </div>
@@ -870,6 +1154,7 @@ export default function DashboardPage() {
                                 <Download className="h-4 w-4" />
                                 <span>Download</span>
                               </Button>
+
                             </div>
                             
                             {/* Expanded Submissions View */}
@@ -904,7 +1189,7 @@ export default function DashboardPage() {
                                           <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => router.push(`/admin/submissions/${submission.submissionId || submission.id}`)}
+                                            onClick={() => router.push(`/admin/submissions/${submission.submissionId}`)}
                                             className="flex items-center space-x-1 h-6 px-2"
                                           >
                                             <Eye className="h-3 w-3" />
@@ -918,6 +1203,49 @@ export default function DashboardPage() {
                                           >
                                             <Download className="h-3 w-3" />
                                             <span className="text-xs">Download</span>
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleSelectForAdvancedValidation(submission.submissionId)}
+                                            className={`flex items-center space-x-1 h-6 px-2 ${
+                                              selectedAdvancedValidation.has(submission.submissionId) 
+                                                ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20' 
+                                                : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20'
+                                            }`}
+                                          >
+                                            {selectedAdvancedValidation.has(submission.submissionId) ? (
+                                              <CheckSquare className="h-3 w-3" />
+                                            ) : (
+                                              <Square className="h-3 w-3" />
+                                            )}
+                                            <span className="text-xs">Advanced</span>
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleSelectForParameterValidation(submission.submissionId)}
+                                            className={`flex items-center space-x-1 h-6 px-2 ${
+                                              selectedParameterValidation.has(submission.submissionId) 
+                                                ? 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20' 
+                                                : 'text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/20'
+                                            }`}
+                                          >
+                                            {selectedParameterValidation.has(submission.submissionId) ? (
+                                              <CheckSquare className="h-3 w-3" />
+                                            ) : (
+                                              <Square className="h-3 w-3" />
+                                            )}
+                                            <span className="text-xs">Parameter</span>
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleRemoveFromValidation(submission.submissionId)}
+                                            className="flex items-center space-x-1 h-6 px-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-900/20"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                            <span className="text-xs">Remove</span>
                                           </Button>
                                         </div>
                                       </div>
@@ -950,5 +1278,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 } 

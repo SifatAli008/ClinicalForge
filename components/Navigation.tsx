@@ -27,6 +27,7 @@ export default function Navigation() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
   const { user, userProfile, signOut, loading, isAdmin, isContributor, isPublic } = useAuth();
 
   const toggleMobileMenu = () => {
@@ -69,6 +70,11 @@ export default function Navigation() {
   React.useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
+
+  // Reset image error when user changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [user?.uid, userProfile?.avatarUrl]);
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -131,6 +137,59 @@ export default function Navigation() {
 
   const navigationItems = getNavigationItems();
 
+  // Helper function to get user photo with fallback
+  const getUserPhoto = () => {
+    let photoUrl = user?.photoURL || userProfile?.avatarUrl;
+    
+    // If the photo URL is empty or invalid, return null
+    if (!photoUrl || photoUrl === 'null' || photoUrl === 'undefined' || photoUrl === '') {
+      return null;
+    }
+    
+    return photoUrl;
+  };
+
+  // Get user photo URL
+  const userPhoto = getUserPhoto();
+
+  // Avatar component with proper fallback
+  const UserAvatar = ({ size = 32, className = "" }: { size?: number; className?: string }) => {
+    const displayName = user?.displayName || userProfile?.displayName || 'Demo User';
+    const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+    
+    if (userPhoto && !imageError) {
+      return (
+        <div className={`relative ${className}`}>
+          <Image 
+            src={userPhoto} 
+            alt={displayName}
+            width={size}
+            height={size}
+            className={`rounded-full border-2 border-border transition-all duration-200 group-hover:border-primary/50 ${className}`}
+            onError={() => setImageError(true)}
+            onLoad={() => setImageError(false)}
+            unoptimized={userPhoto.startsWith('data:') || userPhoto.startsWith('blob:')}
+          />
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className={`relative ${className}`}>
+        <div className={`rounded-full border-2 border-border bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
+          <div className="text-center">
+            <User className="text-gray-400 mx-auto" style={{ width: size * 0.4, height: size * 0.4 }} />
+            <div className="text-xs text-gray-500 font-medium" style={{ fontSize: size * 0.25 }}>
+              {initials}
+            </div>
+          </div>
+        </div>
+        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+      </div>
+    );
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -184,20 +243,11 @@ export default function Navigation() {
                     onClick={toggleProfileDropdown}
                     className="flex items-center space-x-3 hover:bg-accent transition-all duration-200 group"
                   >
-                    <div className="relative">
-                      <Image 
-                        src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
-                        alt={user.displayName || userProfile?.displayName || 'User'} 
-                        width={32}
-                        height={32}
-                        className="rounded-full border-2 border-border transition-all duration-200 group-hover:border-primary/50"
-                      />
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-                    </div>
-                    <div className="hidden lg:block text-left">
-                      <p className="text-sm font-medium">{user.displayName || userProfile?.displayName || 'User'}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
+                    <UserAvatar size={32} />
+                                         <div className="hidden lg:block text-left">
+                       <p className="text-sm font-medium">{user.displayName || userProfile?.displayName || 'Demo User'}</p>
+                       <p className="text-xs text-muted-foreground">{user.email || 'demo@example.com'}</p>
+                     </div>
                     <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
                   </Button>
 
@@ -206,19 +256,10 @@ export default function Navigation() {
                     <div className="absolute right-0 mt-2 w-64 bg-background border border-border rounded-xl shadow-lg z-50 animate-in slide-in-from-top-2 duration-200">
                       <div className="p-4 border-b border-border">
                         <div className="flex items-center space-x-3">
-                          <div className="relative">
-                            <Image 
-                              src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
-                              alt={user.displayName || userProfile?.displayName || 'User'} 
-                              width={48}
-                              height={48}
-                              className="rounded-full border-2 border-border"
-                            />
-                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
-                          </div>
+                          <UserAvatar size={48} />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{user.displayName || userProfile?.displayName || 'User'}</p>
-                            <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                            <p className="font-medium truncate">{user.displayName || userProfile?.displayName || 'Demo User'}</p>
+                            <p className="text-sm text-muted-foreground truncate">{user.email || 'demo@example.com'}</p>
                             <div className="flex items-center space-x-1 mt-1">
                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                               <span className="text-xs text-muted-foreground">
@@ -289,19 +330,10 @@ export default function Navigation() {
               {!loading && user && !isAdmin && (
                 <div className="px-3 py-4 border-b border-border bg-accent/50 rounded-lg mx-2 mb-2">
                   <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <Image 
-                        src={user.photoURL || userProfile?.avatarUrl || '/default-avatar.svg'} 
-                        alt={user.displayName || userProfile?.displayName || 'User'} 
-                        width={48}
-                        height={48}
-                        className="rounded-full border-2 border-border"
-                      />
-                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
-                    </div>
+                    <UserAvatar size={48} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{user.displayName || userProfile?.displayName || 'User'}</p>
-                      <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                      <p className="font-medium truncate">{user.displayName || userProfile?.displayName || 'Demo User'}</p>
+                      <p className="text-sm text-muted-foreground truncate">{user.email || 'demo@example.com'}</p>
                       <div className="flex items-center space-x-1 mt-1">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span className="text-xs text-muted-foreground">
