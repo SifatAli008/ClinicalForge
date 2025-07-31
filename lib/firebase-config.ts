@@ -11,8 +11,8 @@ const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "hdms-a8e42",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "hdms-a8e42.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "1041849143687",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:1041849143687:web:34d48f1209e10443a30322",
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-K26DF8CGV4"
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:1041849143687:web:34d48f1209e10443a30322"
+  // Removed measurementId to prevent conflicts
 };
 
 // Initialize Firebase
@@ -28,8 +28,31 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Initialize Analytics conditionally
-export const analytics = isSupported().then((yes: boolean) => yes ? getAnalytics(app) : null);
+// Initialize Analytics conditionally with better error handling
+export const analytics = isSupported().then((yes: boolean) => {
+  if (yes) {
+    try {
+      // Only initialize analytics if we're on an authorized domain
+      const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
+      const isLocalhost = currentDomain === 'localhost' || currentDomain === '127.0.0.1';
+      const isVercelDomain = currentDomain.includes('vercel.app');
+      
+      if (isLocalhost || isVercelDomain) {
+        console.log('🔥 Firebase Analytics: Domain may not be authorized, skipping analytics');
+        return null;
+      }
+      
+      return getAnalytics(app);
+    } catch (error) {
+      console.warn('Firebase Analytics initialization failed:', error);
+      return null;
+    }
+  }
+  return null;
+}).catch((error) => {
+  console.warn('Firebase Analytics not supported:', error);
+  return null;
+});
 
 // Connect to emulator in development
 if (process.env.NODE_ENV === 'development') {

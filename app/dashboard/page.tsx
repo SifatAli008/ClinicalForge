@@ -1024,9 +1024,7 @@ export default function DashboardPage() {
                   </Link>
                 </CardContent>
               </Card>
-
-
-
+              
               {/* System Status */}
               <Card className="border-l-4 border-l-green-500" data-testid="system-status">
                 <CardHeader className="pb-4">
