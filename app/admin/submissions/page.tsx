@@ -464,7 +464,9 @@ export default function AdminSubmissionsPage() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {submission.diseaseName || 'Unknown Disease'}
+                          {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                  ? submission.diseaseName.clinical || submission.diseaseName.common || 'Unknown Disease'
+                  : submission.diseaseName || 'Unknown Disease'}
                         </h3>
                         <Badge className={getStatusColor(submission.status)}>
                           {submission.status}
@@ -566,7 +568,11 @@ export default function AdminSubmissionsPage() {
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Disease Name:</span>
-                              <span>{submission.diseaseName || 'Not specified'}</span>
+                              <span>
+                  {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                    ? submission.diseaseName.clinical || submission.diseaseName.common || 'Not specified'
+                    : submission.diseaseName || 'Not specified'}
+                </span>
                             </div>
                             {submission.comprehensiveData?.diseaseOverview?.diseaseType && (
                               <div className="flex justify-between">

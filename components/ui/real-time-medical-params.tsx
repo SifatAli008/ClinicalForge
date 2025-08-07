@@ -264,7 +264,11 @@ export function RealTimeMedicalParams({ className, showCharts = true }: RealTime
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm">{submission.diseaseName}</span>
+                    <span className="font-medium text-sm">
+                  {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                    ? submission.diseaseName.clinical || submission.diseaseName.common || 'Unknown Disease'
+                    : submission.diseaseName || 'Unknown Disease'}
+                </span>
                     <Badge variant="outline" className="text-xs">
                       {submission.diseaseType}
                     </Badge>

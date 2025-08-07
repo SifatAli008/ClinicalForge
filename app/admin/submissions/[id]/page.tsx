@@ -321,7 +321,11 @@ export default function SubmissionDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">Disease</p>
-                  <p className="text-lg font-semibold">{submission.diseaseName || 'Unknown Disease'}</p>
+                  <p className="text-lg font-semibold">
+                    {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                      ? submission.diseaseName.clinical || submission.diseaseName.common || 'Unknown Disease'
+                      : submission.diseaseName || 'Unknown Disease'}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">Status</p>
@@ -427,7 +431,11 @@ export default function SubmissionDetailPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Disease Name:</span>
-                        <span>{submission.diseaseName || 'Not specified'}</span>
+                        <span>
+                          {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                            ? submission.diseaseName.clinical || submission.diseaseName.common || 'Not specified'
+                            : submission.diseaseName || 'Not specified'}
+                        </span>
                       </div>
                       {submission.comprehensiveData?.diseaseOverview?.diseaseType && (
                         <div className="flex justify-between">

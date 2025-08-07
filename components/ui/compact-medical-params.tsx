@@ -216,7 +216,11 @@ export function CompactMedicalParams() {
           <div className="space-y-2">
             {submissions.slice(0, 3).map((submission, index) => (
               <div key={index} className="flex items-center justify-between text-sm">
-                <span className="truncate">{submission.diseaseName}</span>
+                <span className="truncate">
+                  {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                    ? submission.diseaseName.clinical || submission.diseaseName.common || 'Unknown Disease'
+                    : submission.diseaseName || 'Unknown Disease'}
+                </span>
                 <span className="text-muted-foreground text-xs">
                   {formatTimeAgo(submission.submissionDate)}
                 </span>

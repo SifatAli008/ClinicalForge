@@ -371,7 +371,9 @@ export default function TestFormIntegration() {
                     <h4 className="font-semibold mb-2">Retrieved Data Summary:</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       <Badge variant="outline">
-                        Disease: {testResults.retrievedData.diseaseOverview?.diseaseName?.clinical}
+                        Disease: {typeof testResults.retrievedData.diseaseOverview?.diseaseName === 'object' && testResults.retrievedData.diseaseOverview?.diseaseName !== null
+                          ? testResults.retrievedData.diseaseOverview?.diseaseName?.clinical || testResults.retrievedData.diseaseOverview?.diseaseName?.common || 'N/A'
+                          : testResults.retrievedData.diseaseOverview?.diseaseName?.clinical || 'N/A'}
                       </Badge>
                       <Badge variant="outline">
                         Type: {testResults.retrievedData.diseaseOverview?.diseaseType?.primary}

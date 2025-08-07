@@ -326,7 +326,11 @@ export default function TestFormsPage() {
               <Card key={submission.submissionId}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <span className="text-sm">{submission.diseaseName}</span>
+                    <span className="text-sm">
+                      {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                        ? submission.diseaseName.clinical || submission.diseaseName.common || 'Unknown Disease'
+                        : submission.diseaseName || 'Unknown Disease'}
+                    </span>
                     <Badge className={getStatusColor(submission.status)}>
                       {submission.status}
                     </Badge>
@@ -361,7 +365,11 @@ export default function TestFormsPage() {
                 <Card key={submission.submissionId}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span className="text-sm">{submission.diseaseName}</span>
+                      <span className="text-sm">
+                        {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                          ? submission.diseaseName.clinical || submission.diseaseName.common || 'Unknown Disease'
+                          : submission.diseaseName || 'Unknown Disease'}
+                      </span>
                       <Badge className={getStatusColor(submission.status)}>
                         {submission.status}
                       </Badge>
@@ -396,7 +404,11 @@ export default function TestFormsPage() {
                 <Card key={submission.submissionId}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span className="text-sm">{submission.diseaseName}</span>
+                      <span className="text-sm">
+                        {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                          ? submission.diseaseName.clinical || submission.diseaseName.common || 'Unknown Disease'
+                          : submission.diseaseName || 'Unknown Disease'}
+                      </span>
                       <Badge className={getStatusColor(submission.status)}>
                         {submission.status}
                       </Badge>
@@ -431,7 +443,11 @@ export default function TestFormsPage() {
                 <Card key={submission.submissionId}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span className="text-sm">{submission.diseaseName}</span>
+                      <span className="text-sm">
+                        {typeof submission.diseaseName === 'object' && submission.diseaseName !== null
+                          ? submission.diseaseName.clinical || submission.diseaseName.common || 'Unknown Disease'
+                          : submission.diseaseName || 'Unknown Disease'}
+                      </span>
                       <Badge className={getStatusColor(submission.status)}>
                         {submission.status}
                       </Badge>

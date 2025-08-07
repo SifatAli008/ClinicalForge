@@ -414,7 +414,9 @@ export default function TestComprehensiveDatabase() {
                   <div>
                     <h4 className="font-semibold mb-2">Data Summary:</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <Badge variant="outline">Disease: {result.data.diseaseOverview.diseaseName.clinical}</Badge>
+                      <Badge variant="outline">Disease: {typeof result.data.diseaseOverview.diseaseName === 'object' && result.data.diseaseOverview.diseaseName !== null
+                        ? result.data.diseaseOverview.diseaseName.clinical || result.data.diseaseOverview.diseaseName.common || 'N/A'
+                        : result.data.diseaseOverview.diseaseName.clinical || 'N/A'}</Badge>
                       <Badge variant="outline">Type: {result.data.diseaseOverview.diseaseType.primary}</Badge>
                       <Badge variant="outline">Subtypes: {result.data.diseaseSubtypes.length}</Badge>
                       <Badge variant="outline">Stages: {result.data.clinicalStages.length}</Badge>
@@ -441,7 +443,9 @@ export default function TestComprehensiveDatabase() {
                   <div key={index} className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold">
-                        {submission.diseaseOverview.diseaseName.clinical}
+                        {typeof submission.diseaseOverview.diseaseName === 'object' && submission.diseaseOverview.diseaseName !== null
+                          ? submission.diseaseOverview.diseaseName.clinical || submission.diseaseOverview.diseaseName.common || 'N/A'
+                          : submission.diseaseOverview.diseaseName.clinical || 'N/A'}
                       </h4>
                       <Badge variant={submission.status === 'approved' ? 'default' : 'secondary'}>
                         {submission.status}

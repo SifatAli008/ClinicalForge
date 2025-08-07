@@ -928,7 +928,9 @@ export default function ProfilePage() {
                        <div>
                          <label className="text-sm font-medium text-green-700 dark:text-green-300">Disease Name</label>
                          <p className="text-green-900 dark:text-green-100 font-semibold">
-                           {selectedSubmission.fullSubmission.comprehensiveData.diseaseOverview?.diseaseName?.clinical || 'N/A'}
+                           {typeof selectedSubmission.fullSubmission.comprehensiveData.diseaseOverview?.diseaseName === 'object' && selectedSubmission.fullSubmission.comprehensiveData.diseaseOverview?.diseaseName !== null
+                             ? selectedSubmission.fullSubmission.comprehensiveData.diseaseOverview?.diseaseName?.clinical || selectedSubmission.fullSubmission.comprehensiveData.diseaseOverview?.diseaseName?.common || 'N/A'
+                             : selectedSubmission.fullSubmission.comprehensiveData.diseaseOverview?.diseaseName?.clinical || 'N/A'}
                          </p>
                        </div>
                        <div>
@@ -1030,7 +1032,11 @@ export default function ProfilePage() {
                      {selectedSubmission.activity.formType.includes('Comprehensive Parameter Validation') && (
                        <div className="space-y-2">
                          <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                           <strong>Disease Name:</strong> {selectedSubmission.activity.diseaseName || 'N/A'}
+                           <strong>Disease Name:</strong> {
+                  typeof selectedSubmission.activity.diseaseName === 'object' && selectedSubmission.activity.diseaseName !== null
+                    ? selectedSubmission.activity.diseaseName.clinical || selectedSubmission.activity.diseaseName.common || 'N/A'
+                    : selectedSubmission.activity.diseaseName || 'N/A'
+                }
                          </p>
                          <p className="text-sm text-yellow-700 dark:text-yellow-300">
                            <strong>Disease Type:</strong> {selectedSubmission.activity.diseaseType || 'N/A'}

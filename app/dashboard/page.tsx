@@ -1164,9 +1164,11 @@ export default function DashboardPage() {
                                         <div className="flex items-center justify-between mb-2">
                                           <div className="flex-1">
                                             <p className="font-medium text-sm text-gray-900 dark:text-white">
-                                              {submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || 
-                                               submission.comprehensiveData?.diseaseOverview?.diseaseName || 
-                                               'Unknown Disease'}
+                                              {typeof submission.comprehensiveData?.diseaseOverview?.diseaseName === 'object' && submission.comprehensiveData?.diseaseOverview?.diseaseName !== null
+                                                ? submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || submission.comprehensiveData?.diseaseOverview?.diseaseName?.common || 'Unknown Disease'
+                                                : submission.comprehensiveData?.diseaseOverview?.diseaseName?.clinical || 
+                                                   submission.comprehensiveData?.diseaseOverview?.diseaseName || 
+                                                   'Unknown Disease'}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                               {submission.formType} • {submission.submittedAt?.toDate?.()?.toLocaleDateString() || 
